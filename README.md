@@ -12,6 +12,7 @@ import pystash
 # Get a directory (as a pathlib.Path)
 pykeen_directory = pystash.get('pykeen')
 
-# Get a subdirectory (as a pathlib.Path)
+# Get a subdirectory (as a pathlib.Path).
+# You can specify as deep as you want.
 pykeen_experiments_directory = pystash.get('pykeen', 'experiments')
 ```
