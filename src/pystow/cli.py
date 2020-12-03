@@ -14,7 +14,7 @@ from .api import get
 def main(keys: str):
     """List a PyStow directory."""
     directory = get(*keys)
-    click.secho(f'[pystash] {directory}', fg='cyan', bold=True)
+    click.secho(f'[pystow] {directory}', fg='cyan', bold=True)
     os.system(f'ls -al {directory}')  # noqa:S605
 
 
