@@ -21,14 +21,16 @@ Example usage:
 ```python
 import pystow
 
-# Get a directory (as a pathlib.Path)
+# Get a directory (as a pathlib.Path) for ~/.data/pykeen
 pykeen_directory = pystow.get('pykeen')
 
-# Get a subdirectory (as a pathlib.Path).
-# You can specify as deep as you want.
+# Get a subdirectory (as a pathlib.Path). for ~/.data/pykeen/experiments
 pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
+
+# You can go as deep as you want
+pykeen_experiments_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
-Data gets stored in `~/.data` by default. If you want to change the name of the directory, set
-the environment variable `PYSTOW_NAME`. If you want to change the default parent directory to
-be other than the home directory, set `PYSTOW_HOME`
+Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
+variable `PYSTOW_NAME`. If you want to change the default parent directory to be other than the home directory,
+set `PYSTOW_HOME`
