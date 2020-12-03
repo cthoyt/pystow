@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-"""API functions for PyStash."""
+"""API functions for PyStow."""
 
 import os
 from pathlib import Path
 
-PYSTASH_NAME_ENVVAR = 'PYSTASH_NAME'
-PYSTASH_HOME_ENVVAR = 'PYSTASH_HOME'
-PYSTASH_NAME_DEFAULT = '.data'
+PYSTOW_NAME_ENVVAR = 'PYSTOW_NAME'
+PYSTOW_HOME_ENVVAR = 'PYSTOW_HOME'
+PYSTOW_NAME_DEFAULT = '.data'
 
 
 def get_name() -> str:
-    """Get the PyStash home directory name."""
-    return os.getenv(PYSTASH_NAME_ENVVAR) or PYSTASH_NAME_DEFAULT
+    """Get the PyStow home directory name."""
+    return os.getenv(PYSTOW_NAME_ENVVAR) or PYSTOW_NAME_DEFAULT
 
 
 def _env_or_default(envvar: str, default: Path) -> Path:
@@ -20,9 +20,9 @@ def _env_or_default(envvar: str, default: Path) -> Path:
 
 
 def get_home(ensure_exists: bool = True) -> Path:
-    """Get the PyStash home directory."""
+    """Get the PyStow home directory."""
     default = Path.home() / get_name()
-    rv = _env_or_default(PYSTASH_HOME_ENVVAR, default)
+    rv = _env_or_default(PYSTOW_HOME_ENVVAR, default)
     if ensure_exists:
         rv.mkdir(exist_ok=True, parents=True)
     return rv

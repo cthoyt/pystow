@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Tests for PyStash."""
+"""Tests for PYSTOW."""
 
 import contextlib
 import os
@@ -9,8 +9,8 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from pystash.api import (
-    PYSTASH_HOME_ENVVAR, PYSTASH_NAME_ENVVAR, get_home, get_name,
+from pystow.api import (
+    PYSTOW_HOME_ENVVAR, PYSTOW_NAME_ENVVAR, get_home, get_name,
 )
 
 
@@ -22,8 +22,8 @@ def mock_envvar(k: str, v: str):
     del os.environ[k]
 
 
-class TestPyStash(unittest.TestCase):
-    """Tests for :mod:`pystash`."""
+class TestPYSTOW(unittest.TestCase):
+    """Tests for :mod:`PYSTOW`."""
 
     def test_mock_envvar(self):
         """Test that environment variables can be mocked properly."""
@@ -44,7 +44,7 @@ class TestPyStash(unittest.TestCase):
             expected_path = Path(d) / name
             self.assertFalse(expected_path.exists())
 
-            with mock_envvar(PYSTASH_HOME_ENVVAR, expected_path_str):
+            with mock_envvar(PYSTOW_HOME_ENVVAR, expected_path_str):
                 self.assertFalse(expected_path.exists())
                 self.assertEqual(expected_path, get_home(ensure_exists=False))
                 self.assertFalse(expected_path.exists())
@@ -56,7 +56,7 @@ class TestPyStash(unittest.TestCase):
         expected_path = Path.home() / name
         self.assertFalse(expected_path.exists())
 
-        with mock_envvar(PYSTASH_NAME_ENVVAR, name):
+        with mock_envvar(PYSTOW_NAME_ENVVAR, name):
             self.assertEqual(name, get_name())
 
             self.assertFalse(expected_path.exists())
