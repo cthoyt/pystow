@@ -6,14 +6,14 @@ import os
 
 import click
 
-from .api import get_directory
+from .api import get
 
 
 @click.command()
 @click.argument('keys', nargs=-1)
 def main(keys: str):
     """List a PyStash directory."""
-    directory = get_directory(*keys)
+    directory = get(*keys)
     click.secho(f'[pystash] {directory}', fg='cyan', bold=True)
     os.system(f'ls -al {directory}')  # noqa:S605
 

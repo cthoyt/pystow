@@ -33,7 +33,7 @@ def _assert_valid(key: str) -> None:
         raise ValueError
 
 
-def get_directory(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
+def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
     """Return the home data directory for the given module.
 
     :param key: The name of the module. No funny characters. The envvar

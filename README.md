@@ -10,8 +10,8 @@ Example usage:
 import pystash
 
 # Get a directory (as a pathlib.Path)
-pykeen_directory = pystash.get_directory('pykeen')
+pykeen_directory = pystash.get('pykeen')
 
 # Get a subdirectory (as a pathlib.Path)
-pykeen_experiments_directory = pystash.get_directory('pykeen', 'experiments')
+pykeen_experiments_directory = pystash.get('pykeen', 'experiments')
 ```
