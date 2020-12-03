@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Version information for PyStash."""
+"""Version information for PyStow."""
 
 __all__ = [
     'VERSION',
