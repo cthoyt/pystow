@@ -40,11 +40,10 @@ class TestPYSTOW(unittest.TestCase):
         name = str(uuid4())
 
         with tempfile.TemporaryDirectory() as d:
-            expected_path_str = os.path.join(d, name)
             expected_path = Path(d) / name
             self.assertFalse(expected_path.exists())
 
-            with mock_envvar(PYSTOW_HOME_ENVVAR, expected_path_str):
+            with mock_envvar(PYSTOW_HOME_ENVVAR, expected_path.as_posix()):
                 self.assertFalse(expected_path.exists())
                 self.assertEqual(expected_path, get_home(ensure_exists=False))
                 self.assertFalse(expected_path.exists())
