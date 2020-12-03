@@ -12,11 +12,11 @@
   </a>
 </p>
 
-Easily pick a place to store data to go with your python package.
+👜 Easily pick a place to store data to go with your python package.
 
-Install with: `pip install pystow`
+🚀 Install with: `pip install pystow`
 
-Example usage:
+💪 Example usage:
 
 ```python
 import pystow
@@ -31,6 +31,6 @@ pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
 pykeen_experiments_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
-Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
+⚠️ Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
 variable `PYSTOW_NAME`. If you want to change the default parent directory to be other than the home directory,
 set `PYSTOW_HOME`
