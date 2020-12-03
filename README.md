@@ -1,6 +1,6 @@
 # PyStash
 
-Easy configuration of storing stuff to go with your python package
+Easily pick a place to store data to go with your python package.
 
 Install with: `pip install pystash`
 
