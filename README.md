@@ -24,7 +24,7 @@ import pystow
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
 pykeen_directory = pystow.get('pykeen')
 
-# Get a subdirectory (as a pathlib.Path). for ~/.data/pykeen/experiments
+# Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
 pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
 
 # You can go as deep as you want
