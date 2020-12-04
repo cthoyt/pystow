@@ -11,6 +11,7 @@ from .module import Module
 from .utils import read_tarfile_csv, read_zipfile_csv
 
 __all__ = [
+    'module',
     'get',
     'ensure',
     'ensure_csv',
@@ -18,6 +19,22 @@ __all__ = [
     'ensure_tar_df',
     'ensure_zip_df',
 ]
+
+
+def module(key: str, ensure_exists: bool = True) -> Module:
+    """Return a module for the application.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param ensure_exists:
+        Should all directories be created automatically?
+        Defaults to true.
+    :return:
+        The module object that manages getting and ensuring
+    """
+    return Module.from_key(key, ensure_exists=ensure_exists)
 
 
 def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
@@ -35,8 +52,8 @@ def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
     :return:
         The path of the directory or subdirectory for the given module.
     """
-    module = Module.from_key(key, ensure_exists=ensure_exists)
-    return module.get(*subkeys, ensure_exists=ensure_exists)
+    _module = Module.from_key(key, ensure_exists=ensure_exists)
+    return _module.get(*subkeys, ensure_exists=ensure_exists)
 
 
 def ensure(key: str, *subkeys: str, url: str, name: Optional[str] = None, force: bool = False) -> Path:
@@ -60,8 +77,8 @@ def ensure(key: str, *subkeys: str, url: str, name: Optional[str] = None, force:
     :return:
         The path of the file that has been downloaded (or already exists)
     """
-    module = Module.from_key(key, ensure_exists=True)
-    return module.ensure(*subkeys, url=url, name=name, force=force)
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure(*subkeys, url=url, name=name, force=force)
 
 
 def ensure_csv(
