@@ -3,6 +3,14 @@
 </h1>
 
 <p align="center">
+  <a href="https://github.com/cthoyt/pystow/actions">
+    <img src="https://github.com/cthoyt/pystow/workflows/Tests/badge.svg" alt="Build status" height="18" />
+  </a>
+
+  <a href="https://badge.fury.io/py/pystow">
+    <img src="https://badge.fury.io/py/pystow.svg" alt="PyPI version" height="18" />
+  </a>
+
   <a href='https://opensource.org/licenses/MIT'>
     <img src='https://img.shields.io/badge/License-MIT-blue.svg' alt='License'/>
   </a>
