@@ -23,7 +23,6 @@
 Get a directory for your application.
 
 ```python
-import pystow.api
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
