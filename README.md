@@ -19,16 +19,17 @@
 💪 Example usage:
 
 ```python
+import pystow.api
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
-pykeen_directory = pystow.get('pykeen')
+pykeen_directory = pystow.api.get('pykeen')
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
+pykeen_experiments_directory = pystow.api.get('pykeen', 'experiments')
 
 # You can go as deep as you want
-pykeen_experiments_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
+pykeen_experiments_directory = pystow.api.get('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
 ⚠️ Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment

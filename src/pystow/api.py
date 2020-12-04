@@ -2,58 +2,120 @@
 
 """API functions for PyStow."""
 
-import os
 from pathlib import Path
+from typing import Optional
 
-PYSTOW_NAME_ENVVAR = 'PYSTOW_NAME'
-PYSTOW_HOME_ENVVAR = 'PYSTOW_HOME'
-PYSTOW_NAME_DEFAULT = '.data'
+import pandas as pd
 
+from .module import Module
+from .utils import read_tarfile_csv, read_zipfile_csv
 
-def get_name() -> str:
-    """Get the PyStow home directory name."""
-    return os.getenv(PYSTOW_NAME_ENVVAR) or PYSTOW_NAME_DEFAULT
-
-
-def _env_or_default(envvar: str, default: Path) -> Path:
-    return Path(os.getenv(envvar) or default)
-
-
-def get_home(ensure_exists: bool = True) -> Path:
-    """Get the PyStow home directory."""
-    default = Path.home() / get_name()
-    rv = _env_or_default(PYSTOW_HOME_ENVVAR, default)
-    if ensure_exists:
-        rv.mkdir(exist_ok=True, parents=True)
-    return rv
-
-
-def _assert_valid(key: str) -> None:
-    if '.' in key:
-        raise ValueError
+__all__ = [
+    'get',
+    'ensure',
+    'ensure_csv',
+    'ensure_excel',
+    'ensure_tar_df',
+    'ensure_zip_df',
+]
 
 
 def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
     """Return the home data directory for the given module.
 
-    :param key: The name of the module. No funny characters. The envvar
+    :param key:
+        The name of the module. No funny characters. The envvar
         <key>_HOME where key is uppercased is checked first before using
         the default home directory.
-    :param subkeys: A sequence of additional strings to join
-    :param ensure_exists: Should all directories be created automatically?
+    :param subkeys:
+        A sequence of additional strings to join
+    :param ensure_exists:
+        Should all directories be created automatically?
         Defaults to true.
-    :return: The path of the directory or subdirectory for the given module.
+    :return:
+        The path of the directory or subdirectory for the given module.
     """
-    _assert_valid(key)
-    envvar = f'{key.upper()}_HOME'
-    default = get_home() / key
-    rv = _env_or_default(envvar, default)
-    if ensure_exists:
-        rv.mkdir(exist_ok=True, parents=True)
+    module = Module.from_key(key, ensure_exists=ensure_exists)
+    return module.get(*subkeys, ensure_exists=ensure_exists)
 
-    for subkey in subkeys:
-        rv = rv / subkey
-        if ensure_exists:
-            rv.mkdir(exist_ok=True, parents=True)
 
-    return rv
+def ensure(key: str, *subkeys: str, url: str, name: Optional[str] = None, force: bool = False) -> Path:
+    """Ensure a file is downloaded.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :return:
+        The path of the file that has been downloaded (or already exists)
+    """
+    module = Module.from_key(key, ensure_exists=True)
+    return module.ensure(*subkeys, url=url, name=name, force=force)
+
+
+def ensure_csv(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    sep: str = '\t',
+    **kwargs,
+) -> pd.DataFrame:
+    """Download a CSV and open as a dataframe with :mod:`pandas`."""
+    path = ensure(key, *subkeys, url=url, name=name, force=force)
+    return pd.read_csv(path, sep=sep, **kwargs)
+
+
+def ensure_excel(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    **kwargs,
+) -> pd.DataFrame:
+    """Download an excel file and open as a dataframe with :mod:`pandas`."""
+    path = ensure(key, *subkeys, url=url, name=name, force=force)
+    return pd.read_excel(path, **kwargs)
+
+
+def ensure_tar_df(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    sep: str = '\t',
+    **kwargs,
+) -> pd.DataFrame:
+    """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
+    path = ensure(key, *subkeys, url=url, name=name, force=force)
+    return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **kwargs)
+
+
+def ensure_zip_df(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    sep: str = '\t',
+    **kwargs,
+) -> pd.DataFrame:
+    """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
+    path = ensure(key, *subkeys, url=url, name=name, force=force)
+    return read_zipfile_csv(path=path, inner_path=inner_path, sep=sep, **kwargs)
