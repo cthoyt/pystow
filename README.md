@@ -36,6 +36,28 @@ pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
 pykeen_deep_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
+Ensure a file from the internet is available in your application's directory:
+
+```python
+import pystow
+
+url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+path = pystow.ensure('pykeen', 'datasets', 'nations', url=url)
+```
+
+Ensure a file from the internet and load it for usage:
+
+```python
+import pystow
+
+url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+df = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+
+
+```
+
+Also see `pystow.ensure_excel()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()` .
+
 ## ⚠️ Configuration
 
 Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
