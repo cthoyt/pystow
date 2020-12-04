@@ -14,24 +14,30 @@
 
 👜 Easily pick a place to store data to go with your python package.
 
-🚀 Install with: `pip install pystow`
+## 🚀 Installation
 
-💪 Example usage:
+`pip install pystow`
+
+## 💪 Usage
+
+Get a directory for your application.
 
 ```python
 import pystow.api
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
-pykeen_directory = pystow.api.get('pykeen')
+pykeen_directory = pystow.get('pykeen')
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pystow.api.get('pykeen', 'experiments')
+pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
 
 # You can go as deep as you want
-pykeen_experiments_directory = pystow.api.get('pykeen', 'experiments', 'a', 'b', 'c')
+pykeen_deep_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
-⚠️ Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
+## ⚠️ Configuration
+
+Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
 variable `PYSTOW_NAME`. If you want to change the default parent directory to be other than the home directory,
 set `PYSTOW_HOME`
