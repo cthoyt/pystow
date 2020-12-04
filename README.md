@@ -12,7 +12,7 @@
   </a>
 </p>
 
-👜 Easily pick a place to store data to go with your python package.
+👜 Easily pick a place to store data for your python package.
 
 ## 🚀 Installation
 
