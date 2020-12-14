@@ -3,12 +3,11 @@
 """API functions for PyStow."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 import pandas as pd
 
 from .module import Module
-from .utils import read_tarfile_csv, read_zipfile_csv
 
 __all__ = [
     'module',
@@ -56,7 +55,14 @@ def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
     return _module.get(*subkeys, ensure_exists=ensure_exists)
 
 
-def ensure(key: str, *subkeys: str, url: str, name: Optional[str] = None, force: bool = False) -> Path:
+def ensure(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Path:
     """Ensure a file is downloaded.
 
     :param key:
@@ -74,11 +80,12 @@ def ensure(key: str, *subkeys: str, url: str, name: Optional[str] = None, force:
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :return:
         The path of the file that has been downloaded (or already exists)
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.ensure(*subkeys, url=url, name=name, force=force)
+    return _module.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
 
 
 def ensure_csv(
@@ -87,12 +94,19 @@ def ensure_csv(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
-    sep: str = '\t',
-    **kwargs,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> pd.DataFrame:
     """Download a CSV and open as a dataframe with :mod:`pandas`."""
-    path = ensure(key, *subkeys, url=url, name=name, force=force)
-    return pd.read_csv(path, sep=sep, **kwargs)
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_csv(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        read_csv_kwargs=read_csv_kwargs,
+    )
 
 
 def ensure_excel(
@@ -101,11 +115,19 @@ def ensure_excel(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
-    **kwargs,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    read_excel_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> pd.DataFrame:
     """Download an excel file and open as a dataframe with :mod:`pandas`."""
-    path = ensure(key, *subkeys, url=url, name=name, force=force)
-    return pd.read_excel(path, **kwargs)
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_excel(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        read_excel_kwargs=read_excel_kwargs,
+    )
 
 
 def ensure_tar_df(
@@ -115,12 +137,20 @@ def ensure_tar_df(
     inner_path: str,
     name: Optional[str] = None,
     force: bool = False,
-    sep: str = '\t',
-    **kwargs,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> pd.DataFrame:
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
-    path = ensure(key, *subkeys, url=url, name=name, force=force)
-    return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **kwargs)
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_tar_df(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        inner_path=inner_path,
+        download_kwargs=download_kwargs,
+        read_csv_kwargs=read_csv_kwargs,
+    )
 
 
 def ensure_zip_df(
@@ -130,9 +160,17 @@ def ensure_zip_df(
     inner_path: str,
     name: Optional[str] = None,
     force: bool = False,
-    sep: str = '\t',
-    **kwargs,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> pd.DataFrame:
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
-    path = ensure(key, *subkeys, url=url, name=name, force=force)
-    return read_zipfile_csv(path=path, inner_path=inner_path, sep=sep, **kwargs)
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_zip_df(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        inner_path=inner_path,
+        download_kwargs=download_kwargs,
+        read_csv_kwargs=read_csv_kwargs,
+    )

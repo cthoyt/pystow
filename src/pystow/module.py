@@ -5,9 +5,11 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Mapping, Optional, Union
 
-from .utils import download, getenv_path, mkdir, name_from_url
+import pandas as pd
+
+from .utils import download, getenv_path, mkdir, name_from_url, read_tarfile_csv, read_zipfile_csv
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,7 @@ class Module:
         url: str,
         name: Optional[str] = None,
         force: bool = False,
-        **kwargs,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
         """Ensure a file is downloaded.
 
@@ -118,7 +120,7 @@ class Module:
         :param force:
             Should the download be done again, even if the path already exists?
             Defaults to false.
-        :param kwargs: Keyword arguments to pass through to :func:`better_urlretrieve`.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
         :return:
             The path of the file that has been downloaded (or already exists)
         """
@@ -131,6 +133,68 @@ class Module:
             download(
                 url=url,
                 path=path,
-                **kwargs,
+                **(download_kwargs or {}),
             )
         return path
+
+    def ensure_csv(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> pd.DataFrame:
+        """Download a CSV and open as a dataframe with :mod:`pandas`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
+
+    def ensure_excel(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        read_excel_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> pd.DataFrame:
+        """Download an excel file and open as a dataframe with :mod:`pandas`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        return pd.read_excel(path, **(read_excel_kwargs or {}))
+
+    def ensure_tar_df(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        sep: str = '\t',
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> pd.DataFrame:
+        """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **_clean_csv_kwargs(read_csv_kwargs))
+
+    def ensure_zip_df(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> pd.DataFrame:
+        """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        return read_zipfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
+
+
+def _clean_csv_kwargs(read_csv_kwargs):
+    if read_csv_kwargs is None:
+        read_csv_kwargs = {}
+    read_csv_kwargs.setdefault('sep', '\t')
+    return read_csv_kwargs
