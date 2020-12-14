@@ -6,9 +6,8 @@ import logging
 import os
 from pathlib import Path
 from typing import Optional, Union
-from urllib.request import urlretrieve
 
-from .utils import getenv_path, mkdir, name_from_url
+from .utils import download, getenv_path, mkdir, name_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +103,7 @@ class Module:
         url: str,
         name: Optional[str] = None,
         force: bool = False,
+        **kwargs,
     ) -> Path:
         """Ensure a file is downloaded.
 
@@ -118,6 +118,7 @@ class Module:
         :param force:
             Should the download be done again, even if the path already exists?
             Defaults to false.
+        :param kwargs: Keyword arguments to pass through to :func:`better_urlretrieve`.
         :return:
             The path of the file that has been downloaded (or already exists)
         """
@@ -127,5 +128,9 @@ class Module:
         path = directory / name
         if not path.exists() or force:
             logger.info('downloading data from %s to %s', url, path)
-            urlretrieve(url, path.as_posix())  # noqa:S310
+            download(
+                url=url,
+                path=path,
+                **kwargs,
+            )
         return path

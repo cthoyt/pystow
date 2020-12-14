@@ -3,16 +3,61 @@
 """Utilities."""
 
 import contextlib
+import logging
 import os
+import shutil
 import tarfile
 import zipfile
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from typing import Union
 from urllib.parse import urlparse
+from urllib.request import urlretrieve
 from uuid import uuid4
 
 import pandas as pd
+import requests
+
+logger = logging.getLogger(__name__)
+
+
+def download(
+    url: str,
+    path: Union[str, Path],
+    clean_on_failure: bool = True,
+    backend: str = 'urllib',
+    **kwargs,
+) -> None:
+    """Download a file from a given URL.
+
+    :param url: URL to download
+    :param path: Path to download the file to
+    :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param backend: The downloader to use. Choose 'urllib' or 'requests'
+    :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
+        depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
+
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    :raises ValueError: If an invalid backend is chosen
+    """
+    try:
+        if backend == 'urllib':
+            logger.info('downloading from %s to %s', url, path)
+            urlretrieve(url, path, **kwargs)  # noqa:S310
+        elif backend == 'requests':
+            kwargs.setdefault('stream', True)
+            # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
+            # pattern from https://stackoverflow.com/a/39217788/5775947
+            with requests.get(url, **kwargs) as response, open(path, 'wb') as file:
+                logger.info('downloading (stream=%s) from %s to %s', kwargs['stream'], url, path)
+                shutil.copyfileobj(response.raw, file)
+        else:
+            raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
+    except (Exception, KeyboardInterrupt):
+        if clean_on_failure:
+            os.remove(path)
+        raise
 
 
 def name_from_url(url: str) -> str:
