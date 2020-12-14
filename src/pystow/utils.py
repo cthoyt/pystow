@@ -68,10 +68,10 @@ def name_from_url(url: str) -> str:
     return name
 
 
-def mkdir(path: Path, ensure_exists: bool = True) -> None:
+def mkdir(path: Path, ensure_exists: bool = True, suffix_check: bool = True) -> None:
     """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``."""
     if ensure_exists:
-        if path.suffix:  # if it looks like a file path
+        if suffix_check and path.suffix:  # if it looks like a file path
             path.parent.mkdir(exist_ok=True, parents=True)
         else:
             path.mkdir(exist_ok=True, parents=True)

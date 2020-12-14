@@ -81,7 +81,7 @@ class Module:
         base = self.get(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
 
-    def get(self, *subkeys: str, ensure_exists: bool = True) -> Path:
+    def get(self, *subkeys: str, ensure_exists: bool = True, suffix_check: bool = True) -> Path:
         """Get a subdirectory of the current module.
 
         :param subkeys:
@@ -90,13 +90,16 @@ class Module:
         :param ensure_exists:
             Should all directories be created automatically?
             Defaults to true.
+        :param suffix_check:
+            Should the last part of the path be checked for a suffix (i.e., contains a dot)?
+            Turn off if your final directory is not a file name but does contain dots.
         :return:
             The path of the directory or subdirectory for the given module.
         """
         rv = self.base
         if subkeys:
             rv = rv.joinpath(*subkeys)
-        mkdir(rv, ensure_exists=ensure_exists)
+        mkdir(rv, ensure_exists=ensure_exists, suffix_check=suffix_check)
         return rv
 
     def ensure(
@@ -126,7 +129,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        directory = self.get(*subkeys, ensure_exists=True)
+        directory = self.get(*subkeys, ensure_exists=True, suffix_check=False)
         path = directory / name
         if not path.exists() or force:
             logger.info('downloading data from %s to %s', url, path)
