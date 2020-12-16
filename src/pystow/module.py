@@ -150,7 +150,7 @@ class Module:
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
         """Download a CSV and open as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
     def ensure_excel(
@@ -163,7 +163,7 @@ class Module:
         read_excel_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
         """Download an excel file and open as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return pd.read_excel(path, **(read_excel_kwargs or {}))
 
     def ensure_tar_df(
@@ -178,7 +178,7 @@ class Module:
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **_clean_csv_kwargs(read_csv_kwargs))
 
     def ensure_zip_df(
@@ -192,7 +192,7 @@ class Module:
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, **(download_kwargs or {}))
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_zipfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
 
 
