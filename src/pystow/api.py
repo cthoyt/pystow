@@ -3,11 +3,14 @@
 """API functions for PyStow."""
 
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, TYPE_CHECKING
 
 import pandas as pd
 
 from .module import Module
+
+if TYPE_CHECKING:
+    import rdflib
 
 __all__ = [
     'module',
@@ -176,4 +179,27 @@ def ensure_zip_df(
         inner_path=inner_path,
         download_kwargs=download_kwargs,
         read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def ensure_rdf(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    precache: bool = True,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+) -> 'rdflib.Graph':
+    """Download a RDF file and open with :mod:`rdflib`."""
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_rdf(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        precache=precache,
+        parse_kwargs=parse_kwargs,
     )
