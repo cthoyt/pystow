@@ -154,9 +154,9 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs
 def get_commit(org: str, repo: str, provider: str = 'git') -> str:
     """Get last commit hash for the given repo."""
     if provider == 'git':
-        r = check_output(['git', 'ls-remote', f'https://github.com/{org}/{repo}'])  # noqa
-        r = (line.strip().split('\t') for line in r.decode('utf8').splitlines())
-        rv = next(line[0] for line in r if line[1] == 'HEAD')
+        output = check_output(['git', 'ls-remote', f'https://github.com/{org}/{repo}'])  # noqa
+        lines = (line.strip().split('\t') for line in output.decode('utf8').splitlines())
+        rv = next(line[0] for line in lines if line[1] == 'HEAD')
     elif provider == 'github':
         res = requests.get(f'https://api.github.com/repos/{org}/{repo}/branches/master')
         res_json = res.json()
