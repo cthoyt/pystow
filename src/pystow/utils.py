@@ -3,6 +3,7 @@
 """Utilities."""
 
 import contextlib
+import gzip
 import logging
 import os
 import shutil
@@ -11,13 +12,16 @@ import zipfile
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Union
+from typing import TYPE_CHECKING, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
 
 import pandas as pd
 import requests
+
+if TYPE_CHECKING:
+    import rdflib
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +153,22 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs
     with tarfile.open(path) as tar_file:
         with tar_file.extractfile(inner_path) as file:  # type: ignore
             return pd.read_csv(file, sep=sep, **kwargs)
+
+
+def read_rdf(path: Union[str, Path], **kwargs) -> 'rdflib.Graph':
+    """Read an RDF file with :mod:`rdflib`."""
+    import rdflib
+    graph = rdflib.Graph()
+    with gzip.open(path) if _is_gzip(path) else open(path) as file:  # type: ignore
+        graph.parse(file, **kwargs)
+    return graph
+
+
+def _is_gzip(path: Union[str, Path]) -> bool:
+    return (
+        isinstance(path, str) and path.endswith('.gz')
+        or isinstance(path, Path) and path.suffix == 'gz'
+    )
 
 
 def get_commit(org: str, repo: str, provider: str = 'git') -> str:

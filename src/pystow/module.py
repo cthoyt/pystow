@@ -5,11 +5,14 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
 
 import pandas as pd
 
-from .utils import download, getenv_path, mkdir, name_from_url, read_tarfile_csv, read_zipfile_csv
+from .utils import download, getenv_path, mkdir, name_from_url, read_rdf, read_tarfile_csv, read_zipfile_csv
+
+if TYPE_CHECKING:
+    import rdflib
 
 logger = logging.getLogger(__name__)
 
@@ -194,6 +197,19 @@ class Module:
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_zipfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
+
+    def ensure_rdf(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        parse_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> 'rdflib.Graph':
+        """Download a RDF file and open with :mod:`rdflib`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        return read_rdf(path=path, **(parse_kwargs or {}))
 
 
 def _clean_csv_kwargs(read_csv_kwargs):
