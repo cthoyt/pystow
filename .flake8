@@ -3,6 +3,10 @@
 # (.flake8)             #
 #########################
 [flake8]
+ignore =
+    S403 # pickle
+    S301 # pickle
+    W503 # line break before binary operator
 exclude =
     .tox,
     .git,

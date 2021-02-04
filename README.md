@@ -63,7 +63,7 @@ df = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
 
 ```
 
-Also see `pystow.ensure_excel()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()` .
+Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
 ## ⚠️ Configuration
 

@@ -2,8 +2,10 @@
 
 """Module implementation."""
 
+import gzip
 import logging
 import os
+import pickle
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
 
@@ -205,11 +207,23 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
+        precache: bool = True,
         parse_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> 'rdflib.Graph':
         """Download a RDF file and open with :mod:`rdflib`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        return read_rdf(path=path, **(parse_kwargs or {}))
+        if not precache:
+            return read_rdf(path=path, **(parse_kwargs or {}))
+
+        cache_path = path.with_suffix(path.suffix + '.pickle.gz')
+        if cache_path.exists() and not force:
+            with gzip.open(cache_path, 'rb') as file:
+                return pickle.load(file)  # type: ignore
+
+        rv = read_rdf(path=path, **(parse_kwargs or {}))
+        with gzip.open(cache_path, 'wb') as file:
+            pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)  # type: ignore
+        return rv
 
 
 def _clean_csv_kwargs(read_csv_kwargs):

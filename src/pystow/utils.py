@@ -158,17 +158,16 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs
 def read_rdf(path: Union[str, Path], **kwargs) -> 'rdflib.Graph':
     """Read an RDF file with :mod:`rdflib`."""
     import rdflib
+    if isinstance(path, str):
+        path = Path(path)
     graph = rdflib.Graph()
-    with gzip.open(path) if _is_gzip(path) else open(path) as file:  # type: ignore
+    with (
+        gzip.open(path, 'rb')  # type: ignore
+        if isinstance(path, Path) and path.suffix == '.gz' else
+        open(path)
+    ) as file:
         graph.parse(file, **kwargs)
     return graph
-
-
-def _is_gzip(path: Union[str, Path]) -> bool:
-    return (
-        isinstance(path, str) and path.endswith('.gz')
-        or isinstance(path, Path) and path.suffix == 'gz'
-    )
 
 
 def get_commit(org: str, repo: str, provider: str = 'git') -> str:
