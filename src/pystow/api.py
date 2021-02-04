@@ -20,20 +20,23 @@ __all__ = [
 ]
 
 
-def module(key: str, ensure_exists: bool = True) -> Module:
+def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
     """Return a module for the application.
 
     :param key:
         The name of the module. No funny characters. The envvar
         <key>_HOME where key is uppercased is checked first before using
         the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
     :param ensure_exists:
         Should all directories be created automatically?
         Defaults to true.
     :return:
         The module object that manages getting and ensuring
     """
-    return Module.from_key(key, ensure_exists=ensure_exists)
+    return Module.from_key(key, *subkeys, ensure_exists=ensure_exists)
 
 
 def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
