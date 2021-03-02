@@ -12,6 +12,7 @@ from .utils import getenv_path
 
 __all__ = [
     'get_config',
+    'write_config',
 ]
 
 CONFIG_NAME_ENVVAR = 'PYSTOW_CONFIG_NAME'
@@ -56,3 +57,14 @@ def get_config(module: str, key: str, fallback: Optional[str] = None) -> Optiona
     if rv is not None:
         return rv
     return _get_cfp(module).get(module, key, fallback=None)
+
+
+def write_config(module: str, key: str, value: str) -> None:
+    """Write a configuration value."""
+    _get_cfp.cache_clear()
+    cfp = ConfigParser()
+    path = get_home() / f'{module}.ini'
+    cfp.read(path)
+    cfp.set(module, key, value)
+    with path.open('w') as file:
+        cfp.write(file)
