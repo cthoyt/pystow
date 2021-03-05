@@ -2,6 +2,7 @@
 
 """API functions for PyStow."""
 
+import warnings
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
@@ -42,7 +43,7 @@ def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
     return Module.from_key(key, *subkeys, ensure_exists=ensure_exists)
 
 
-def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
+def join(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
     """Return the home data directory for the given module.
 
     :param key:
@@ -58,7 +59,13 @@ def get(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
         The path of the directory or subdirectory for the given module.
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
-    return _module.get(*subkeys, ensure_exists=ensure_exists)
+    return _module.join(*subkeys, ensure_exists=ensure_exists)
+
+
+def get(*args, **kwargs):
+    """Get a subdirectory of the current module, deprecated in favor of :func:`join`."""
+    warnings.warn('Use pystow.join instead of pystow.get', DeprecationWarning)
+    return join(*args, **kwargs)
 
 
 def ensure(

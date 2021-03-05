@@ -6,6 +6,7 @@ import gzip
 import logging
 import os
 import pickle
+import warnings
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
 
@@ -83,10 +84,10 @@ class Module:
         :return:
             A module representing the subdirectory based on the given ``subkeys``.
         """
-        base = self.get(*subkeys, ensure_exists=False)
+        base = self.join(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
 
-    def get(self, *subkeys: str, ensure_exists: bool = True, suffix_check: bool = True) -> Path:
+    def join(self, *subkeys: str, ensure_exists: bool = True, suffix_check: bool = True) -> Path:
         """Get a subdirectory of the current module.
 
         :param subkeys:
@@ -106,6 +107,11 @@ class Module:
             rv = rv.joinpath(*subkeys)
         mkdir(rv, ensure_exists=ensure_exists, suffix_check=suffix_check)
         return rv
+
+    def get(self, *args, **kwargs):
+        """Get a subdirectory of the current module, deprecated in favor of :meth:`join`."""
+        warnings.warn('Use Module.join instead of Module.get', DeprecationWarning)
+        return self.join(*args, **kwargs)
 
     def ensure(
         self,
@@ -134,7 +140,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        directory = self.get(*subkeys, ensure_exists=True, suffix_check=False)
+        directory = self.join(*subkeys, ensure_exists=True, suffix_check=False)
         path = directory / name
         if not path.exists() or force:
             logger.info('downloading data from %s to %s', url, path)
