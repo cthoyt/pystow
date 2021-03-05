@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     'module',
+    'join',
     'get',
     'ensure',
     'ensure_csv',
