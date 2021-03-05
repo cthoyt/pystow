@@ -15,6 +15,10 @@
     <img src='https://img.shields.io/badge/License-MIT-blue.svg' alt='License'/>
   </a>
 
+  <a href='https://pystow.readthedocs.io/en/latest/?badge=latest'>
+    <img src='https://readthedocs.org/projects/pystow/badge/?version=latest' alt='Documentation Status' />
+  </a>
+
   <a href="https://zenodo.org/badge/latestdoi/318194121">
     <img src="https://zenodo.org/badge/318194121.svg" alt="DOI">
   </a>
