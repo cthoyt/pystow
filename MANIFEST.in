@@ -1,6 +1,7 @@
 graft src
 graft tests
 
+recursive-include docs Makefile
 recursive-include docs/source *.py
 recursive-include docs/source *.rst
 recursive-include docs/source *.png
