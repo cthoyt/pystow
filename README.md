@@ -22,10 +22,6 @@
 
 👜 Easily pick a place to store data for your python package.
 
-## 🚀 Installation
-
-`pip install pystow`
-
 ## 💪 Usage
 
 Get a directory for your application.
@@ -65,8 +61,35 @@ df = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
-## ⚠️ Configuration
+### ⚠️ Configuration
 
 Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
 variable `PYSTOW_NAME`. If you want to change the default parent directory to be other than the home directory,
 set `PYSTOW_HOME`
+
+## 🚀 Installation
+
+The most recent release can be installed from
+[PyPI](https://pypi.org/project/pystow/) with:
+
+```bash
+$ pip install pystow
+```
+
+The most recent code and data can be installed directly from GitHub with:
+
+```bash
+$ pip install git+https://github.com/cthoyt/pystow.git
+```
+
+To install in development mode, use the following:
+
+```bash
+$ git clone git+https://github.com/cthoyt/pystow.git
+$ cd pystow
+$ pip install -e .
+```
+
+## ⚖️ License
+
+The code in this package is licensed under the MIT License.
