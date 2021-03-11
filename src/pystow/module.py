@@ -142,13 +142,12 @@ class Module:
             name = name_from_url(url)
         directory = self.join(*subkeys, ensure_exists=True, suffix_check=False)
         path = directory / name
-        if not path.exists() or force:
-            logger.info('downloading data from %s to %s', url, path)
-            download(
-                url=url,
-                path=path,
-                **(download_kwargs or {}),
-            )
+        download(
+            url=url,
+            path=path,
+            force=force,
+            **(download_kwargs or {}),
+        )
         return path
 
     def ensure_csv(

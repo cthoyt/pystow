@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 def download(
     url: str,
     path: Union[str, Path],
+    force: bool = True,
     clean_on_failure: bool = True,
     backend: str = 'urllib',
     **kwargs,
@@ -37,6 +38,7 @@ def download(
 
     :param url: URL to download
     :param path: Path to download the file to
+    :param force: If false and the file already exists, will not re-download.
     :param clean_on_failure: If true, will delete the file on any exception raised during download
     :param backend: The downloader to use. Choose 'urllib' or 'requests'
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
@@ -46,6 +48,10 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
+    if os.path.exists(path) and not force:
+        logger.debug('did not re-download %s from %s', path, url)
+        return
+
     try:
         if backend == 'urllib':
             logger.info('downloading from %s to %s', url, path)
