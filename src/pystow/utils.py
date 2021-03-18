@@ -67,7 +67,10 @@ def download(
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            os.remove(path)
+            try:
+                os.remove(path)
+            except FileExistsError:
+                pass  # if the file can't be deleted then no problem
         raise
 
 
