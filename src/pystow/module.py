@@ -146,7 +146,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        directory = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.join(*subkeys, name=name, ensure_exists=True)
         download(
             url=url,
             path=path,
