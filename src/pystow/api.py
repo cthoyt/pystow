@@ -4,13 +4,9 @@
 
 import warnings
 from pathlib import Path
-from typing import Any, Mapping, Optional, TYPE_CHECKING
+from typing import Any, Mapping, Optional
 
 from .module import Module
-
-if TYPE_CHECKING:
-    import rdflib
-    import pandas as pd
 
 __all__ = [
     'module',
@@ -111,8 +107,35 @@ def ensure_csv(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> 'pd.DataFrame':
-    """Download a CSV and open as a dataframe with :mod:`pandas`."""
+):
+    """Download a CSV and open as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+    :return: A pandas DataFrame
+    :rtype: pandas.DataFrame
+
+    Example usage::
+
+    .. code-block:: python
+
+        >>> import pystow
+        >>> import pandas as pd
+        >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+        >>> df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_csv(
         *subkeys,
@@ -132,8 +155,26 @@ def ensure_excel(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-) -> 'pd.DataFrame':
-    """Download an excel file and open as a dataframe with :mod:`pandas`."""
+):
+    """Download an excel file and open as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
+    :return: A pandas DataFrame
+    :rtype: pandas.DataFrame
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_excel(
         *subkeys,
@@ -154,7 +195,7 @@ def ensure_tar_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> 'pd.DataFrame':
+):
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_df(
@@ -177,7 +218,7 @@ def ensure_zip_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> 'pd.DataFrame':
+):
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_df(
@@ -200,8 +241,36 @@ def ensure_rdf(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     precache: bool = True,
     parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> 'rdflib.Graph':
-    """Download a RDF file and open with :mod:`rdflib`."""
+):
+    """Download a RDF file and open with :mod:`rdflib`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
+    :param parse_kwargs: Keyword arguments to pass through to :func:`pystow.utils.read_rdf`.
+    :return: An RDF graph
+    :rtype: rdflib.Graph
+
+    Example usage::
+
+    .. code-block:: python
+
+        >>> import pystow
+        >>> import rdflib
+        >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
+        >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(
         *subkeys,
