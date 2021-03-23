@@ -34,13 +34,13 @@ Get a directory for your application.
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
-pykeen_directory = pystow.get('pykeen')
+pykeen_directory = pystow.join('pykeen')
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pystow.get('pykeen', 'experiments')
+pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
 
 # You can go as deep as you want
-pykeen_deep_directory = pystow.get('pykeen', 'experiments', 'a', 'b', 'c')
+pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
 Ensure a file from the internet is available in your application's directory:
@@ -52,15 +52,24 @@ url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/dataset
 path = pystow.ensure('pykeen', 'datasets', 'nations', url=url)
 ```
 
-Ensure a file from the internet and load it for usage:
+Ensure a tabular data file from the internet and load it for usage (requires `pip install pandas`):
 
 ```python
 import pystow
+import pandas as pd
 
 url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-df = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+```
 
+Ensure a RDF file from the internet and load it for usage (requires `pip install rdflib`)
 
+```python
+import pystow
+import rdflib
+
+url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
+rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 ```
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.

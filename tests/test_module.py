@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pystow import ensure_csv, get
+from pystow import ensure_csv, join
 from pystow.module import Module, PYSTOW_HOME_ENVVAR, PYSTOW_NAME_ENVVAR, get_home, get_name
 from pystow.utils import mock_envvar, n
 
@@ -81,7 +81,7 @@ class TestGet(unittest.TestCase):
         with self.mock_directory():
             for parts in parts_examples:
                 with self.subTest(parts=parts):
-                    self.assertEqual(self.join(*parts), get(*parts))
+                    self.assertEqual(self.join(*parts), join(*parts))
 
     def test_ensure(self):
         """Test ensuring a CSV file."""
