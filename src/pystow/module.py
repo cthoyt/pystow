@@ -10,12 +10,11 @@ import warnings
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
 
-import pandas as pd
-
 from .utils import download, getenv_path, mkdir, name_from_url, read_rdf, read_tarfile_csv, read_zipfile_csv
 
 if TYPE_CHECKING:
     import rdflib
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +162,10 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> pd.DataFrame:
+    ) -> 'pd.DataFrame':
         """Download a CSV and open as a dataframe with :mod:`pandas`."""
+        import pandas as pd
+
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
@@ -176,7 +177,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> pd.DataFrame:
+    ) -> 'pd.DataFrame':
         """Download an excel file and open as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return pd.read_excel(path, **(read_excel_kwargs or {}))
@@ -191,7 +192,7 @@ class Module:
         sep: str = '\t',
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> pd.DataFrame:
+    ) -> 'pd.DataFrame':
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **_clean_csv_kwargs(read_csv_kwargs))
@@ -205,7 +206,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> pd.DataFrame:
+    ) -> 'pd.DataFrame':
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_zipfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))

@@ -6,12 +6,11 @@ import warnings
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
-import pandas as pd
-
 from .module import Module
 
 if TYPE_CHECKING:
     import rdflib
+    import pandas as pd
 
 __all__ = [
     'module',
@@ -112,7 +111,7 @@ def ensure_csv(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> pd.DataFrame:
+) -> 'pd.DataFrame':
     """Download a CSV and open as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_csv(
@@ -133,7 +132,7 @@ def ensure_excel(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-) -> pd.DataFrame:
+) -> 'pd.DataFrame':
     """Download an excel file and open as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_excel(
@@ -155,7 +154,7 @@ def ensure_tar_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> pd.DataFrame:
+) -> 'pd.DataFrame':
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_df(
@@ -178,7 +177,7 @@ def ensure_zip_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> pd.DataFrame:
+) -> 'pd.DataFrame':
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_df(
