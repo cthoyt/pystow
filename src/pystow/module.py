@@ -87,7 +87,12 @@ class Module:
         base = self.join(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
 
-    def join(self, *subkeys: str, ensure_exists: bool = True, suffix_check: bool = True) -> Path:
+    def join(
+        self,
+        *subkeys: str,
+        name: Optional[str] = None,
+        ensure_exists: bool = True,
+    ) -> Path:
         """Get a subdirectory of the current module.
 
         :param subkeys:
@@ -96,16 +101,17 @@ class Module:
         :param ensure_exists:
             Should all directories be created automatically?
             Defaults to true.
-        :param suffix_check:
-            Should the last part of the path be checked for a suffix (i.e., contains a dot)?
-            Turn off if your final directory is not a file name but does contain dots.
+        :param name:
+            The name of the file (optional) inside the folder
         :return:
             The path of the directory or subdirectory for the given module.
         """
         rv = self.base
         if subkeys:
             rv = rv.joinpath(*subkeys)
-        mkdir(rv, ensure_exists=ensure_exists, suffix_check=suffix_check)
+            mkdir(rv, ensure_exists=ensure_exists)
+        if name:
+            rv = rv.joinpath(name)
         return rv
 
     def get(self, *args, **kwargs):
@@ -140,8 +146,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        directory = self.join(*subkeys, ensure_exists=True, suffix_check=False)
-        path = directory / name
+        path = self.join(*subkeys, name=name, ensure_exists=True)
         download(
             url=url,
             path=path,

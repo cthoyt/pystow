@@ -44,7 +44,7 @@ def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
     return Module.from_key(key, *subkeys, ensure_exists=ensure_exists)
 
 
-def join(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
+def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: bool = True) -> Path:
     """Return the home data directory for the given module.
 
     :param key:
@@ -53,6 +53,8 @@ def join(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
         the default home directory.
     :param subkeys:
         A sequence of additional strings to join
+    :param name:
+        The name of the file (optional) inside the folder
     :param ensure_exists:
         Should all directories be created automatically?
         Defaults to true.
@@ -60,7 +62,7 @@ def join(key: str, *subkeys: str, ensure_exists: bool = True) -> Path:
         The path of the directory or subdirectory for the given module.
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
-    return _module.join(*subkeys, ensure_exists=ensure_exists)
+    return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
 
 
 def get(*args, **kwargs):
