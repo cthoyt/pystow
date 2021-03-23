@@ -164,6 +164,8 @@ class Module:
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> 'pd.DataFrame':
         """Download a CSV and open as a dataframe with :mod:`pandas`."""
+        import pandas as pd
+
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
