@@ -17,11 +17,11 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
 
-import pandas as pd
 import requests
 
 if TYPE_CHECKING:
     import rdflib
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ def n() -> str:
     return str(uuid4())
 
 
-def get_df_io(df: pd.DataFrame, sep: str = '\t', index: bool = False, **kwargs) -> BytesIO:
+def get_df_io(df: 'pd.DataFrame', sep: str = '\t', index: bool = False, **kwargs) -> BytesIO:
     """Get the dataframe as bytes."""
     sio = StringIO()
     df.to_csv(sio, sep=sep, index=index, **kwargs)
@@ -118,7 +118,7 @@ def get_df_io(df: pd.DataFrame, sep: str = '\t', index: bool = False, **kwargs) 
 
 
 def write_zipfile_csv(
-    df: pd.DataFrame,
+    df: 'pd.DataFrame',
     path: Union[str, Path],
     inner_path: str, sep='\t',
     index: bool = False,
@@ -131,15 +131,17 @@ def write_zipfile_csv(
             file.write(bytes_io.read())
 
 
-def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> pd.DataFrame:
+def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> 'pd.DataFrame':
     """Read an inner CSV file from a zip archive."""
+    import pandas as pd
+
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
 def write_tarfile_csv(
-    df: pd.DataFrame,
+    df: 'pd.DataFrame',
     path: Union[str, Path],
     inner_path: str,
     sep='\t',
@@ -154,8 +156,10 @@ def write_tarfile_csv(
     #        file.write(bytes_io.read())
 
 
-def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> pd.DataFrame:
+def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> 'pd.DataFrame':
     """Read an inner CSV file from a tar archive."""
+    import pandas as pd
+
     with tarfile.open(path) as tar_file:
         with tar_file.extractfile(inner_path) as file:  # type: ignore
             return pd.read_csv(file, sep=sep, **kwargs)
