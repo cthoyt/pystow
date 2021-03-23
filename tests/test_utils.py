@@ -41,24 +41,6 @@ class TestUtils(unittest.TestCase):
             mkdir(subdirectory, ensure_exists=True)
             self.assertTrue(subdirectory.exists())
 
-    def test_mkdir_file(self):
-        """Test for ensuring a directory for a :class:`Path` to a file."""
-        with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
-            subdirectory = directory / 'sd2'
-            self.assertFalse(subdirectory.exists())
-
-            path = subdirectory / 'test.tsv'
-            self.assertFalse(path.exists())
-
-            mkdir(path, ensure_exists=False)
-            self.assertFalse(subdirectory.exists())
-            self.assertFalse(path.exists())
-
-            mkdir(path, ensure_exists=True)
-            self.assertTrue(subdirectory.exists())
-            self.assertFalse(path.exists())
-
     def test_mock_envvar(self):
         """Test that environment variables can be mocked properly."""
         name, value = n(), n()
