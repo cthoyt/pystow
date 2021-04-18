@@ -44,7 +44,7 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
 
 def _assert_valid(key: str) -> None:
     if '.' in key:
-        raise ValueError
+        raise ValueError(f'The module should not have a dot in it: {key}')
 
 
 class Module:
