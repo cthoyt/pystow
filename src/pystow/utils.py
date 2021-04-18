@@ -82,6 +82,11 @@ def name_from_url(url: str) -> str:
     return name
 
 
+def name_from_s3_key(key: str) -> str:
+    """Get the filename from the S3 key."""
+    return key.split('/')[-1]
+
+
 def mkdir(path: Path, ensure_exists: bool = True) -> None:
     """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``."""
     if ensure_exists:

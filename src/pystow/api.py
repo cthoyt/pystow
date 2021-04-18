@@ -4,7 +4,7 @@
 
 import warnings
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Sequence, Union
 
 from .module import Module
 
@@ -17,6 +17,7 @@ __all__ = [
     'ensure_excel',
     'ensure_tar_df',
     'ensure_zip_df',
+    'ensure_from_s3',
     'ensure_rdf',
 ]
 
@@ -282,3 +283,41 @@ def ensure_rdf(
         precache=precache,
         parse_kwargs=parse_kwargs,
     )
+
+
+def ensure_from_s3(
+    key: str,
+    *subkeys: str,
+    s3_bucket: str,
+    s3_key: Union[str, Sequence[str]],
+    name: Optional[str] = None,
+    force: bool = False,
+) -> Path:
+    """Ensure a file is downloaded.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param s3_bucket:
+        The S3 bucket name
+    :param s3_key:
+        The S3 key name
+    :param name:
+        Overrides the name of the file at the end of the S3 key, if given.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :return:
+        The path of the file that has been downloaded (or already exists)
+
+    Example downloading ProtMapper 0.0.21:
+
+    >>> version = '0.0.21'
+    >>> ensure_from_s3('test', version, s3_bucket='bigmech', s3_key=f'protmapper/{version}/refseq_uniprot.csv')
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_from_s3(*subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force)

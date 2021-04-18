@@ -9,13 +9,17 @@ import pickle
 import warnings
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
+from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
-from .utils import download, getenv_path, mkdir, name_from_url, read_rdf, read_tarfile_csv, read_zipfile_csv
+from .utils import (
+    download, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf, read_tarfile_csv,
+    read_zipfile_csv,
+)
 
 if TYPE_CHECKING:
     import rdflib
     import pandas as pd
+    import botocore.client
 
 logger = logging.getLogger(__name__)
 
@@ -272,6 +276,61 @@ class Module:
         with gzip.open(cache_path, 'wb') as file:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)  # type: ignore
         return rv
+
+    def ensure_from_s3(
+        self,
+        *subkeys: str,
+        s3_bucket: str,
+        s3_key: Union[str, Sequence[str]],
+        name: Optional[str] = None,
+        client: Optional['botocore.client.BaseClient'] = None,
+        client_kwargs: Optional[Mapping[str, Any]] = None,
+        download_file_kwargs: Optional[Mapping[str, Any]] = None,
+        force: bool = False,
+    ) -> Path:
+        """Ensure a file is downloaded.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param s3_bucket:
+            The S3 bucket name
+        :param s3_key:
+            The S3 key name
+        :param name:
+            Overrides the name of the file at the end of the S3 key, if given.
+        :param client:
+            A botocore client. If none given, one will be created automatically
+        :param client_kwargs:
+            Keyword arguments to be passed to the client on instantiation.
+        :param download_file_kwargs:
+            Keyword arguments to be passed to :func:`boto3.s3.transfer.S3Transfer.download_file`
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :return:
+            The path of the file that has been downloaded (or already exists)
+        """
+        if not isinstance(s3_key, str):
+            s3_key = '/'.join(s3_key)  # join sequence
+        if name is None:
+            name = name_from_s3_key(s3_key)
+        path = self.join(*subkeys, name=name, ensure_exists=True)
+        if path.exists() and not force:
+            return path
+
+        import boto3.s3.transfer
+        if client is None:
+            import boto3
+            import botocore.client
+            client_kwargs = {} if client_kwargs is None else dict(client_kwargs)
+            client_kwargs.setdefault('config', botocore.client.Config(signature_version=botocore.UNSIGNED))
+            client = boto3.client('s3', **client_kwargs)
+
+        download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
+        download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
+        client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
+        return path
 
 
 def _clean_csv_kwargs(read_csv_kwargs):
