@@ -17,6 +17,7 @@ __all__ = [
     'ensure_excel',
     'ensure_tar_df',
     'ensure_zip_df',
+    'ensure_rdf',
 ]
 
 
