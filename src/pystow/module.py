@@ -168,8 +168,7 @@ class Module:
     ):
         """Ensure a file is downloaded then open it."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        if open_kwargs is None:
-            open_kwargs = {}
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault('mode', mode)
         with path.open(**open_kwargs) as file:
             yield file
@@ -187,8 +186,7 @@ class Module:
     ):
         """Ensure a gzipped file is downloaded then open it."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        if open_kwargs is None:
-            open_kwargs = {}
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault('mode', mode)
         with gzip.open(path, **open_kwargs) as file:
             yield file
