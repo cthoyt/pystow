@@ -7,6 +7,7 @@ import logging
 import os
 import pickle
 import warnings
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
 
@@ -153,6 +154,44 @@ class Module:
             **(download_kwargs or {}),
         )
         return path
+
+    @contextmanager
+    def ensure_open(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = 'r',
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        if open_kwargs is None:
+            open_kwargs = {}
+        open_kwargs.setdefault('mode', mode)
+        with path.open(**open_kwargs) as file:
+            yield file
+
+    @contextmanager
+    def ensure_open_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = 'rb',
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a gzipped file is downloaded then open it."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        if open_kwargs is None:
+            open_kwargs = {}
+        open_kwargs.setdefault('mode', mode)
+        with gzip.open(path, **open_kwargs) as file:
+            yield file
 
     def ensure_csv(
         self,
