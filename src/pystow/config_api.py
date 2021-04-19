@@ -6,7 +6,7 @@ import os
 from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 from .utils import getenv_path
 
@@ -14,6 +14,8 @@ __all__ = [
     'get_config',
     'write_config',
 ]
+
+X = TypeVar('X')
 
 CONFIG_NAME_ENVVAR = 'PYSTOW_CONFIG_NAME'
 CONFIG_HOME_ENVVAR = 'PYSTOW_CONFIG_HOME'
@@ -56,9 +58,10 @@ def _get_cfp(module: str) -> ConfigParser:
 def get_config(
     module: str,
     key: str, *,
-    passthrough: Optional[str] = None,
-    default: Optional[str] = None,
-) -> Optional[str]:
+    passthrough: Optional[X] = None,
+    default: Optional[X] = None,
+    dtype: Optional[Type[X]] = None,
+):
     """Get a configuration value.
 
     :param module: Name of the module (e.g., ``pybel``) to get configuration for
@@ -66,14 +69,31 @@ def get_config(
     :param passthrough: If this is not none, will get returned
     :param default: If the environment and configuration files don't contain anything,
         this is returned.
+    :param dtype: The datatype to parse out. Can either be :func:`int`, :func:`float`,
+        :func:`bool`, or :func:`str`. If none, defaults to :func:`str`.
     :returns: The config value or the default.
     """
     if passthrough is not None:
-        return passthrough
+        return _cast(passthrough, dtype)
     rv = os.getenv(f'{module.upper()}_{key.upper()}')
     if rv is not None:
         return rv
-    return _get_cfp(module).get(module, key, fallback=default)
+    rv = _get_cfp(module).get(module, key, fallback=None)
+    if rv is None:
+        return default
+    return _cast(rv, dtype)
+
+
+def _cast(rv, dtype):
+    if not isinstance(rv, str):  # if it's not a string, it doesn't need munging
+        return rv
+    if dtype in (None, str):  # no munging necessary
+        return rv
+    if dtype in (int, float):
+        return dtype(rv)  # type: ignore
+    if dtype is bool:
+        return rv.lower() in ('t', 'true', 'yes', '1', 1, True)
+    raise TypeError(f'dtype is invalid: {dtype}')
 
 
 def write_config(module: str, key: str, value: str) -> None:
