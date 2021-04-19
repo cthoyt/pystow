@@ -36,6 +36,10 @@ def _get_cfp(module: str) -> ConfigParser:
     cfp = ConfigParser()
     directory = get_home()
     filenames = [
+        os.path.join(directory, 'config.cfg'),
+        os.path.join(directory, 'config.ini'),
+        os.path.join(directory, 'pystow.cfg'),
+        os.path.join(directory, 'pystow.ini'),
         os.path.join(directory, f'{module}.cfg'),
         os.path.join(directory, f'{module}.ini'),
         os.path.join(directory, module, f'{module}.cfg'),
