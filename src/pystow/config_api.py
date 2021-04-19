@@ -66,6 +66,7 @@ def get_config(
     :param passthrough: If this is not none, will get returned
     :param default: If the environment and configuration files don't contain anything,
         this is returned.
+    :returns: The config value or the default.
     """
     if passthrough is not None:
         return passthrough
