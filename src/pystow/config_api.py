@@ -53,14 +53,26 @@ def _get_cfp(module: str) -> ConfigParser:
     return cfp
 
 
-def get_config(module: str, key: str, fallback: Optional[str] = None) -> Optional[str]:
-    """Get a configuration value."""
-    if fallback is not None:
-        return fallback
+def get_config(
+    module: str,
+    key: str, *,
+    passthrough: Optional[str] = None,
+    default: Optional[str] = None,
+) -> Optional[str]:
+    """Get a configuration value.
+
+    :param module: Name of the module (e.g., ``pybel``) to get configuration for
+    :param key: Name of the key (e.g., ``connection``)
+    :param passthrough: If this is not none, will get returned
+    :param default: If the environment and configuration files don't contain anything,
+        this is returned.
+    """
+    if passthrough is not None:
+        return passthrough
     rv = os.getenv(f'{module.upper()}_{key.upper()}')
     if rv is not None:
         return rv
-    return _get_cfp(module).get(module, key, fallback=None)
+    return _get_cfp(module).get(module, key, fallback=default)
 
 
 def write_config(module: str, key: str, value: str) -> None:
