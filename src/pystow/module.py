@@ -339,7 +339,7 @@ class Module:
         file_id: str,
         force: bool = False,
     ) -> Path:
-        """Ensure a file is downloaded from Google Drive
+        """Ensure a file is downloaded from Google Drive.
 
         :param subkeys:
             A sequence of additional strings to join. If none are given,

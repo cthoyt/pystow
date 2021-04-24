@@ -203,7 +203,7 @@ def get_commit(org: str, repo: str, provider: str = 'git') -> str:
 
 CHUNK_SIZE = 32768
 DOWNLOAD_URL = 'https://docs.google.com/uc?export=download'
-TOKEN_KEY = 'download_warning'
+TOKEN_KEY = 'download_warning'  # noqa:S105
 
 
 def download_from_google(file_id: str, path: Union[str, os.PathLike]):
