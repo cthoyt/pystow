@@ -214,16 +214,17 @@ def download_from_google(file_id: str, path: Union[str, os.PathLike]):
     :param file_id: The google file identifier
     :param path: The place to write the file
     """
-    token = _get_confirm_token(file_id)
-    response = requests.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-    with open(path, 'wb') as file:
-        for chunk in tqdm(response.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
-            if chunk:  # filter out keep-alive new chunks
-                file.write(chunk)
+    with requests.Session() as sess:
+        res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+        token = _get_confirm_token(res)
+        res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
+        with open(path, 'wb') as file:
+            for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
+                if chunk:  # filter out keep-alive new chunks
+                    file.write(chunk)
 
 
-def _get_confirm_token(file_id: str) -> str:
-    res = requests.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+def _get_confirm_token(res: requests.Response) -> str:
     for key, value in res.cookies.items():
         if key.startswith(TOKEN_KEY):
             return value
