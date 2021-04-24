@@ -355,7 +355,6 @@ def ensure_from_google(
     Example downloading the WK3l-15k dataset as motivated by
     https://github.com/pykeen/pykeen/pull/403:
 
-    >>> version = '0.0.21'
     >>> ensure_from_google('test', name='wk3l15k.zip', file_id='1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z')
     """
     _module = Module.from_key(key, ensure_exists=True)
