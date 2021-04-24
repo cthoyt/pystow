@@ -18,6 +18,7 @@ __all__ = [
     'ensure_tar_df',
     'ensure_zip_df',
     'ensure_from_s3',
+    'ensure_from_google',
     'ensure_rdf',
 ]
 
@@ -321,3 +322,41 @@ def ensure_from_s3(
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_s3(*subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force)
+
+
+def ensure_from_google(
+    key: str,
+    *subkeys: str,
+    name: str,
+    file_id: str,
+    force: bool = False,
+) -> Path:
+    """Ensure a file is downloaded from google drive.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        The name of the file
+    :param file_id:
+        The file identifier of the google file. If your share link is
+        https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view, then your file id is
+        ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :return:
+        The path of the file that has been downloaded (or already exists)
+
+    Example downloading the WK3l-15k dataset as motivated by
+    https://github.com/pykeen/pykeen/pull/403:
+
+    >>> version = '0.0.21'
+    >>> ensure_from_google('test', name='wk3l15k.zip', file_id='1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z')
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)

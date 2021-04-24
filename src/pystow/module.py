@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
 from .utils import (
-    download, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf, read_tarfile_csv,
-    read_zipfile_csv,
+    download, download_from_google, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf,
+    read_tarfile_csv, read_zipfile_csv,
 )
 
 if TYPE_CHECKING:
@@ -330,6 +330,36 @@ class Module:
         download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
         download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
+        return path
+
+    def ensure_from_google(
+        self,
+        *subkeys: str,
+        name: str,
+        file_id: str,
+        force: bool = False,
+    ) -> Path:
+        """Ensure a file is downloaded from Google Drive
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name:
+            The name of the file
+        :param file_id:
+            The file identifier of the google file. If your share link is
+            https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view, then your file id is
+            ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :return:
+            The path of the file that has been downloaded (or already exists)
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=True)
+        if path.exists() and not force:
+            return path
+        download_from_google(file_id, path)
         return path
 
 

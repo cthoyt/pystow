@@ -18,6 +18,7 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 import requests
+from tqdm import tqdm
 
 if TYPE_CHECKING:
     import rdflib
@@ -198,3 +199,32 @@ def get_commit(org: str, repo: str, provider: str = 'git') -> str:
     else:
         raise NotImplementedError(f'invalid implementation: {provider}')
     return rv
+
+
+CHUNK_SIZE = 32768
+DOWNLOAD_URL = 'https://docs.google.com/uc?export=download'
+TOKEN_KEY = 'download_warning'
+
+
+def download_from_google(file_id: str, path: Union[str, os.PathLike]):
+    """Download a file from google drive.
+
+    Implementation inspired by https://github.com/ndrplz/google-drive-downloader.
+
+    :param file_id: The google file identifier
+    :param path: The place to write the file
+    """
+    token = _get_confirm_token(file_id)
+    response = requests.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
+    with open(path, 'wb') as file:
+        for chunk in tqdm(response.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
+            if chunk:  # filter out keep-alive new chunks
+                file.write(chunk)
+
+
+def _get_confirm_token(file_id: str) -> str:
+    res = requests.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+    for key, value in res.cookies.items():
+        if key.startswith(TOKEN_KEY):
+            return value
+    raise ValueError(f'no token found with key {TOKEN_KEY} in cookies: {res.cookies}')
