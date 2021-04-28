@@ -136,6 +136,9 @@ def download(
                 pass  # if the file can't be deleted then no problem
         raise
 
+    if not verify_checksum(destination=path):
+        raise ValueError("Hexdigest of downloaded file does not match the expected ones!")
+
 
 def name_from_url(url: str) -> str:
     """Get the filename from the end of the URL."""
