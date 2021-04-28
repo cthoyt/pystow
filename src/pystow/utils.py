@@ -131,7 +131,7 @@ def download(
     """
     path = Path(path).resolve()
 
-    if os.path.exists(path) and not force:
+    if path.exists() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug('did not re-download %s from %s', path, url)
         return
