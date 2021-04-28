@@ -105,6 +105,8 @@ class TestHashing(unittest.TestCase):
         with TEST_TXT.open('rb') as file:
             md5.update(file.read())
         self.expected_md5 = md5.hexdigest()
+        self.mismatching_md5_hexdigest = 'yolo'
+        self.assertNotEqual(self.mismatching_md5_hexdigest, self.expected_md5)
 
     def tearDown(self) -> None:
         """Tear down a test."""
@@ -127,7 +129,7 @@ class TestHashing(unittest.TestCase):
                 url=TEST_TXT.as_uri(),
                 path=self.path,
                 hexdigests={
-                    'md5': 'yolo',
+                    'md5': self.mismatching_md5_hexdigest,
                 },
             )
 
@@ -141,7 +143,7 @@ class TestHashing(unittest.TestCase):
                 url=TEST_TXT.as_uri(),
                 path=self.path,
                 hexdigests={
-                    'md5': 'yolo',
+                    'md5': self.mismatching_md5_hexdigest,
                 },
             )
 
@@ -150,7 +152,7 @@ class TestHashing(unittest.TestCase):
             url=TEST_TXT.as_uri(),
             path=self.path,
             hexdigests={
-                'md5': 'yolo',
+                'md5': self.mismatching_md5_hexdigest,
             },
             force=True,
         )
