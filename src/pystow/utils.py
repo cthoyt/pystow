@@ -49,7 +49,8 @@ def get_offending_hexdigests(
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
     """
-    hexdigests = hexdigests or {}
+    if hexdigests is None:
+        hexdigests = {}
 
     if verbose:
         logger.info(f"Checking hash sums for file: {destination.as_uri()}")
