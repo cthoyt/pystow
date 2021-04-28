@@ -4,6 +4,7 @@
 
 import contextlib
 import gzip
+import hashlib
 import logging
 import os
 import shutil
@@ -13,7 +14,7 @@ from contextlib import contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
+from typing import Any, Collection, Mapping, Optional, TYPE_CHECKING, Tuple, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -27,6 +28,85 @@ if TYPE_CHECKING:
     import botocore.client
 
 logger = logging.getLogger(__name__)
+
+# Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
+Hash = Any
+
+
+class HexDigestError(ValueError):
+    """Thrown if the hashsums do not match expected hashsums."""
+
+    def __init__(self, offending_hexdigests: Collection[Tuple[str, str]]):
+        """Instantiate the exception.
+
+        :param offending_hexdigests: The result from :func:`get_offending_hexdigests`
+        """
+        self.offending_hexdigests = offending_hexdigests
+
+    def __str__(self):  # noqa:D105
+        return "\n".join((
+            "Hexdigest of downloaded file does not match the expected ones!",
+            *(
+                f"\tactual: {actual} vs. expected: {expected}"
+                for actual, expected in self.offending_hexdigests
+            ),
+        ))
+
+
+def get_offending_hexdigests(
+    path: Path,
+    chunk_size: int = 64 * 2 ** 10,
+    hexdigests: Optional[Mapping[str, str]] = None,
+) -> Collection[Tuple[str, str]]:
+    """
+    Check a file for hash sums.
+
+    :param path:
+        The file path.
+    :param chunk_size:
+        The chunk size for reading the file.
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+
+    :return:
+        A collection of observed / expected hexdigests where the digests do not match.
+    """
+    if not hexdigests:
+        return []
+
+    logger.info(f"Checking hash sums for file: {path.as_uri()}")
+
+    # instantiate algorithms
+    algorithms: Mapping[str, Hash] = {
+        alg: hashlib.new(alg)
+        for alg in hexdigests
+    }
+
+    # calculate hash sums of file incrementally
+    buffer = memoryview(bytearray(chunk_size))
+    with path.open('rb', buffering=0) as file:
+        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
+            for alg in algorithms.values():
+                alg.update(buffer[:this_chunk_size])
+
+    # Compare digests
+    mismatches = []
+    for alg, expected_digest in hexdigests.items():
+        observed_digest = algorithms[alg].hexdigest()
+        if observed_digest != expected_digest:
+            logger.error(f"{alg} expected {expected_digest} but got {observed_digest}.")
+            mismatches.append((observed_digest, expected_digest))
+        else:
+            logger.debug(f"Successfully checked with {alg}.")
+
+    return mismatches
+
+
+def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
+    """Raise a HexDigestError if the digests do not match."""
+    offending_hexdigests = get_offending_hexdigests(path=path, hexdigests=hexdigests)
+    if offending_hexdigests:
+        raise HexDigestError(offending_hexdigests)
 
 
 @contextmanager
@@ -56,7 +136,7 @@ def download_context(
         yield path
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
     finally:
         pass
@@ -68,6 +148,7 @@ def download(
     force: bool = True,
     clean_on_failure: bool = True,
     backend: str = 'urllib',
+    hexdigests: Optional[Mapping[str, str]] = None,
     **kwargs,
 ) -> None:
     """Download a file from a given URL.
@@ -77,6 +158,8 @@ def download(
     :param force: If false and the file already exists, will not re-download.
     :param clean_on_failure: If true, will delete the file on any exception raised during download
     :param backend: The downloader to use. Choose 'urllib' or 'requests'
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
         depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
 
@@ -97,6 +180,8 @@ def download(
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
+
+    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def name_from_url(url: str) -> str:
@@ -235,6 +320,7 @@ def download_from_google(
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
+    hexdigests: Optional[Mapping[str, str]] = None,
 ) -> None:
     """Download a file from google drive.
 
@@ -244,6 +330,8 @@ def download_from_google(
     :param path: The place to write the file
     :param force: If false and the file already exists, will not re-download.
     :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
@@ -310,3 +398,11 @@ def download_from_s3(
         download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
         download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
+
+
+def _unlink(path: Union[str, Path]) -> None:
+    # python 3.6 does not have pathlib.Path.unlink, smh
+    try:
+        os.remove(path)
+    except OSError:
+        pass  # if the file can't be deleted then no problem

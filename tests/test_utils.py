@@ -2,6 +2,7 @@
 
 """Tests for utilities."""
 
+import hashlib
 import os
 import tempfile
 import unittest
@@ -10,8 +11,11 @@ from pathlib import Path
 import pandas as pd
 
 from pystow.utils import (
-    getenv_path, mkdir, mock_envvar, n, name_from_url, read_zipfile_csv, write_zipfile_csv,
+    HexDigestError, download, getenv_path, mkdir, mock_envvar, n, name_from_url, read_zipfile_csv, write_zipfile_csv,
 )
+
+HERE = Path(__file__).resolve().parent
+TEST_TXT = HERE.joinpath('resources', 'test.txt')
 
 
 class TestUtils(unittest.TestCase):
@@ -87,3 +91,78 @@ class TestUtils(unittest.TestCase):
                 new_df = reader(path=path, inner_path=inner_path)
                 self.assertEqual(list(df.columns), list(new_df.columns))
                 self.assertEqual(df.values.tolist(), new_df.values.tolist())
+
+
+class TestHashing(unittest.TestCase):
+    """Tests for hexdigest checking."""
+
+    def setUp(self) -> None:
+        """Set up a test."""
+        self.directory = tempfile.TemporaryDirectory()
+        self.path = Path(self.directory.name).joinpath('test.tsv')
+
+        md5 = hashlib.md5()  # noqa:S303
+        with TEST_TXT.open('rb') as file:
+            md5.update(file.read())
+        self.expected_md5 = md5.hexdigest()
+        self.mismatching_md5_hexdigest = 'yolo'
+        self.assertNotEqual(self.mismatching_md5_hexdigest, self.expected_md5)
+
+    def tearDown(self) -> None:
+        """Tear down a test."""
+        self.directory.cleanup()
+
+    def test_hash_success(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests={
+                'md5': self.expected_md5,
+            },
+        )
+
+    def test_hash_error(self):
+        """Test hash error on download."""
+        self.assertFalse(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests={
+                    'md5': self.mismatching_md5_hexdigest,
+                },
+            )
+
+    def test_override_hash_error(self):
+        """Test hash error on download."""
+        with open(self.path, 'w') as file:
+            print('test file content', file)
+
+        self.assertTrue(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests={
+                    'md5': self.expected_md5,
+                },
+                force=False,
+            )
+
+    def test_force(self):
+        """Test overwriting wrong file."""
+        # now if force=True it should not bother with the hash check
+        with open(self.path, 'w') as file:
+            print('test file content', file)
+
+        self.assertTrue(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests={
+                'md5': self.expected_md5,
+            },
+            force=True,
+        )
