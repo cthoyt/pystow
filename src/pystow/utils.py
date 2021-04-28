@@ -72,7 +72,7 @@ def get_offending_hexdigests(
         logger.info(f"Checking hash sums for file: {destination.as_uri()}")
     if len(hexdigests) == 0 and verbose:
         logger.warning("There are no hash sums to check for.")
-        return True
+        return []
 
     # instantiate algorithms
     hash_algorithms = {
