@@ -292,7 +292,14 @@ DOWNLOAD_URL = 'https://docs.google.com/uc?export=download'
 TOKEN_KEY = 'download_warning'  # noqa:S105
 
 
-def download_from_google(file_id: str, path: Union[str, os.PathLike]):
+def download_from_google(
+    file_id: str,
+    path: Union[str, os.PathLike, Path],
+    force: bool = True,
+    clean_on_failure: bool = True,
+    hexdigests: Optional[Mapping[str, str]] = None,
+    **kwargs,
+) -> None:
     """Download a file from google drive.
 
     Implementation inspired by https://github.com/ndrplz/google-drive-downloader.
@@ -300,14 +307,33 @@ def download_from_google(file_id: str, path: Union[str, os.PathLike]):
     :param file_id: The google file identifier
     :param path: The place to write the file
     """
-    with requests.Session() as sess:
-        res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
-        token = _get_confirm_token(res)
-        res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-        with open(path, 'wb') as file:
-            for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
-                if chunk:  # filter out keep-alive new chunks
-                    file.write(chunk)
+    # TODO: Reduce code duplication with download
+    # input normalization
+    path = Path(path).resolve()
+
+    if os.path.exists(path) and not force:
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
+        logger.debug('did not re-download %s for ID %s', path, file_id)
+        return
+
+    try:
+        with requests.Session() as sess:
+            res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+            token = _get_confirm_token(res)
+            res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
+            with open(path, 'wb') as file:
+                for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
+                    if chunk:  # filter out keep-alive new chunks
+                        file.write(chunk)
+    except (Exception, KeyboardInterrupt):
+        if clean_on_failure:
+            try:
+                os.remove(path)
+            except OSError:
+                pass  # if the file can't be deleted then no problem
+        raise
+
+    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def _get_confirm_token(res: requests.Response) -> str:
