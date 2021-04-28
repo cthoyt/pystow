@@ -49,6 +49,8 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
+    path = Path(path).resolve()
+
     if os.path.exists(path) and not force:
         logger.debug('did not re-download %s from %s', path, url)
         return
@@ -208,7 +210,7 @@ TOKEN_KEY = 'download_warning'  # noqa:S105
 
 def download_from_google(
     file_id: str,
-    path: Union[str, os.PathLike],
+    path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
 ) -> None:
@@ -224,6 +226,8 @@ def download_from_google(
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
+    path = Path(path).resolve()
+
     if os.path.exists(path) and not force:
         logger.debug('did not re-download %s from %s', path, file_id)
         return
