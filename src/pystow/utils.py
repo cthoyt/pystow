@@ -71,7 +71,7 @@ def download(
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
 
 
@@ -241,7 +241,7 @@ def download_from_google(
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
 
 
@@ -299,5 +299,13 @@ def download_from_s3(
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
+
+
+def _unlink(path: Union[str, Path]) -> None:
+    # python 3.6 does not have pathlib.Path.unlink, smh
+    try:
+        os.remove(path)
+    except OSError:
+        pass  # if the file can't be deleted then no problem
