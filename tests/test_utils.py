@@ -92,9 +92,9 @@ class TestUtils(unittest.TestCase):
         """Test hash error on download."""
         with self.assertRaises(HexDigestError), tempfile.TemporaryDirectory() as directory:
             download(
-                url='https://example.com/test/tsv',
+                url='https://raw.githubusercontent.com/cthoyt/pystow/main/README.md',
                 path=os.path.join(directory, 'test.tsv'),
                 hexdigests={
                     'md5': 'yolo',
-                }
+                },
             )
