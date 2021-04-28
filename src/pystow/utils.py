@@ -32,15 +32,19 @@ class HexDigestError(ValueError):
     """Thrown if the hashsums do not match expected hashsums."""
 
     def __init__(self, offending_hexdigests: Collection[Tuple[str, str]]):
+        """Instantiate the exception.
+
+        :param offending_hexdigests: The result from :func:`get_offending_hexdigests`
+        """
         self.offending_hexdigests = offending_hexdigests
 
-    def __str__(self):
+    def __str__(self):  # noqa:D105
         return "\n".join((
             "Hexdigest of downloaded file does not match the expected ones!",
             *(
                 f"\tactual: {actual} vs. expected: {expected}"
                 for actual, expected in self.offending_hexdigests
-            )
+            ),
         ))
 
 
@@ -52,7 +56,7 @@ def get_offending_hexdigests(
     """
     Check a file for hash sums.
 
-    :param destination:
+    :param path:
         The file path.
     :param chunk_size:
         The chunk size for reading the file.
@@ -65,7 +69,7 @@ def get_offending_hexdigests(
     if not hexdigests:
         return []
 
-    logger.info(f"Checking hash sums for file: {destination.as_uri()}")
+    logger.info(f"Checking hash sums for file: {path.as_uri()}")
 
     # instantiate algorithms
     algorithms = {
@@ -75,7 +79,7 @@ def get_offending_hexdigests(
 
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
-    with destination.open('rb', buffering=0) as file:
+    with path.open('rb', buffering=0) as file:
         for this_chunk_size in iter(lambda: file.readinto(buffer), 0):
             for alg in algorithms.values():
                 alg.update(buffer[:this_chunk_size])
@@ -94,9 +98,9 @@ def get_offending_hexdigests(
     return mismatches
 
 
-def raise_on_digest_mismatch(path: Path, hexdigests: Optional[Mapping[str, str]]) -> None:
+def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
     """Raise a HexDigestError if the digests do not match."""
-    offending_hexdigests = get_offending_hexdigests(destination=path, hexdigests=hexdigests)
+    offending_hexdigests = get_offending_hexdigests(path=path, hexdigests=hexdigests)
     if offending_hexdigests:
         raise HexDigestError(offending_hexdigests)
 
@@ -129,7 +133,7 @@ def download(
     path = Path(path).resolve()
 
     if os.path.exists(path) and not force:
-        raise_on_digest_mismatch(hexdigests, path)
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug('did not re-download %s from %s', path, url)
         return
 
@@ -154,7 +158,7 @@ def download(
                 pass  # if the file can't be deleted then no problem
         raise
 
-    raise_on_digest_mismatch(hexdigests, path)
+    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def name_from_url(url: str) -> str:
