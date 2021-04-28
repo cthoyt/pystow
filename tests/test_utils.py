@@ -92,9 +92,35 @@ class TestUtils(unittest.TestCase):
         """Test hash error on download."""
         with self.assertRaises(HexDigestError), tempfile.TemporaryDirectory() as directory:
             download(
-                url='https://example.com/test/tsv',
+                url='https://raw.githubusercontent.com/cthoyt/pystow/main/README.md',
                 path=os.path.join(directory, 'test.tsv'),
                 hexdigests={
                     'md5': 'yolo',
-                }
+                },
+            )
+
+    def test_override_hash_error(self):
+        """Test hash error on download."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'test.tsv')
+            with open(path, 'w') as file:
+                print('test file content', file)
+
+            with self.assertRaises(HexDigestError):
+                download(
+                    url='https://raw.githubusercontent.com/cthoyt/pystow/main/README.md',
+                    path=path,
+                    hexdigests={
+                        'md5': 'yolo',
+                    },
+                )
+
+            # now if force=True it should be okay
+            download(
+                url='https://raw.githubusercontent.com/cthoyt/pystow/main/README.md',
+                path=path,
+                hexdigests={
+                    'md5': 'yolo',
+                },
+                force=True,
             )
