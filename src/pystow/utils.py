@@ -4,6 +4,7 @@
 
 import contextlib
 import gzip
+import hashlib
 import logging
 import os
 import shutil
@@ -27,12 +28,67 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def verify_checksum(
+    destination: Path,
+    chunk_size: int = 64 * 2 ** 10,
+    verbose: bool = True,
+    hexdigests: Mapping[str, str] = None,
+) -> bool:
+    """
+    Check a file for hash sums.
+
+    :param destination:
+        The file path.
+    :param chunk_size:
+        The chunk size for reading the file.
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :param verbose:
+        Whether to be verbose.
+
+    :return:
+        Whether all hash sums match.
+    """
+    hexdigests = hexdigests or {}
+
+    if verbose:
+        logger.info(f"Checking hash sums for file: {destination.as_uri()}")
+    if len(hexdigests) == 0:
+        logger.warning("There are no hash sums to check for.")
+        return True
+
+    # instantiate algorithms
+    hash_algorithms = {}
+    for alg in hexdigests.keys():
+        hash_algorithms[alg] = hashlib.new(alg)
+
+    # calculate hash sums of file incrementally
+    buffer = memoryview(bytearray(chunk_size))
+    with destination.open('rb', buffering=0) as f:
+        for this_chunk_size in iter(lambda: f.readinto(buffer), 0):
+            for alg in hash_algorithms.values():
+                alg.update(buffer[:this_chunk_size])
+
+    # Compare digests
+    integer_file = True
+    for alg, digest in hexdigests.items():
+        digest_ = hash_algorithms[alg].hexdigest()
+        if digest_ != digest:
+            logger.fatal(f"Hashsum does not match! expected {alg}={digest}, but got {digest_}.")
+            integer_file = False
+        else:
+            logger.info(f"Successfully checked with {alg}.")
+
+    return integer_file
+
+
 def download(
     url: str,
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
     backend: str = 'urllib',
+    hexdigests: Optional[Mapping[str, str]] = None,
     **kwargs,
 ) -> None:
     """Download a file from a given URL.
@@ -49,7 +105,13 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
+    # input normalization
+    path = Path(path).resolve()
+
+    skip_download = False
     if os.path.exists(path) and not force:
+        skip_download = verify_checksum(destination=path, hexdigests=hexdigests)
+    if skip_download:
         logger.debug('did not re-download %s from %s', path, url)
         return
 
