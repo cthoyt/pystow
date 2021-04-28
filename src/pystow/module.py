@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
 from .utils import (
-    download, download_from_google, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf,
+    download, download_from_google, download_from_s3, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf,
     read_tarfile_csv, read_zipfile_csv,
 )
 
@@ -316,20 +316,15 @@ class Module:
         if name is None:
             name = name_from_s3_key(s3_key)
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        if path.exists() and not force:
-            return path
-
-        import boto3.s3.transfer
-        if client is None:
-            import boto3
-            import botocore.client
-            client_kwargs = {} if client_kwargs is None else dict(client_kwargs)
-            client_kwargs.setdefault('config', botocore.client.Config(signature_version=botocore.UNSIGNED))
-            client = boto3.client('s3', **client_kwargs)
-
-        download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
-        download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
-        client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
+        download_from_s3(
+            s3_bucket=s3_bucket,
+            s3_key=s3_key,
+            path=path,
+            client=client,
+            client_kwargs=client_kwargs,
+            force=force,
+            download_file_kwargs=download_file_kwargs,
+        )
         return path
 
     def ensure_from_google(
