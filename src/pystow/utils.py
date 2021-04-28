@@ -306,6 +306,7 @@ def download_from_google(
 
     :param file_id: The google file identifier
     :param path: The place to write the file
+    :param force: If false and the file already exists, will not re-download.
     """
     # TODO: Reduce code duplication with download
     # input normalization
