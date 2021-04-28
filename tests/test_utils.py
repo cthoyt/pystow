@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from pystow.utils import (
-    getenv_path, mkdir, mock_envvar, n, name_from_url, read_zipfile_csv, write_zipfile_csv,
+    HexDigestError, download, getenv_path, mkdir, mock_envvar, n, name_from_url, read_zipfile_csv, write_zipfile_csv,
 )
 
 
@@ -87,3 +87,14 @@ class TestUtils(unittest.TestCase):
                 new_df = reader(path=path, inner_path=inner_path)
                 self.assertEqual(list(df.columns), list(new_df.columns))
                 self.assertEqual(df.values.tolist(), new_df.values.tolist())
+
+    def test_hash_error(self):
+        """Test hash error on download."""
+        with self.assertRaises(HexDigestError), tempfile.TemporaryDirectory() as directory:
+            download(
+                url='https://example.com/test/tsv',
+                path=os.path.join(directory, 'test.tsv'),
+                hexdigests={
+                    'md5': 'yolo',
+                }
+            )

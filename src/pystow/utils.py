@@ -154,7 +154,7 @@ def download(
         if clean_on_failure:
             try:
                 os.remove(path)
-            except FileExistsError:
+            except OSError:
                 pass  # if the file can't be deleted then no problem
         raise
 
