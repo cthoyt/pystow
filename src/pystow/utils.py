@@ -317,7 +317,7 @@ def download_from_google(
 
     if path.exists() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s from %s', path, file_id)
+        logger.debug('did not re-download %s from Google ID %s', path, file_id)
         return
 
     try:
@@ -333,6 +333,8 @@ def download_from_google(
         if clean_on_failure:
             _unlink(path)
         raise
+
+    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def _get_confirm_token(res: requests.Response) -> str:
