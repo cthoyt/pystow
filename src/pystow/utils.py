@@ -13,7 +13,7 @@ import zipfile
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import TYPE_CHECKING, Union
+from typing import Collection, Mapping, Optional, TYPE_CHECKING, Tuple, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -32,7 +32,7 @@ def get_offending_hexdigests(
     destination: Path,
     chunk_size: int = 64 * 2 ** 10,
     verbose: bool = True,
-    hexdigests: Mapping[str, str] = None,
+    hexdigests: Optional[Mapping[str, str]] = None,
 ) -> Collection[Tuple[str, str]]:
     """
     Check a file for hash sums.
