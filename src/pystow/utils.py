@@ -51,7 +51,7 @@ def download(
     """
     path = Path(path).resolve()
 
-    if os.path.exists(path) and not force:
+    if path.exists() and not force:
         logger.debug('did not re-download %s from %s', path, url)
         return
 
@@ -63,17 +63,14 @@ def download(
             kwargs.setdefault('stream', True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
             # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, open(path, 'wb') as file:
+            with requests.get(url, **kwargs) as response, path.open('wb') as file:
                 logger.info('downloading (stream=%s) with requests from %s to %s', kwargs['stream'], url, path)
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # if the file can't be deleted then no problem
+            path.unlink(missing_ok=True)
         raise
 
 
@@ -228,7 +225,7 @@ def download_from_google(
     """
     path = Path(path).resolve()
 
-    if os.path.exists(path) and not force:
+    if path.exists() and not force:
         logger.debug('did not re-download %s from %s', path, file_id)
         return
 
@@ -237,16 +234,13 @@ def download_from_google(
             res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
             token = _get_confirm_token(res)
             res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-            with open(path, 'wb') as file:
+            with path.open('wb') as file:
                 for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # if the file can't be deleted then no problem
+            path.unlink(missing_ok=True)
         raise
 
 
