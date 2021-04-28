@@ -115,6 +115,7 @@ def download_context(
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
+    hexdigests: Optional[Mapping[str, str]] = None,
 ) -> None:
     """Download a file from a given URL.
 
@@ -122,6 +123,8 @@ def download_context(
     :param path: Path to download the file to
     :param force: If false and the file already exists, will not re-download.
     :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
@@ -129,6 +132,7 @@ def download_context(
     path = Path(path).resolve()
 
     if path.exists() and not force:
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug('did not re-download %s from %s', path, target)
         return
 
@@ -139,7 +143,7 @@ def download_context(
             _unlink(path)
         raise
     finally:
-        pass
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def download(
@@ -167,7 +171,13 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
-    with download_context(path=path, target=url, force=force, clean_on_failure=clean_on_failure) as path:
+    with download_context(
+        path=path,
+        target=url,
+        force=force,
+        clean_on_failure=clean_on_failure,
+        hexdigests=hexdigests,
+    ) as path:
         if backend == 'urllib':
             logger.info('downloading with urllib from %s to %s', url, path)
             urlretrieve(url, path, **kwargs)  # noqa:S310
@@ -336,7 +346,13 @@ def download_from_google(
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
-    with download_context(path=path, target=file_id, force=force, clean_on_failure=clean_on_failure) as path:
+    with download_context(
+        path=path,
+        target=file_id,
+        force=force,
+        clean_on_failure=clean_on_failure,
+        hexdigests=hexdigests,
+    ) as path:
         with requests.Session() as sess:
             res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
             token = _get_confirm_token(res)
