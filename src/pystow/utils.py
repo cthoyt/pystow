@@ -28,12 +28,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def verify_checksum(
+def get_offending_hexdigests(
     destination: Path,
     chunk_size: int = 64 * 2 ** 10,
     verbose: bool = True,
     hexdigests: Mapping[str, str] = None,
-) -> bool:
+) -> Collection[Tuple[str, str]]:
     """
     Check a file for hash sums.
 
@@ -47,7 +47,7 @@ def verify_checksum(
         Whether to be verbose.
 
     :return:
-        Whether all hash sums match.
+        A collection of observed / expected hexdigests where the digests do not match.
     """
     hexdigests = hexdigests or {}
 
@@ -70,16 +70,16 @@ def verify_checksum(
                 alg.update(buffer[:this_chunk_size])
 
     # Compare digests
-    integer_file = True
+    mismatches = []
     for alg, digest in hexdigests.items():
         digest_ = hash_algorithms[alg].hexdigest()
         if digest_ != digest:
             logger.fatal(f"Hashsum does not match! expected {alg}={digest}, but got {digest_}.")
-            integer_file = False
+            mismatches.append((digest_, digest))
         elif verbose:
             logger.info(f"Successfully checked with {alg}.")
 
-    return integer_file
+    return mismatches
 
 
 def download(
@@ -110,7 +110,7 @@ def download(
 
     skip_download = False
     if os.path.exists(path) and not force:
-        skip_download = verify_checksum(destination=path, hexdigests=hexdigests)
+        skip_download = not get_offending_hexdigests(destination=path, hexdigests=hexdigests)
     if skip_download:
         logger.debug('did not re-download %s from %s', path, url)
         return
@@ -136,8 +136,15 @@ def download(
                 pass  # if the file can't be deleted then no problem
         raise
 
-    if not verify_checksum(destination=path):
-        raise ValueError("Hexdigest of downloaded file does not match the expected ones!")
+    offending_hexdigests = get_offending_hexdigests(destination=path, hexdigests=hexdigests)
+    if offending_hexdigests:
+        raise ValueError("\n".join((
+            "Hexdigest of downloaded file does not match the expected ones!",
+            *(
+                f"\tactual: {actual} vs. expected: {expected}"
+                for actual, expected in offending_hexdigests
+            )
+        )))
 
 
 def name_from_url(url: str) -> str:
