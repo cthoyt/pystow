@@ -97,6 +97,13 @@ def get_offending_hexdigests(
     return mismatches
 
 
+def raise_on_digest_mismatch(path: Path, hexdigests: Optional[Mapping[str, str]]) -> None:
+    """Raise a HexDigestError if the digests do not match."""
+    offending_hexdigests = get_offending_hexdigests(destination=path, hexdigests=hexdigests)
+    if offending_hexdigests:
+        raise HexDigestError(offending_hexdigests)
+
+
 def download(
     url: str,
     path: Union[str, Path],
@@ -124,10 +131,8 @@ def download(
     # input normalization
     path = Path(path).resolve()
 
-    skip_download = False
     if os.path.exists(path) and not force:
-        skip_download = not get_offending_hexdigests(destination=path, hexdigests=hexdigests)
-    if skip_download:
+        raise_on_digest_mismatch(hexdigests, path)
         logger.debug('did not re-download %s from %s', path, url)
         return
 
@@ -152,9 +157,7 @@ def download(
                 pass  # if the file can't be deleted then no problem
         raise
 
-    offending_hexdigests = get_offending_hexdigests(destination=path, hexdigests=hexdigests)
-    if offending_hexdigests:
-        raise HexDigestError(offending_hexdigests)
+    raise_on_digest_mismatch(hexdigests, path)
 
 
 def name_from_url(url: str) -> str:
