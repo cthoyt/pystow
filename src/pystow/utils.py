@@ -84,7 +84,7 @@ def get_offending_hexdigests(
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
     with path.open('rb', buffering=0) as file:
-        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):
+        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
             for alg in algorithms.values():
                 alg.update(buffer[:this_chunk_size])
 
