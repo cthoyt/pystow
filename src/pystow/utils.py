@@ -28,6 +28,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
+Hash = Any
+
 
 class HexDigestError(ValueError):
     """Thrown if the hashsums do not match expected hashsums."""
@@ -73,7 +76,7 @@ def get_offending_hexdigests(
     logger.info(f"Checking hash sums for file: {path.as_uri()}")
 
     # instantiate algorithms
-    algorithms = {
+    algorithms: Mapping[str, Hash] = {
         alg: hashlib.new(alg)
         for alg in hexdigests
     }
