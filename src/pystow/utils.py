@@ -59,9 +59,10 @@ def get_offending_hexdigests(
         return True
 
     # instantiate algorithms
-    hash_algorithms = {}
-    for alg in hexdigests.keys():
-        hash_algorithms[alg] = hashlib.new(alg)
+    hash_algorithms = {
+        alg: hashlib.new(alg)
+        for alg in hexdigests
+    }
 
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
