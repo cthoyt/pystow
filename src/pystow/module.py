@@ -357,9 +357,7 @@ class Module:
             The path of the file that has been downloaded (or already exists)
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        if path.exists() and not force:
-            return path
-        download_from_google(file_id, path)
+        download_from_google(file_id, path, force=force)
         return path
 
 

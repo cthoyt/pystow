@@ -206,14 +206,23 @@ DOWNLOAD_URL = 'https://docs.google.com/uc?export=download'
 TOKEN_KEY = 'download_warning'  # noqa:S105
 
 
-def download_from_google(file_id: str, path: Union[str, os.PathLike]):
+def download_from_google(
+    file_id: str,
+    path: Union[str, os.PathLike],
+    force: bool = True,
+):
     """Download a file from google drive.
 
     Implementation inspired by https://github.com/ndrplz/google-drive-downloader.
 
     :param file_id: The google file identifier
     :param path: The place to write the file
+    :param force: If false and the file already exists, will not re-download.
     """
+    if os.path.exists(path) and not force:
+        logger.debug('did not re-download %s from %s', path, file_id)
+        return
+
     with requests.Session() as sess:
         res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
         token = _get_confirm_token(res)
