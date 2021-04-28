@@ -62,13 +62,10 @@ def get_offending_hexdigests(
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
     """
-    if hexdigests is None:
-        hexdigests = {}
+    if not hexdigests:
+        return []
 
     logger.info(f"Checking hash sums for file: {destination.as_uri()}")
-    if len(hexdigests) == 0:
-        logger.warning("There are no hash sums to check for.")
-        return []
 
     # instantiate algorithms
     algorithms = {
