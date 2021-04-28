@@ -88,7 +88,7 @@ def get_offending_hexdigests(
             # TODO: This may be obsolete, since we raise an error later on with the same information.
             logger.fatal(f"Hashsum does not match! expected {alg}={expected_digest}, but got {observed_digest}.")
             mismatches.append((observed_digest, expected_digest))
-        elif verbose:
+        else:
             logger.info(f"Successfully checked with {alg}.")
 
     return mismatches
