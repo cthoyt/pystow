@@ -89,11 +89,10 @@ def get_offending_hexdigests(
     for alg, expected_digest in hexdigests.items():
         observed_digest = algorithms[alg].hexdigest()
         if observed_digest != expected_digest:
-            # TODO: This may be obsolete, since we raise an error later on with the same information.
-            logger.fatal(f"Hashsum does not match! expected {alg}={expected_digest}, but got {observed_digest}.")
+            logger.error(f"{alg} expected {expected_digest} but got {observed_digest}.")
             mismatches.append((observed_digest, expected_digest))
         else:
-            logger.info(f"Successfully checked with {alg}.")
+            logger.debug(f"Successfully checked with {alg}.")
 
     return mismatches
 
