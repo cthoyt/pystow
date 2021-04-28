@@ -53,7 +53,7 @@ def verify_checksum(
 
     if verbose:
         logger.info(f"Checking hash sums for file: {destination.as_uri()}")
-    if len(hexdigests) == 0:
+    if len(hexdigests) == 0 and verbose:
         logger.warning("There are no hash sums to check for.")
         return True
 
@@ -76,7 +76,7 @@ def verify_checksum(
         if digest_ != digest:
             logger.fatal(f"Hashsum does not match! expected {alg}={digest}, but got {digest_}.")
             integer_file = False
-        else:
+        elif verbose:
             logger.info(f"Successfully checked with {alg}.")
 
     return integer_file
