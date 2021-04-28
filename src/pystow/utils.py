@@ -210,7 +210,8 @@ def download_from_google(
     file_id: str,
     path: Union[str, os.PathLike],
     force: bool = True,
-):
+    clean_on_failure: bool = True,
+) -> None:
     """Download a file from google drive.
 
     Implementation inspired by https://github.com/ndrplz/google-drive-downloader.
@@ -218,19 +219,31 @@ def download_from_google(
     :param file_id: The google file identifier
     :param path: The place to write the file
     :param force: If false and the file already exists, will not re-download.
+    :param clean_on_failure: If true, will delete the file on any exception raised during download
+
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
     if os.path.exists(path) and not force:
         logger.debug('did not re-download %s from %s', path, file_id)
         return
 
-    with requests.Session() as sess:
-        res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
-        token = _get_confirm_token(res)
-        res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-        with open(path, 'wb') as file:
-            for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
-                if chunk:  # filter out keep-alive new chunks
-                    file.write(chunk)
+    try:
+        with requests.Session() as sess:
+            res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+            token = _get_confirm_token(res)
+            res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
+            with open(path, 'wb') as file:
+                for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
+                    if chunk:  # filter out keep-alive new chunks
+                        file.write(chunk)
+    except (Exception, KeyboardInterrupt):
+        if clean_on_failure:
+            try:
+                os.remove(path)
+            except OSError:
+                pass  # if the file can't be deleted then no problem
+        raise
 
 
 def _get_confirm_token(res: requests.Response) -> str:
