@@ -99,7 +99,7 @@ class TestHashing(unittest.TestCase):
     def setUp(self) -> None:
         """Set up a test."""
         self.directory = tempfile.TemporaryDirectory()
-        self.path = os.path.join(self.directory.name, 'test.tsv')
+        self.path = Path(self.directory.name).joinpath('test.tsv')
 
         md5 = hashlib.md5()
         with TEST_TXT.open('rb') as file:
@@ -114,6 +114,7 @@ class TestHashing(unittest.TestCase):
 
     def test_hash_success(self):
         """Test checking actually works."""
+        self.assertFalse(self.path.exists())
         download(
             url=TEST_TXT.as_uri(),
             path=self.path,
@@ -124,6 +125,7 @@ class TestHashing(unittest.TestCase):
 
     def test_hash_error(self):
         """Test hash error on download."""
+        self.assertFalse(self.path.exists())
         with self.assertRaises(HexDigestError):
             download(
                 url=TEST_TXT.as_uri(),
@@ -138,15 +140,18 @@ class TestHashing(unittest.TestCase):
         with open(self.path, 'w') as file:
             print('test file content', file)
 
+        self.assertTrue(self.path.exists())
         with self.assertRaises(HexDigestError):
             download(
                 url=TEST_TXT.as_uri(),
                 path=self.path,
                 hexdigests={
-                    'md5': self.mismatching_md5_hexdigest,
+                    'md5': self.expected_md5,
                 },
+                force=False,
             )
 
+    def test_force(self):
         # now if force=True it should not bother with the hash check
         download(
             url=TEST_TXT.as_uri(),
