@@ -45,7 +45,7 @@ class HexDigestError(ValueError):
 
 
 def get_offending_hexdigests(
-    destination: Path,
+    path: Path,
     chunk_size: int = 64 * 2 ** 10,
     hexdigests: Optional[Mapping[str, str]] = None,
 ) -> Collection[Tuple[str, str]]:
