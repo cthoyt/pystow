@@ -13,7 +13,7 @@ import zipfile
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Collection, Mapping, Optional, TYPE_CHECKING, Tuple, Union
+from typing import Any, Collection, Mapping, Optional, TYPE_CHECKING, Tuple, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -24,6 +24,7 @@ from tqdm import tqdm
 if TYPE_CHECKING:
     import rdflib
     import pandas as pd
+    import botocore.client
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +152,7 @@ def download(
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
@@ -327,7 +328,7 @@ def download_from_google(
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            path.unlink(missing_ok=True)
+            _unlink(path)
         raise
 
 
@@ -336,3 +337,62 @@ def _get_confirm_token(res: requests.Response) -> str:
         if key.startswith(TOKEN_KEY):
             return value
     raise ValueError(f'no token found with key {TOKEN_KEY} in cookies: {res.cookies}')
+
+
+def download_from_s3(
+    s3_bucket: str,
+    s3_key: str,
+    path: Union[str, Path],
+    client: Optional['botocore.client.BaseClient'] = None,
+    client_kwargs: Optional[Mapping[str, Any]] = None,
+    download_file_kwargs: Optional[Mapping[str, Any]] = None,
+    force: bool = True,
+    clean_on_failure: bool = True,
+) -> None:
+    """Download a file from S3.
+
+    :param s3_bucket: The key inside the S3 bucket name
+    :param s3_key: The key inside the S3 bucket
+    :param path: The place to write the file
+    :param client:
+        A botocore client. If none given, one will be created automatically
+    :param client_kwargs:
+        Keyword arguments to be passed to the client on instantiation.
+    :param download_file_kwargs:
+        Keyword arguments to be passed to :func:`boto3.s3.transfer.S3Transfer.download_file`
+    :param force: If false and the file already exists, will not re-download.
+    :param clean_on_failure: If true, will delete the file on any exception raised during download
+
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    """
+    path = Path(path).resolve()
+
+    if path.exists() and not force:
+        logger.debug('did not re-download %s from %s %s', path, s3_bucket, s3_key)
+        return
+
+    try:
+        import boto3.s3.transfer
+        if client is None:
+            import boto3
+            import botocore.client
+            client_kwargs = {} if client_kwargs is None else dict(client_kwargs)
+            client_kwargs.setdefault('config', botocore.client.Config(signature_version=botocore.UNSIGNED))
+            client = boto3.client('s3', **client_kwargs)
+
+        download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
+        download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
+        client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
+    except (Exception, KeyboardInterrupt):
+        if clean_on_failure:
+            _unlink(path)
+        raise
+
+
+def _unlink(path: Union[str, Path]) -> None:
+    # python 3.6 does not have pathlib.Path.unlink, smh
+    try:
+        os.remove(path)
+    except OSError:
+        pass  # if the file can't be deleted then no problem
