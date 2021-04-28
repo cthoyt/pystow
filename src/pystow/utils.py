@@ -47,7 +47,6 @@ class HexDigestError(ValueError):
 def get_offending_hexdigests(
     destination: Path,
     chunk_size: int = 64 * 2 ** 10,
-    verbose: bool = True,
     hexdigests: Optional[Mapping[str, str]] = None,
 ) -> Collection[Tuple[str, str]]:
     """
@@ -59,8 +58,6 @@ def get_offending_hexdigests(
         The chunk size for reading the file.
     :param hexdigests:
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
-    :param verbose:
-        Whether to be verbose.
 
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
@@ -68,9 +65,8 @@ def get_offending_hexdigests(
     if hexdigests is None:
         hexdigests = {}
 
-    if verbose:
-        logger.info(f"Checking hash sums for file: {destination.as_uri()}")
-    if len(hexdigests) == 0 and verbose:
+    logger.info(f"Checking hash sums for file: {destination.as_uri()}")
+    if len(hexdigests) == 0:
         logger.warning("There are no hash sums to check for.")
         return []
 
@@ -92,6 +88,7 @@ def get_offending_hexdigests(
     for alg, expected_digest in hexdigests.items():
         observed_digest = algorithms[alg].hexdigest()
         if observed_digest != expected_digest:
+            # TODO: This may be obsolete, since we raise an error later on with the same information.
             logger.fatal(f"Hashsum does not match! expected {alg}={expected_digest}, but got {observed_digest}.")
             mismatches.append((observed_digest, expected_digest))
         elif verbose:
