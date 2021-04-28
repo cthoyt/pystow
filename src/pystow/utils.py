@@ -129,7 +129,6 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
-    # input normalization
     path = Path(path).resolve()
 
     if os.path.exists(path) and not force:
@@ -145,17 +144,14 @@ def download(
             kwargs.setdefault('stream', True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
             # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, open(path, 'wb') as file:
+            with requests.get(url, **kwargs) as response, path.open('wb') as file:
                 logger.info('downloading (stream=%s) with requests from %s to %s', kwargs['stream'], url, path)
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # if the file can't be deleted then no problem
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
@@ -294,7 +290,7 @@ TOKEN_KEY = 'download_warning'  # noqa:S105
 
 def download_from_google(
     file_id: str,
-    path: Union[str, os.PathLike, Path],
+    path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
     hexdigests: Optional[Mapping[str, str]] = None,
@@ -309,14 +305,15 @@ def download_from_google(
     :param clean_on_failure: If true, will delete the file on any exception raised during download
     :param hexdigests:
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
-    # TODO: Reduce code duplication with download
-    # input normalization
     path = Path(path).resolve()
 
-    if os.path.exists(path) and not force:
+    if path.exists() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s for ID %s', path, file_id)
+        logger.debug('did not re-download %s from %s', path, file_id)
         return
 
     try:
@@ -324,19 +321,14 @@ def download_from_google(
             res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
             token = _get_confirm_token(res)
             res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-            with open(path, 'wb') as file:
+            with path.open('wb') as file:
                 for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            try:
-                os.remove(path)
-            except OSError:
-                pass  # if the file can't be deleted then no problem
+            path.unlink(missing_ok=True)
         raise
-
-    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def _get_confirm_token(res: requests.Response) -> str:
