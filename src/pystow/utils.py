@@ -55,14 +55,14 @@ def download(
 
     try:
         if backend == 'urllib':
-            logger.info('downloading from %s to %s', url, path)
+            logger.info('downloading with urllib from %s to %s', url, path)
             urlretrieve(url, path, **kwargs)  # noqa:S310
         elif backend == 'requests':
             kwargs.setdefault('stream', True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
             # pattern from https://stackoverflow.com/a/39217788/5775947
             with requests.get(url, **kwargs) as response, open(path, 'wb') as file:
-                logger.info('downloading (stream=%s) from %s to %s', kwargs['stream'], url, path)
+                logger.info('downloading (stream=%s) with requests from %s to %s', kwargs['stream'], url, path)
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
