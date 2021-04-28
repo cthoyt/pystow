@@ -121,13 +121,14 @@ def download(
     :param force: If false and the file already exists, will not re-download.
     :param clean_on_failure: If true, will delete the file on any exception raised during download
     :param backend: The downloader to use. Choose 'urllib' or 'requests'
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
         depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
-    :raises HexDigestError: If the downloaded file's hexdigest does not match
     """
     # input normalization
     path = Path(path).resolve()
