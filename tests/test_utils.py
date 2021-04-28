@@ -152,12 +152,17 @@ class TestHashing(unittest.TestCase):
             )
 
     def test_force(self):
+        """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
+        with open(self.path, 'w') as file:
+            print('test file content', file)
+
+        self.assertTrue(self.path.exists())
         download(
             url=TEST_TXT.as_uri(),
             path=self.path,
             hexdigests={
-                'md5': self.mismatching_md5_hexdigest,
+                'md5': self.expected_md5,
             },
             force=True,
         )
