@@ -103,7 +103,7 @@ def download(
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
-    :raises ValueError: If an invalid backend is chosen
+    :raises ValueError: If an invalid backend is chosen, or the downloaded file's hexdigest does not match.
     """
     # input normalization
     path = Path(path).resolve()
