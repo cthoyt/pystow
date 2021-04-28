@@ -28,6 +28,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class HexDigestError(ValueError):
+    """Thrown if the hashsums do not match expected hashsums."""
+
+    def __init__(self, offending_hexdigests: Collection[Tuple[str, str]]):
+        self.offending_hexdigests = offending_hexdigests
+
+    def __str__(self):
+        return "\n".join((
+            "Hexdigest of downloaded file does not match the expected ones!",
+            *(
+                f"\tactual: {actual} vs. expected: {expected}"
+                for actual, expected in self.offending_hexdigests
+            )
+        ))
+
+
 def get_offending_hexdigests(
     destination: Path,
     chunk_size: int = 64 * 2 ** 10,
@@ -105,7 +121,8 @@ def download(
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
-    :raises ValueError: If an invalid backend is chosen, or the downloaded file's hexdigest does not match.
+    :raises ValueError: If an invalid backend is chosen
+    :raises HexDigestError: If the downloaded file's hexdigest does not match
     """
     # input normalization
     path = Path(path).resolve()
@@ -140,13 +157,7 @@ def download(
 
     offending_hexdigests = get_offending_hexdigests(destination=path, hexdigests=hexdigests)
     if offending_hexdigests:
-        raise ValueError("\n".join((
-            "Hexdigest of downloaded file does not match the expected ones!",
-            *(
-                f"\tactual: {actual} vs. expected: {expected}"
-                for actual, expected in offending_hexdigests
-            )
-        )))
+        raise HexDigestError(offending_hexdigests)
 
 
 def name_from_url(url: str) -> str:
