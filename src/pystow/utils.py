@@ -75,25 +75,25 @@ def get_offending_hexdigests(
         return []
 
     # instantiate algorithms
-    hash_algorithms = {
+    algorithms = {
         alg: hashlib.new(alg)
         for alg in hexdigests
     }
 
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
-    with destination.open('rb', buffering=0) as f:
-        for this_chunk_size in iter(lambda: f.readinto(buffer), 0):
-            for alg in hash_algorithms.values():
+    with destination.open('rb', buffering=0) as file:
+        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):
+            for alg in algorithms.values():
                 alg.update(buffer[:this_chunk_size])
 
     # Compare digests
     mismatches = []
-    for alg, digest in hexdigests.items():
-        digest_ = hash_algorithms[alg].hexdigest()
-        if digest_ != digest:
-            logger.fatal(f"Hashsum does not match! expected {alg}={digest}, but got {digest_}.")
-            mismatches.append((digest_, digest))
+    for alg, expected_digest in hexdigests.items():
+        observed_digest = algorithms[alg].hexdigest()
+        if observed_digest != expected_digest:
+            logger.fatal(f"Hashsum does not match! expected {alg}={expected_digest}, but got {observed_digest}.")
+            mismatches.append((observed_digest, expected_digest))
         elif verbose:
             logger.info(f"Successfully checked with {alg}.")
 
