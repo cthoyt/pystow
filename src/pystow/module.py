@@ -40,7 +40,18 @@ def get_home(ensure_exists: bool = True) -> Path:
 
 
 def get_base(key: str, ensure_exists: bool = True) -> Path:
-    """Get the base directory for a module."""
+    """Get the base directory for a module.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param ensure_exists:
+        Should all directories be created automatically?
+        Defaults to true.
+    :returns:
+        The path to the given
+    """
     _assert_valid(key)
     envvar = f'{key.upper()}_HOME'
     default = get_home(ensure_exists=False) / key
@@ -69,7 +80,21 @@ class Module:
 
     @classmethod
     def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> 'Module':
-        """Get a module for the given directory or one of its subdirectories."""
+        """Get a module for the given directory or one of its subdirectories.
+
+        :param key:
+            The name of the module. No funny characters. The envvar
+            <key>_HOME where key is uppercased is checked first before using
+            the default home directory.
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param ensure_exists:
+            Should all directories be created automatically?
+            Defaults to true.
+        :return:
+            A module
+        """
         base = get_base(key, ensure_exists=False)
         rv = cls(base=base, ensure_exists=ensure_exists)
         if subkeys:
