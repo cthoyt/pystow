@@ -10,6 +10,7 @@ import os
 import shutil
 import tarfile
 import zipfile
+from contextlib import contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
@@ -108,6 +109,43 @@ def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, st
         raise HexDigestError(offending_hexdigests)
 
 
+@contextmanager
+def download_context(
+    target: Any,
+    path: Union[str, Path],
+    force: bool = True,
+    clean_on_failure: bool = True,
+    hexdigests: Optional[Mapping[str, str]] = None,
+) -> None:
+    """Download a file from a given URL.
+
+    :param target: The download target (just used for logging)
+    :param path: Path to download the file to
+    :param force: If false and the file already exists, will not re-download.
+    :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    """
+    path = Path(path).resolve()
+
+    if path.exists() and not force:
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
+        logger.debug('did not re-download %s from %s', path, target)
+        return
+
+    try:
+        yield path
+    except (Exception, KeyboardInterrupt):
+        if clean_on_failure:
+            _unlink(path)
+        raise
+    finally:
+        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
+
+
 def download(
     url: str,
     path: Union[str, Path],
@@ -133,14 +171,13 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises ValueError: If an invalid backend is chosen
     """
-    path = Path(path).resolve()
-
-    if path.exists() and not force:
-        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s from %s', path, url)
-        return
-
-    try:
+    with download_context(
+        path=path,
+        target=url,
+        force=force,
+        clean_on_failure=clean_on_failure,
+        hexdigests=hexdigests,
+    ) as path:
         if backend == 'urllib':
             logger.info('downloading with urllib from %s to %s', url, path)
             urlretrieve(url, path, **kwargs)  # noqa:S310
@@ -153,10 +190,6 @@ def download(
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
-    except (Exception, KeyboardInterrupt):
-        if clean_on_failure:
-            _unlink(path)
-        raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
@@ -313,14 +346,13 @@ def download_from_google(
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
-    path = Path(path).resolve()
-
-    if path.exists() and not force:
-        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s from Google ID %s', path, file_id)
-        return
-
-    try:
+    with download_context(
+        path=path,
+        target=file_id,
+        force=force,
+        clean_on_failure=clean_on_failure,
+        hexdigests=hexdigests,
+    ) as path:
         with requests.Session() as sess:
             res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
             token = _get_confirm_token(res)
@@ -329,12 +361,6 @@ def download_from_google(
                 for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
-    except (Exception, KeyboardInterrupt):
-        if clean_on_failure:
-            _unlink(path)
-        raise
-
-    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
 
 
 def _get_confirm_token(res: requests.Response) -> str:
@@ -371,13 +397,12 @@ def download_from_s3(
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     """
-    path = Path(path).resolve()
-
-    if path.exists() and not force:
-        logger.debug('did not re-download %s from %s %s', path, s3_bucket, s3_key)
-        return
-
-    try:
+    with download_context(
+        path=path,
+        target=(s3_key, s3_bucket),
+        force=force,
+        clean_on_failure=clean_on_failure,
+    ) as path:
         import boto3.s3.transfer
         if client is None:
             import boto3
@@ -389,10 +414,6 @@ def download_from_s3(
         download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
         download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
-    except (Exception, KeyboardInterrupt):
-        if clean_on_failure:
-            _unlink(path)
-        raise
 
 
 def _unlink(path: Union[str, Path]) -> None:
