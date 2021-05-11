@@ -34,9 +34,9 @@ def get_name() -> str:
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
 
-def get_home(ensure_exists: bool = True, use_appdirs: bool = False) -> Path:
+def get_home(ensure_exists: bool = True, use_system: bool = False) -> Path:
     """Get the PyStow home directory."""
-    if use_appdirs:
+    if use_system:
         from appdirs import user_data_dir
         return Path(user_data_dir())
     else:
@@ -44,7 +44,7 @@ def get_home(ensure_exists: bool = True, use_appdirs: bool = False) -> Path:
     return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
-def get_base(key: str, ensure_exists: bool = True, use_appdirs: bool = False) -> Path:
+def get_base(key: str, ensure_exists: bool = True, use_system: bool = False) -> Path:
     """Get the base directory for a module.
 
     :param key:
@@ -54,7 +54,7 @@ def get_base(key: str, ensure_exists: bool = True, use_appdirs: bool = False) ->
     :param ensure_exists:
         Should all directories be created automatically?
         Defaults to true.
-    :param use_appdirs:
+    :param use_system:
         Should the :mod:`appdirs` module be used to find a system-specific
         path instead of inside the home directory? Defaults to false.
     :returns:
@@ -62,7 +62,7 @@ def get_base(key: str, ensure_exists: bool = True, use_appdirs: bool = False) ->
     """
     _assert_valid(key)
     envvar = f'{key.upper()}_HOME'
-    if use_appdirs:
+    if use_system:
         from appdirs import user_data_dir
         default = Path(user_data_dir(appname=key))
     else:
@@ -147,7 +147,7 @@ class Module:
         mkdir(self.base, ensure_exists=ensure_exists)
 
     @classmethod
-    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True, use_appdirs: bool = False) -> 'Module':
+    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True, use_system: bool = False) -> 'Module':
         """Get a module for the given directory or one of its subdirectories.
 
         :param key:
@@ -160,13 +160,13 @@ class Module:
         :param ensure_exists:
             Should all directories be created automatically?
             Defaults to true.
-        :param use_appdirs:
+        :param use_system:
             Should the :mod:`appdirs` module be used to find a system-specific
             path instead of inside the home directory? Defaults to false.
         :return:
             A module
         """
-        base = get_base(key, ensure_exists=False, use_appdirs=use_appdirs)
+        base = get_base(key, ensure_exists=False, use_system=use_system)
         rv = cls(base=base, ensure_exists=ensure_exists)
         if subkeys:
             rv = rv.submodule(*subkeys, ensure_exists=ensure_exists)
