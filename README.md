@@ -24,9 +24,9 @@
   </a>
 </p>
 
-👜 Easily pick a place to store data for your python package.
+👜 Easily pick a place to store data for your python code.
 
-## 💪 Usage
+## 🚀 Getting Started
 
 Get a directory for your application.
 
@@ -41,6 +41,16 @@ pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
 
 # You can go as deep as you want
 pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
+```
+
+Get a file path for your application by adding the `name` keyword argument. This is made explicit so PyStow knows which
+parent directories to automatically create.
+
+```python
+import pystow
+
+# Get a directory (as a pathlib.Path) for ~/.data/indra/database.tsv
+indra_database_path = pystow.join('indra', 'database', name='database.tsv')
 ```
 
 Ensure a file from the internet is available in your application's directory:
