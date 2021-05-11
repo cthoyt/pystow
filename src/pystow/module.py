@@ -34,13 +34,17 @@ def get_name() -> str:
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
 
-def get_home(ensure_exists: bool = True) -> Path:
+def get_home(ensure_exists: bool = True, use_appdirs: bool = False) -> Path:
     """Get the PyStow home directory."""
-    default = Path.home() / get_name()
+    if use_appdirs:
+        from appdirs import user_data_dir
+        return Path(user_data_dir())
+    else:
+        default = Path.home() / get_name()
     return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
-def get_base(key: str, ensure_exists: bool = True) -> Path:
+def get_base(key: str, ensure_exists: bool = True, use_appdirs: bool = False) -> Path:
     """Get the base directory for a module.
 
     :param key:
@@ -55,7 +59,11 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
     """
     _assert_valid(key)
     envvar = f'{key.upper()}_HOME'
-    default = get_home(ensure_exists=False) / key
+    if use_appdirs:
+        from appdirs import user_data_dir
+        default = Path(user_data_dir(appname=key))
+    else:
+        default = get_home(ensure_exists=False) / key
     return getenv_path(envvar, default, ensure_exists=ensure_exists)
 
 
