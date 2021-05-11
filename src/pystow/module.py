@@ -116,7 +116,7 @@ def ensure_readme():
     readme_path = get_home(ensure_exists=True).joinpath('README.md')
     if readme_path.is_file():
         return
-    with readme_path.open('w') as file:
+    with readme_path.open('w', encoding='utf8') as file:
         print(README_TEXT, file=file)
 
 
