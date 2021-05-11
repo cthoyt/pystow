@@ -52,6 +52,20 @@ class HexDigestError(ValueError):
         ))
 
 
+class UnexpectedDirectory(FileExistsError):
+    """Thrown if a directory path is given where file path should have been."""
+
+    def __init__(self, path: Path):
+        """Instantiate the exception.
+
+        :param path: The path to a directory that should have been a file.
+        """
+        self.path = path
+
+    def __str__(self):  # noqa:D105
+        return f'got directory instead of file: {self.path}'
+
+
 def get_offending_hexdigests(
     path: Path,
     chunk_size: int = 64 * 2 ** 10,
@@ -131,11 +145,14 @@ def download(
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     :raises ValueError: If an invalid backend is chosen
     """
     path = Path(path).resolve()
 
-    if path.exists() and not force:
+    if path.is_dir():
+        raise UnexpectedDirectory(path)
+    if path.is_file() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug('did not re-download %s from %s', path, url)
         return
@@ -312,10 +329,13 @@ def download_from_google(
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     """
     path = Path(path).resolve()
 
-    if path.exists() and not force:
+    if path.is_dir():
+        raise UnexpectedDirectory(path)
+    if path.is_file() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug('did not re-download %s from Google ID %s', path, file_id)
         return
@@ -370,10 +390,13 @@ def download_from_s3(
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
+    :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     """
     path = Path(path).resolve()
 
-    if path.exists() and not force:
+    if path.is_dir():
+        raise UnexpectedDirectory(path)
+    if path.is_file() and not force:
         logger.debug('did not re-download %s from %s %s', path, s3_bucket, s3_key)
         return
 
