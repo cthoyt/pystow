@@ -54,6 +54,9 @@ def get_base(key: str, ensure_exists: bool = True, use_appdirs: bool = False) ->
     :param ensure_exists:
         Should all directories be created automatically?
         Defaults to true.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :returns:
         The path to the given
     """
@@ -144,7 +147,7 @@ class Module:
         mkdir(self.base, ensure_exists=ensure_exists)
 
     @classmethod
-    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> 'Module':
+    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True, use_appdirs: bool = False) -> 'Module':
         """Get a module for the given directory or one of its subdirectories.
 
         :param key:
@@ -157,10 +160,13 @@ class Module:
         :param ensure_exists:
             Should all directories be created automatically?
             Defaults to true.
+        :param use_appdirs:
+            Should the :mod:`appdirs` module be used to find a system-specific
+            path instead of inside the home directory? Defaults to false.
         :return:
             A module
         """
-        base = get_base(key, ensure_exists=False)
+        base = get_base(key, ensure_exists=False, use_appdirs=use_appdirs)
         rv = cls(base=base, ensure_exists=ensure_exists)
         if subkeys:
             rv = rv.submodule(*subkeys, ensure_exists=ensure_exists)

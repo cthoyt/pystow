@@ -75,6 +75,7 @@ def ensure(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Path:
     """Ensure a file is downloaded.
@@ -98,7 +99,7 @@ def ensure(
     :return:
         The path of the file that has been downloaded (or already exists)
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
 
 
@@ -108,6 +109,7 @@ def ensure_csv(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ):
@@ -125,6 +127,9 @@ def ensure_csv(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
     :return: A pandas DataFrame
@@ -139,7 +144,7 @@ def ensure_csv(
         >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
         >>> df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_csv(
         *subkeys,
         url=url,
@@ -156,6 +161,7 @@ def ensure_excel(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_excel_kwargs: Optional[Mapping[str, Any]] = None,
 ):
@@ -173,12 +179,15 @@ def ensure_excel(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
     :return: A pandas DataFrame
     :rtype: pandas.DataFrame
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_excel(
         *subkeys,
         url=url,
@@ -196,11 +205,12 @@ def ensure_tar_df(
     inner_path: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_tar_df(
         *subkeys,
         url=url,
@@ -219,11 +229,12 @@ def ensure_zip_df(
     inner_path: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_zip_df(
         *subkeys,
         url=url,
@@ -241,6 +252,7 @@ def ensure_rdf(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     precache: bool = True,
     parse_kwargs: Optional[Mapping[str, Any]] = None,
@@ -259,6 +271,9 @@ def ensure_rdf(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
     :param parse_kwargs: Keyword arguments to pass through to :func:`pystow.utils.read_rdf`.
@@ -271,10 +286,10 @@ def ensure_rdf(
 
         >>> import pystow
         >>> import rdflib
-        >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
-        >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
+        >>> rhea_url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
+        >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=rhea_url)
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_rdf(
         *subkeys,
         url=url,
@@ -293,6 +308,7 @@ def ensure_from_s3(
     s3_key: Union[str, Sequence[str]],
     name: Optional[str] = None,
     force: bool = False,
+    use_appdirs: bool = False,
 ) -> Path:
     """Ensure a file is downloaded.
 
@@ -312,6 +328,9 @@ def ensure_from_s3(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :return:
         The path of the file that has been downloaded (or already exists)
 
@@ -320,7 +339,7 @@ def ensure_from_s3(
     >>> version = '0.0.21'
     >>> ensure_from_s3('test', version, s3_bucket='bigmech', s3_key=f'protmapper/{version}/refseq_uniprot.csv')
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_from_s3(*subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force)
 
 
@@ -330,6 +349,7 @@ def ensure_from_google(
     name: str,
     file_id: str,
     force: bool = False,
+    use_appdirs: bool = False,
 ) -> Path:
     """Ensure a file is downloaded from google drive.
 
@@ -349,6 +369,9 @@ def ensure_from_google(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param use_appdirs:
+        Should the :mod:`appdirs` module be used to find a system-specific
+        path instead of inside the home directory? Defaults to false.
     :return:
         The path of the file that has been downloaded (or already exists)
 
@@ -357,5 +380,5 @@ def ensure_from_google(
 
     >>> ensure_from_google('test', name='wk3l15k.zip', file_id='1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z')
     """
-    _module = Module.from_key(key, ensure_exists=True)
+    _module = Module.from_key(key, ensure_exists=True, use_appdirs=use_appdirs)
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
