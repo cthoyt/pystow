@@ -24,9 +24,9 @@
   </a>
 </p>
 
-👜 Easily pick a place to store data for your python package.
+👜 Easily pick a place to store data for your python code.
 
-## 💪 Usage
+## 🚀 Getting Started
 
 Get a directory for your application.
 
@@ -41,6 +41,16 @@ pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
 
 # You can go as deep as you want
 pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
+```
+
+Get a file path for your application by adding the `name` keyword argument. This is made explicit so PyStow knows which
+parent directories to automatically create.
+
+```python
+import pystow
+
+# Get a directory (as a pathlib.Path) for ~/.data/indra/database.tsv
+indra_database_path = pystow.join('indra', 'database', name='database.tsv')
 ```
 
 Ensure a file from the internet is available in your application's directory:
@@ -74,11 +84,44 @@ rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
-### ⚠️ Configuration
+### ⚙️️ Configuration
 
-Data gets stored in `~/.data` by default. If you want to change the name of the directory, set the environment
-variable `PYSTOW_NAME`. If you want to change the default parent directory to be other than the home directory,
-set `PYSTOW_HOME`
+By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
+`$HOME/.data/<app>` folder.
+
+If you want to use an alternate folder name to `.data` inside the home directory, you can set the `PYSTOW_NAME`
+environment variable. For example, if you set `PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
+create the `$HOME/mydata/pykeen/` directory:
+
+```python
+import os
+import pystow
+
+# Only for demonstration purposes. You should set environment
+# variables either with your .bashrc or in the command line REPL.
+os.environ['PYSTOW_NAME'] = 'mydata'
+
+# Get a directory (as a pathlib.Path) for ~/mydata/pykeen
+pykeen_directory = pystow.join('pykeen')
+```
+
+If you want to specify a completely custom directory that isn't relative to your home directory, you can set
+the `PYSTOW_HOME` environment variable. For example, if you set `PYSTOW_HOME=/usr/local/`, then the following code for
+the `pykeen` app will create the `/usr/local/pykeen/` directory:
+
+```python
+import os
+import pystow
+
+# Only for demonstration purposes. You should set environment
+# variables either with your .bashrc or in the command line REPL.
+os.environ['PYSTOW_HOME'] = '/usr/local/'
+
+# Get a directory (as a pathlib.Path) for /usr/local/pykeen
+pykeen_directory = pystow.join('pykeen')
+```
+
+Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
 
 ## 🚀 Installation
 

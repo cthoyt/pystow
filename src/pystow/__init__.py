@@ -7,4 +7,6 @@ from .api import (  # noqa
     ensure_zip_df, get, join, module,
 )
 from .config_api import get_config, write_config  # noqa
-from .module import Module  # noqa
+from .module import Module, ensure_readme  # noqa
+
+ensure_readme()
