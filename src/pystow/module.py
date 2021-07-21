@@ -259,6 +259,8 @@ class Module:
         else:
             # try and get the name of the file itself - .tar.gz
             raise NotImplementedError
+        if unzipped_path.is_dir() and not force:
+            return unzipped_path
         with tarfile.open(path) as tar_file:
             tar_file.extractall(unzipped_path)
         return unzipped_path
