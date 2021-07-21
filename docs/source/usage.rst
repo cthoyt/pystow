@@ -3,6 +3,7 @@ Usage
 .. autofunction:: pystow.join
 .. autofunction:: pystow.module
 .. autofunction:: pystow.ensure
+.. autofunction:: pystow.ensure_untar
 
 Ensure with Parsing
 -------------------
