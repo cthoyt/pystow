@@ -312,13 +312,12 @@ class Module:
         inner_path: str,
         name: Optional[str] = None,
         force: bool = False,
-        sep: str = '\t',
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> 'pd.DataFrame':
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        return read_tarfile_csv(path=path, inner_path=inner_path, sep=sep, **_clean_csv_kwargs(read_csv_kwargs))
+        return read_tarfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
 
     def ensure_zip_df(
         self,
