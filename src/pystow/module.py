@@ -14,7 +14,7 @@ from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
 from .utils import (
     download, download_from_google, download_from_s3, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf,
-    read_tarfile_csv, read_zipfile_csv,
+    read_tarfile_csv, read_tarfile_xml, read_zipfile_csv,
 )
 
 if TYPE_CHECKING:
@@ -318,6 +318,20 @@ class Module:
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
         return read_tarfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
+
+    def ensure_tar_xml(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        parse_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> 'pd.DataFrame':
+        """Download a tar file and open an inner file as an XML with :mod:`lxml`."""
+        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        return read_tarfile_xml(path=path, inner_path=inner_path, **(parse_kwargs or {}))
 
     def ensure_zip_df(
         self,

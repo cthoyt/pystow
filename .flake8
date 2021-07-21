@@ -7,6 +7,8 @@ ignore =
     S403 # pickle
     S301 # pickle
     W503 # line break before binary operator
+    S410
+    S320
 exclude =
     .tox,
     .git,

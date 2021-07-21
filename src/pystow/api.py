@@ -16,6 +16,7 @@ __all__ = [
     'ensure_csv',
     'ensure_excel',
     'ensure_tar_df',
+    'ensure_tar_xml',
     'ensure_zip_df',
     'ensure_from_s3',
     'ensure_from_google',
@@ -209,6 +210,29 @@ def ensure_tar_df(
         inner_path=inner_path,
         download_kwargs=download_kwargs,
         read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def ensure_tar_xml(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Download a tar file and open an inner XML file with :mod:`lxml`."""
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_tar_xml(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        inner_path=inner_path,
+        download_kwargs=download_kwargs,
+        parse_kwargs=parse_kwargs,
     )
 
 
