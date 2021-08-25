@@ -4,7 +4,7 @@
 
 from .api import (  # noqa
     ensure, ensure_csv, ensure_excel, ensure_from_google, ensure_from_s3, ensure_rdf, ensure_tar_df, ensure_tar_xml,
-    ensure_untar, ensure_zip_df, get, join, module,
+    ensure_untar, ensure_zip_df, get, join, joinpath, module,
 )
 from .config_api import get_config, write_config  # noqa
 from .module import Module, ensure_readme  # noqa

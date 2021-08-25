@@ -34,13 +34,13 @@ Get a directory for your application.
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.joinpath('pykeen')
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
+pykeen_experiments_directory = pystow.joinpath('pykeen', 'experiments')
 
 # You can go as deep as you want
-pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
+pykeen_deep_directory = pystow.joinpath('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
 Get a file path for your application by adding the `name` keyword argument. This is made explicit so PyStow knows which
@@ -50,7 +50,7 @@ parent directories to automatically create.
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/indra/database.tsv
-indra_database_path = pystow.join('indra', 'database', name='database.tsv')
+indra_database_path = pystow.joinpath('indra', 'database', name='database.tsv')
 ```
 
 Ensure a file from the internet is available in your application's directory:
@@ -102,7 +102,7 @@ import pystow
 os.environ['PYSTOW_NAME'] = 'mydata'
 
 # Get a directory (as a pathlib.Path) for ~/mydata/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.joinpath('pykeen')
 ```
 
 If you want to specify a completely custom directory that isn't relative to your home directory, you can set
@@ -118,7 +118,7 @@ import pystow
 os.environ['PYSTOW_HOME'] = '/usr/local/'
 
 # Get a directory (as a pathlib.Path) for /usr/local/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.joinpath('pykeen')
 ```
 
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.

@@ -10,6 +10,7 @@ from .module import Module
 
 __all__ = [
     'module',
+    'joinpath',
     'join',
     'get',
     # Downloader functions
@@ -46,7 +47,7 @@ def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
     return Module.from_key(key, *subkeys, ensure_exists=ensure_exists)
 
 
-def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: bool = True) -> Path:
+def joinpath(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: bool = True) -> Path:
     """Return the home data directory for the given module.
 
     :param key:
@@ -64,13 +65,19 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
         The path of the directory or subdirectory for the given module.
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
-    return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
+    return _module.joinpath(*subkeys, name=name, ensure_exists=ensure_exists)
+
+
+def join(*args, **kwargs):
+    """Get a subdirectory of the current module, deprecated in favor of :func:`joinpath`."""
+    warnings.warn('Use pystow.joinpath instead of pystow.join', DeprecationWarning)
+    return joinpath(*args, **kwargs)
 
 
 def get(*args, **kwargs):
-    """Get a subdirectory of the current module, deprecated in favor of :func:`join`."""
-    warnings.warn('Use pystow.join instead of pystow.get', DeprecationWarning)
-    return join(*args, **kwargs)
+    """Get a subdirectory of the current module, deprecated in favor of :func:`joinpath`."""
+    warnings.warn('Use pystow.joinpath instead of pystow.get', DeprecationWarning)
+    return joinpath(*args, **kwargs)
 
 
 def ensure(

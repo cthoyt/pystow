@@ -171,10 +171,10 @@ class Module:
         :return:
             A module representing the subdirectory based on the given ``subkeys``.
         """
-        base = self.join(*subkeys, ensure_exists=False)
+        base = self.joinpath(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
 
-    def join(
+    def joinpath(
         self,
         *subkeys: str,
         name: Optional[str] = None,
@@ -210,13 +210,18 @@ class Module:
         :param name: The name of the database file.
         :return: A SQLite path string.
         """
-        path = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.joinpath(*subkeys, name=name, ensure_exists=True)
         return f"sqlite:///{path.as_posix()}"
 
     def get(self, *args, **kwargs):
-        """Get a subdirectory of the current module, deprecated in favor of :meth:`join`."""
+        """Get a subdirectory of the current module, deprecated in favor of :meth:`joinpath`."""
         warnings.warn('Use Module.join instead of Module.get', DeprecationWarning)
-        return self.join(*args, **kwargs)
+        return self.joinpath(*args, **kwargs)
+
+    def join(self, *args, **kwargs):
+        """Get a subdirectory of the current module, deprecated in favor of :meth:`joinpath`."""
+        warnings.warn("Use Module.join instead of Module.get", DeprecationWarning)
+        return self.joinpath(*args, **kwargs)
 
     def ensure(
         self,
@@ -245,7 +250,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        path = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.joinpath(*subkeys, name=name, ensure_exists=True)
         download(
             url=url,
             path=path,
@@ -486,7 +491,7 @@ class Module:
             s3_key = '/'.join(s3_key)  # join sequence
         if name is None:
             name = name_from_s3_key(s3_key)
-        path = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.joinpath(*subkeys, name=name, ensure_exists=True)
         download_from_s3(
             s3_bucket=s3_bucket,
             s3_key=s3_key,
@@ -522,7 +527,7 @@ class Module:
         :return:
             The path of the file that has been downloaded (or already exists)
         """
-        path = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.joinpath(*subkeys, name=name, ensure_exists=True)
         download_from_google(file_id, path, force=force)
         return path
 

@@ -20,14 +20,14 @@ def main():
 @click.option('--name')
 def join(keys: Sequence[str], name: Optional[str]):
     """List a directory."""
-    click.echo(api.join(*keys, name=name))
+    click.echo(api.joinpath(*keys, name=name))
 
 
 @main.command()
 @click.argument('keys', nargs=-1)
 def ls(keys: Sequence[str]):
     """List a directory."""
-    directory = api.join(*keys)
+    directory = api.joinpath(*keys)
     _ls(directory)
 
 
