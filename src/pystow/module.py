@@ -201,6 +201,18 @@ class Module:
             rv = rv.joinpath(name)
         return rv
 
+    def joinpath_sqlite(self, *subkeys: str, name: str) -> str:
+        """Get an SQLite database connection string.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the database file.
+        :return: A SQLite path string.
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=True)
+        return f"sqlite:///{path.as_posix()}"
+
     def get(self, *args, **kwargs):
         """Get a subdirectory of the current module, deprecated in favor of :meth:`join`."""
         warnings.warn('Use Module.join instead of Module.get', DeprecationWarning)
