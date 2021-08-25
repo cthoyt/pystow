@@ -61,6 +61,7 @@ def get_config(
     passthrough: Optional[X] = None,
     default: Optional[X] = None,
     dtype: Optional[Type[X]] = None,
+    raise_on_missing: bool = False,
 ):
     """Get a configuration value.
 
@@ -71,7 +72,10 @@ def get_config(
         this is returned.
     :param dtype: The datatype to parse out. Can either be :func:`int`, :func:`float`,
         :func:`bool`, or :func:`str`. If none, defaults to :func:`str`.
+    :param raise_on_missing: If true, will raise a value error if no data is found and no default
+        is given
     :returns: The config value or the default.
+    :raises ValueError: If ``raise_on_missing`` conditions are met
     """
     if passthrough is not None:
         return _cast(passthrough, dtype)
@@ -80,6 +84,8 @@ def get_config(
         return rv
     rv = _get_cfp(module).get(module, key, fallback=None)
     if rv is None:
+        if default is None and raise_on_missing:
+            raise ValueError(f"Could not look up {module}/{key} and no default given")
         return default
     return _cast(rv, dtype)
 
