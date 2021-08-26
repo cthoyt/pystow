@@ -114,6 +114,7 @@ def ensure_untar(
     directory: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
+    extract_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Path:
     """Ensure a file is downloaded and untarred.
 
@@ -136,6 +137,7 @@ def ensure_untar(
         Should the download be done again, even if the path already exists?
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param extract_kwargs: Keyword arguments to pass to :meth:`tarfile.TarFile.extract_all`.
     :return:
         The path of the directory where the file that has been downloaded
         gets extracted to

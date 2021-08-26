@@ -262,6 +262,7 @@ class Module:
         directory: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
+        extract_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
@@ -274,7 +275,7 @@ class Module:
         if unzipped_path.is_dir() and not force:
             return unzipped_path
         with tarfile.open(path) as tar_file:
-            tar_file.extractall(unzipped_path)
+            tar_file.extractall(unzipped_path, **(extract_kwargs or {}))
         return unzipped_path
 
     @contextmanager
