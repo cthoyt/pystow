@@ -265,12 +265,12 @@ class Module:
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived."""
         path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        if directory is not None:
-            unzipped_path = path.parent.joinpath(directory)
-            unzipped_path.mkdir(exist_ok=True, parents=True)
-        else:
-            # try and get the name of the file itself - .tar.gz
-            raise NotImplementedError
+        if directory is None:
+            # rhea-rxn.tar.gz -> rhea-rxn
+            suffixes_len = sum(len(suffix) for suffix in path.suffixes)
+            directory = path.name[:-suffixes_len]
+        unzipped_path = path.parent.joinpath(directory)
+        unzipped_path.mkdir(exist_ok=True, parents=True)
         if unzipped_path.is_dir() and not force:
             return unzipped_path
         with tarfile.open(path) as tar_file:
