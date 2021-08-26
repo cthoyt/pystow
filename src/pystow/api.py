@@ -111,6 +111,7 @@ def ensure_untar(
     *subkeys: str,
     url: str,
     name: Optional[str] = None,
+    directory: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Path:
@@ -128,6 +129,9 @@ def ensure_untar(
     :param name:
         Overrides the name of the file at the end of the URL, if given. Also
         useful for URLs that don't have proper filenames with extensions.
+    :param directory:
+        Overrides the name of the directory into which the tar archive is extracted.
+        If none given, will use the stem of the file name that gets downloaded.
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
@@ -137,7 +141,14 @@ def ensure_untar(
         gets extracted to
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.ensure_untar(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+    return _module.ensure_untar(
+        *subkeys,
+        url=url,
+        name=name,
+        directory=directory,
+        force=force,
+        download_kwargs=download_kwargs,
+    )
 
 
 def ensure_csv(
