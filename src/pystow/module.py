@@ -271,9 +271,9 @@ class Module:
             suffixes_len = sum(len(suffix) for suffix in path.suffixes)
             directory = path.name[:-suffixes_len]
         unzipped_path = path.parent.joinpath(directory)
-        unzipped_path.mkdir(exist_ok=True, parents=True)
         if unzipped_path.is_dir() and not force:
             return unzipped_path
+        unzipped_path.mkdir(exist_ok=True, parents=True)
         with tarfile.open(path) as tar_file:
             tar_file.extractall(unzipped_path, **(extract_kwargs or {}))
         return unzipped_path
