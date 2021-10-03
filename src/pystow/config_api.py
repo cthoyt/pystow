@@ -81,7 +81,7 @@ def get_config(
         return _cast(passthrough, dtype)
     rv = os.getenv(f'{module.upper()}_{key.upper()}')
     if rv is not None:
-        return rv
+        return _cast(rv, dtype)
     rv = _get_cfp(module).get(module, key, fallback=None)
     if rv is None:
         if default is None and raise_on_missing:
@@ -98,7 +98,12 @@ def _cast(rv, dtype):
     if dtype in (int, float):
         return dtype(rv)  # type: ignore
     if dtype is bool:
-        return rv.lower() in ('t', 'true', 'yes', '1', 1, True)
+        if rv.lower() in ('t', 'true', 'yes', '1', 1, True):
+            return True
+        elif rv.lower() in ('f', 'false', 'no', '0', 0, False):
+            return False
+        else:
+            raise ValueError(f'value can not be coerced into bool: {rv}')
     raise TypeError(f'dtype is invalid: {dtype}')
 
 

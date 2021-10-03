@@ -6,6 +6,7 @@ import unittest
 
 import pystow
 from pystow.config_api import _get_cfp
+from pystow.utils import mock_envvar
 
 
 class TestConfig(unittest.TestCase):
@@ -24,6 +25,17 @@ class TestConfig(unittest.TestCase):
             option=cls.test_option,
             value=cls.test_value,
         )
+
+    def test_env_cast(self):
+        """Test casting works properly when getting from the environment."""
+        with mock_envvar('TEST_VAR', '1234'):
+            self.assertEqual('1234', pystow.get_config('test', 'var'))
+            self.assertEqual('1234', pystow.get_config('test', 'var', dtype=str))
+            self.assertEqual(1234, pystow.get_config('test', 'var', dtype=int))
+            with self.assertRaises(ValueError):
+                pystow.get_config('test', 'var', dtype=bool)
+            with self.assertRaises(TypeError):
+                pystow.get_config('test', 'var', dtype=object)
 
     def test_get_config(self):
         """Test lookup not existing."""
