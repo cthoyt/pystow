@@ -10,10 +10,11 @@ import os
 import shutil
 import tarfile
 import zipfile
+from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Mapping, Optional, TYPE_CHECKING, Tuple, Union
+from typing import Any, Collection, Mapping, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -31,11 +32,13 @@ logger = logging.getLogger(__name__)
 # Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
 Hash = Any
 
+HexDigestMismatch = namedtuple('HexDigestMismatch', 'name actual expected')
+
 
 class HexDigestError(ValueError):
     """Thrown if the hashsums do not match expected hashsums."""
 
-    def __init__(self, offending_hexdigests: Collection[Tuple[str, str]]):
+    def __init__(self, offending_hexdigests: Collection[HexDigestMismatch]):
         """Instantiate the exception.
 
         :param offending_hexdigests: The result from :func:`get_offending_hexdigests`
@@ -46,8 +49,8 @@ class HexDigestError(ValueError):
         return "\n".join((
             "Hexdigest of downloaded file does not match the expected ones!",
             *(
-                f"\tactual: {actual} vs. expected: {expected}"
-                for actual, expected in self.offending_hexdigests
+                f"\t{name} actual: {actual} vs. expected: {expected}"
+                for name, actual, expected in self.offending_hexdigests
             ),
         ))
 
@@ -70,7 +73,7 @@ def get_offending_hexdigests(
     path: Path,
     chunk_size: int = 64 * 2 ** 10,
     hexdigests: Optional[Mapping[str, str]] = None,
-) -> Collection[Tuple[str, str]]:
+) -> Collection[HexDigestMismatch]:
     """
     Check a file for hash sums.
 
@@ -108,7 +111,7 @@ def get_offending_hexdigests(
         observed_digest = algorithms[alg].hexdigest()
         if observed_digest != expected_digest:
             logger.error(f"{alg} expected {expected_digest} but got {observed_digest}.")
-            mismatches.append((observed_digest, expected_digest))
+            mismatches.append(HexDigestMismatch(alg, observed_digest, expected_digest))
         else:
             logger.debug(f"Successfully checked with {alg}.")
 
