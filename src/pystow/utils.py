@@ -70,7 +70,7 @@ class UnexpectedDirectory(FileExistsError):
 
 
 def get_offending_hexdigests(
-    path: Path,
+    path: Union[str, Path],
     chunk_size: int = 64 * 2 ** 10,
     hexdigests: Optional[Mapping[str, str]] = None,
 ) -> Collection[HexDigestMismatch]:
@@ -90,7 +90,7 @@ def get_offending_hexdigests(
     if not hexdigests:
         return []
 
-    logger.info(f"Checking hash sums for file: {path.as_uri()}")
+    logger.info(f"Checking hash sums for file: {path}")
 
     # instantiate algorithms
     algorithms: Mapping[str, Hash] = {
