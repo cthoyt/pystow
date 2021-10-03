@@ -11,11 +11,19 @@ from pathlib import Path
 import pandas as pd
 
 from pystow.utils import (
-    HexDigestError, download, getenv_path, mkdir, mock_envvar, n, name_from_url, read_zipfile_csv, write_zipfile_csv,
+    HexDigestError,
+    download,
+    getenv_path,
+    mkdir,
+    mock_envvar,
+    n,
+    name_from_url,
+    read_zipfile_csv,
+    write_zipfile_csv,
 )
 
 HERE = Path(__file__).resolve().parent
-TEST_TXT = HERE.joinpath('resources', 'test.txt')
+TEST_TXT = HERE.joinpath("resources", "test.txt")
 
 
 class TestUtils(unittest.TestCase):
@@ -24,9 +32,9 @@ class TestUtils(unittest.TestCase):
     def test_name_from_url(self):
         """Test :func:`name_from_url`."""
         data = [
-            ('test.tsv', 'https://example.com/test.tsv'),
-            ('test.tsv', 'https://example.com/deeper/test.tsv'),
-            ('test.tsv.gz', 'https://example.com/deeper/test.tsv.gz'),
+            ("test.tsv", "https://example.com/test.tsv"),
+            ("test.tsv", "https://example.com/deeper/test.tsv"),
+            ("test.tsv.gz", "https://example.com/deeper/test.tsv.gz"),
         ]
         for name, url in data:
             with self.subTest(name=name, url=url):
@@ -36,7 +44,7 @@ class TestUtils(unittest.TestCase):
         """Test for ensuring a directory."""
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            subdirectory = directory / 'sd1'
+            subdirectory = directory / "sd1"
             self.assertFalse(subdirectory.exists())
 
             mkdir(subdirectory, ensure_exists=False)
@@ -73,12 +81,12 @@ class TestUtils(unittest.TestCase):
     def test_compressed_io(self):
         """Test that the read/write to compressed folder functions work."""
         rows = [[1, 2], [3, 4], [5, 6]]
-        columns = ['A', 'B']
+        columns = ["A", "B"]
         df = pd.DataFrame(rows, columns=columns)
-        inner_path = 'okay.tsv'
+        inner_path = "okay.tsv"
 
         data = [
-            ('test.zip', write_zipfile_csv, read_zipfile_csv),
+            ("test.zip", write_zipfile_csv, read_zipfile_csv),
             # ('test.tar.gz', write_tarfile_csv, read_tarfile_csv),
         ]
         for name, writer, reader in data:
@@ -99,13 +107,13 @@ class TestHashing(unittest.TestCase):
     def setUp(self) -> None:
         """Set up a test."""
         self.directory = tempfile.TemporaryDirectory()
-        self.path = Path(self.directory.name).joinpath('test.tsv')
+        self.path = Path(self.directory.name).joinpath("test.tsv")
 
         md5 = hashlib.md5()  # noqa:S303
-        with TEST_TXT.open('rb') as file:
+        with TEST_TXT.open("rb") as file:
             md5.update(file.read())
         self.expected_md5 = md5.hexdigest()
-        self.mismatching_md5_hexdigest = 'yolo'
+        self.mismatching_md5_hexdigest = "yolo"
         self.assertNotEqual(self.mismatching_md5_hexdigest, self.expected_md5)
 
     def tearDown(self) -> None:
@@ -119,7 +127,7 @@ class TestHashing(unittest.TestCase):
             url=TEST_TXT.as_uri(),
             path=self.path,
             hexdigests={
-                'md5': self.expected_md5,
+                "md5": self.expected_md5,
             },
         )
 
@@ -131,14 +139,14 @@ class TestHashing(unittest.TestCase):
                 url=TEST_TXT.as_uri(),
                 path=self.path,
                 hexdigests={
-                    'md5': self.mismatching_md5_hexdigest,
+                    "md5": self.mismatching_md5_hexdigest,
                 },
             )
 
     def test_override_hash_error(self):
         """Test hash error on download."""
-        with open(self.path, 'w') as file:
-            print('test file content', file)
+        with open(self.path, "w") as file:
+            print("test file content", file)
 
         self.assertTrue(self.path.exists())
         with self.assertRaises(HexDigestError):
@@ -146,7 +154,7 @@ class TestHashing(unittest.TestCase):
                 url=TEST_TXT.as_uri(),
                 path=self.path,
                 hexdigests={
-                    'md5': self.expected_md5,
+                    "md5": self.expected_md5,
                 },
                 force=False,
             )
@@ -154,15 +162,15 @@ class TestHashing(unittest.TestCase):
     def test_force(self):
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
-        with open(self.path, 'w') as file:
-            print('test file content', file)
+        with open(self.path, "w") as file:
+            print("test file content", file)
 
         self.assertTrue(self.path.exists())
         download(
             url=TEST_TXT.as_uri(),
             path=self.path,
             hexdigests={
-                'md5': self.expected_md5,
+                "md5": self.expected_md5,
             },
             force=True,
         )

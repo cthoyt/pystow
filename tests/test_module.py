@@ -85,9 +85,9 @@ class TestGet(unittest.TestCase):
 
     def test_ensure(self):
         """Test ensuring a CSV file."""
-        test_url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+        test_url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
         with self.mock_directory():
-            df = ensure_csv('test', url=test_url)
+            df = ensure_csv("test", url=test_url)
             self.assertEqual(3, len(df.columns))
 
     def test_ensure_module(self):

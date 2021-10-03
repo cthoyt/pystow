@@ -22,6 +22,10 @@
   <a href="https://zenodo.org/badge/latestdoi/318194121">
     <img src="https://zenodo.org/badge/318194121.svg" alt="DOI">
   </a>
+
+  <a href="https://github.com/psf/black">
+    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black">
+  </a>
 </p>
 
 👜 Easily pick a place to store data for your python code.

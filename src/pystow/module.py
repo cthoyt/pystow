@@ -14,8 +14,17 @@ from textwrap import dedent
 from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
 from .utils import (
-    download, download_from_google, download_from_s3, getenv_path, mkdir, name_from_s3_key, name_from_url, read_rdf,
-    read_tarfile_csv, read_tarfile_xml, read_zipfile_csv,
+    download,
+    download_from_google,
+    download_from_s3,
+    getenv_path,
+    mkdir,
+    name_from_s3_key,
+    name_from_url,
+    read_rdf,
+    read_tarfile_csv,
+    read_tarfile_xml,
+    read_zipfile_csv,
 )
 
 if TYPE_CHECKING:
@@ -25,9 +34,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-PYSTOW_NAME_ENVVAR = 'PYSTOW_NAME'
-PYSTOW_HOME_ENVVAR = 'PYSTOW_HOME'
-PYSTOW_NAME_DEFAULT = '.data'
+PYSTOW_NAME_ENVVAR = "PYSTOW_NAME"
+PYSTOW_HOME_ENVVAR = "PYSTOW_HOME"
+PYSTOW_NAME_DEFAULT = ".data"
 
 
 def get_name() -> str:
@@ -55,17 +64,18 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         The path to the given
     """
     _assert_valid(key)
-    envvar = f'{key.upper()}_HOME'
+    envvar = f"{key.upper()}_HOME"
     default = get_home(ensure_exists=False) / key
     return getenv_path(envvar, default, ensure_exists=ensure_exists)
 
 
 def _assert_valid(key: str) -> None:
-    if '.' in key:
-        raise ValueError(f'The module should not have a dot in it: {key}')
+    if "." in key:
+        raise ValueError(f"The module should not have a dot in it: {key}")
 
 
-README_TEXT = dedent('''\
+README_TEXT = dedent(
+    """\
 # PyStow Data Directory
 
 This directory is used by [`pystow`](https://github.com/cthoyt/pystow) as a
@@ -109,15 +119,16 @@ pykeen_directory = pystow.join('pykeen')
 ```
 
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
-''')
+"""
+)
 
 
 def ensure_readme():
     """Ensure there's a README in the PyStow data directory."""
-    readme_path = get_home(ensure_exists=True).joinpath('README.md')
+    readme_path = get_home(ensure_exists=True).joinpath("README.md")
     if readme_path.is_file():
         return
-    with readme_path.open('w', encoding='utf8') as file:
+    with readme_path.open("w", encoding="utf8") as file:
         print(README_TEXT, file=file)
 
 
@@ -137,7 +148,7 @@ class Module:
         mkdir(self.base, ensure_exists=ensure_exists)
 
     @classmethod
-    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> 'Module':
+    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> "Module":
         """Get a module for the given directory or one of its subdirectories.
 
         :param key:
@@ -159,7 +170,7 @@ class Module:
             rv = rv.submodule(*subkeys, ensure_exists=ensure_exists)
         return rv
 
-    def submodule(self, *subkeys: str, ensure_exists: bool = True) -> 'Module':
+    def submodule(self, *subkeys: str, ensure_exists: bool = True) -> "Module":
         """Get a module for a subdirectory of the current module.
 
         :param subkeys:
@@ -215,7 +226,7 @@ class Module:
 
     def get(self, *args, **kwargs):
         """Get a subdirectory of the current module, deprecated in favor of :meth:`join`."""
-        warnings.warn('Use Module.join instead of Module.get', DeprecationWarning)
+        warnings.warn("Use Module.join instead of Module.get", DeprecationWarning)
         return self.join(*args, **kwargs)
 
     def ensure(
@@ -265,7 +276,9 @@ class Module:
         extract_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         if directory is None:
             # rhea-rxn.tar.gz -> rhea-rxn
             suffixes_len = sum(len(suffix) for suffix in path.suffixes)
@@ -286,13 +299,15 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = 'r',
+        mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
     ):
         """Ensure a file is downloaded then open it."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
-        open_kwargs.setdefault('mode', mode)
+        open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
             yield file
 
@@ -304,13 +319,15 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = 'rb',
+        mode: str = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
     ):
         """Ensure a gzipped file is downloaded then open it."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
-        open_kwargs.setdefault('mode', mode)
+        open_kwargs.setdefault("mode", mode)
         with gzip.open(path, **open_kwargs) as file:
             yield file
 
@@ -322,11 +339,13 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> 'pd.DataFrame':
+    ) -> "pd.DataFrame":
         """Download a CSV and open as a dataframe with :mod:`pandas`."""
         import pandas as pd
 
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
     def ensure_excel(
@@ -337,9 +356,11 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> 'pd.DataFrame':
+    ) -> "pd.DataFrame":
         """Download an excel file and open as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         return pd.read_excel(path, **(read_excel_kwargs or {}))
 
     def ensure_tar_df(
@@ -351,7 +372,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> 'pd.DataFrame':
+    ) -> "pd.DataFrame":
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -373,8 +394,12 @@ class Module:
 
         .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
         """
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        return read_tarfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        return read_tarfile_csv(
+            path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs)
+        )
 
     def ensure_tar_xml(
         self,
@@ -407,7 +432,9 @@ class Module:
 
         .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
         """
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         return read_tarfile_xml(path=path, inner_path=inner_path, **(parse_kwargs or {}))
 
     def ensure_zip_df(
@@ -419,10 +446,14 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> 'pd.DataFrame':
+    ) -> "pd.DataFrame":
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
-        return read_zipfile_csv(path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs))
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        return read_zipfile_csv(
+            path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs)
+        )
 
     def ensure_rdf(
         self,
@@ -433,19 +464,21 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         precache: bool = True,
         parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> 'rdflib.Graph':
+    ) -> "rdflib.Graph":
         """Download a RDF file and open with :mod:`rdflib`."""
-        path = self.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         if not precache:
             return read_rdf(path=path, **(parse_kwargs or {}))
 
-        cache_path = path.with_suffix(path.suffix + '.pickle.gz')
+        cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
-            with gzip.open(cache_path, 'rb') as file:
+            with gzip.open(cache_path, "rb") as file:
                 return pickle.load(file)  # type: ignore
 
         rv = read_rdf(path=path, **(parse_kwargs or {}))
-        with gzip.open(cache_path, 'wb') as file:
+        with gzip.open(cache_path, "wb") as file:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)  # type: ignore
         return rv
 
@@ -455,7 +488,7 @@ class Module:
         s3_bucket: str,
         s3_key: Union[str, Sequence[str]],
         name: Optional[str] = None,
-        client: Optional['botocore.client.BaseClient'] = None,
+        client: Optional["botocore.client.BaseClient"] = None,
         client_kwargs: Optional[Mapping[str, Any]] = None,
         download_file_kwargs: Optional[Mapping[str, Any]] = None,
         force: bool = False,
@@ -484,7 +517,7 @@ class Module:
             The path of the file that has been downloaded (or already exists)
         """
         if not isinstance(s3_key, str):
-            s3_key = '/'.join(s3_key)  # join sequence
+            s3_key = "/".join(s3_key)  # join sequence
         if name is None:
             name = name_from_s3_key(s3_key)
         path = self.join(*subkeys, name=name, ensure_exists=True)
@@ -531,5 +564,5 @@ class Module:
 def _clean_csv_kwargs(read_csv_kwargs):
     if read_csv_kwargs is None:
         read_csv_kwargs = {}
-    read_csv_kwargs.setdefault('sep', '\t')
+    read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs

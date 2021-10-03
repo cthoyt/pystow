@@ -3,7 +3,7 @@
 """Version information for PyStow."""
 
 __all__ = [
-    'VERSION',
+    "VERSION",
 ]
 
-VERSION = '0.1.14-dev'
+VERSION = "0.1.14-dev"

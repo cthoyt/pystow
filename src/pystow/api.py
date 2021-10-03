@@ -9,21 +9,21 @@ from typing import Any, Mapping, Optional, Sequence, Union
 from .module import Module
 
 __all__ = [
-    'module',
-    'join',
-    'get',
+    "module",
+    "join",
+    "get",
     # Downloader functions
-    'ensure',
-    'ensure_untar',
+    "ensure",
+    "ensure_untar",
     # Processors
-    'ensure_csv',
-    'ensure_excel',
-    'ensure_tar_df',
-    'ensure_tar_xml',
-    'ensure_zip_df',
-    'ensure_from_s3',
-    'ensure_from_google',
-    'ensure_rdf',
+    "ensure_csv",
+    "ensure_excel",
+    "ensure_tar_df",
+    "ensure_tar_xml",
+    "ensure_zip_df",
+    "ensure_from_s3",
+    "ensure_from_google",
+    "ensure_rdf",
 ]
 
 
@@ -69,7 +69,7 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
 
 def get(*args, **kwargs):
     """Get a subdirectory of the current module, deprecated in favor of :func:`join`."""
-    warnings.warn('Use pystow.join instead of pystow.get', DeprecationWarning)
+    warnings.warn("Use pystow.join instead of pystow.get", DeprecationWarning)
     return join(*args, **kwargs)
 
 
@@ -103,7 +103,9 @@ def ensure(
         The path of the file that has been downloaded (or already exists)
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.ensure(*subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs)
+    return _module.ensure(
+        *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+    )
 
 
 def ensure_untar(
@@ -395,7 +397,9 @@ def ensure_from_s3(
     >>> ensure_from_s3('test', version, s3_bucket='bigmech', s3_key=f'protmapper/{version}/refseq_uniprot.csv')
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.ensure_from_s3(*subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force)
+    return _module.ensure_from_s3(
+        *subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force
+    )
 
 
 def ensure_from_google(

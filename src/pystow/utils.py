@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
 Hash = Any
 
-HexDigestMismatch = namedtuple('HexDigestMismatch', 'name actual expected')
+HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
 
 
 class HexDigestError(ValueError):
@@ -46,13 +46,15 @@ class HexDigestError(ValueError):
         self.offending_hexdigests = offending_hexdigests
 
     def __str__(self):  # noqa:D105
-        return "\n".join((
-            "Hexdigest of downloaded file does not match the expected ones!",
-            *(
-                f"\t{name} actual: {actual} vs. expected: {expected}"
-                for name, actual, expected in self.offending_hexdigests
-            ),
-        ))
+        return "\n".join(
+            (
+                "Hexdigest of downloaded file does not match the expected ones!",
+                *(
+                    f"\t{name} actual: {actual} vs. expected: {expected}"
+                    for name, actual, expected in self.offending_hexdigests
+                ),
+            )
+        )
 
 
 class UnexpectedDirectory(FileExistsError):
@@ -66,7 +68,7 @@ class UnexpectedDirectory(FileExistsError):
         self.path = path
 
     def __str__(self):  # noqa:D105
-        return f'got directory instead of file: {self.path}'
+        return f"got directory instead of file: {self.path}"
 
 
 def get_offending_hexdigests(
@@ -128,14 +130,11 @@ def get_hashes(
         chunk_size = 64 * 2 ** 10
 
     # instantiate hash algorithms
-    algorithms: Mapping[str, Hash] = {
-        name: hashlib.new(name)
-        for name in names
-    }
+    algorithms: Mapping[str, Hash] = {name: hashlib.new(name) for name in names}
 
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
-    with path.open('rb', buffering=0) as file:
+    with path.open("rb", buffering=0) as file:
         for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
             for alg in algorithms.values():
                 alg.update(buffer[:this_chunk_size])
@@ -155,7 +154,7 @@ def download(
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
-    backend: str = 'urllib',
+    backend: str = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
     **kwargs,
 ) -> None:
@@ -182,19 +181,24 @@ def download(
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s from %s', path, url)
+        logger.debug("did not re-download %s from %s", path, url)
         return
 
     try:
-        if backend == 'urllib':
-            logger.info('downloading with urllib from %s to %s', url, path)
+        if backend == "urllib":
+            logger.info("downloading with urllib from %s to %s", url, path)
             urlretrieve(url, path, **kwargs)  # noqa:S310
-        elif backend == 'requests':
-            kwargs.setdefault('stream', True)
+        elif backend == "requests":
+            kwargs.setdefault("stream", True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
             # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, path.open('wb') as file:
-                logger.info('downloading (stream=%s) with requests from %s to %s', kwargs['stream'], url, path)
+            with requests.get(url, **kwargs) as response, path.open("wb") as file:
+                logger.info(
+                    "downloading (stream=%s) with requests from %s to %s",
+                    kwargs["stream"],
+                    url,
+                    path,
+                )
                 shutil.copyfileobj(response.raw, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
@@ -216,7 +220,7 @@ def name_from_url(url: str) -> str:
 
 def name_from_s3_key(key: str) -> str:
     """Get the filename from the S3 key."""
-    return key.split('/')[-1]
+    return key.split("/")[-1]
 
 
 def mkdir(path: Path, ensure_exists: bool = True) -> None:
@@ -245,30 +249,31 @@ def n() -> str:
     return str(uuid4())
 
 
-def get_df_io(df: 'pd.DataFrame', sep: str = '\t', index: bool = False, **kwargs) -> BytesIO:
+def get_df_io(df: "pd.DataFrame", sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
     """Get the dataframe as bytes."""
     sio = StringIO()
     df.to_csv(sio, sep=sep, index=index, **kwargs)
     sio.seek(0)
-    bio = BytesIO(sio.read().encode('utf-8'))
+    bio = BytesIO(sio.read().encode("utf-8"))
     return bio
 
 
 def write_zipfile_csv(
-    df: 'pd.DataFrame',
+    df: "pd.DataFrame",
     path: Union[str, Path],
-    inner_path: str, sep='\t',
+    inner_path: str,
+    sep="\t",
     index: bool = False,
     **kwargs,
 ) -> None:
     """Write a dataframe to an inner CSV file to a zip archive."""
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
-    with zipfile.ZipFile(file=path, mode='w') as zip_file:
-        with zip_file.open(inner_path, mode='w') as file:
+    with zipfile.ZipFile(file=path, mode="w") as zip_file:
+        with zip_file.open(inner_path, mode="w") as file:
             file.write(bytes_io.read())
 
 
-def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> 'pd.DataFrame':
+def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
     """Read an inner CSV file from a zip archive."""
     import pandas as pd
 
@@ -278,10 +283,10 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs
 
 
 def write_tarfile_csv(
-    df: 'pd.DataFrame',
+    df: "pd.DataFrame",
     path: Union[str, Path],
     inner_path: str,
-    sep='\t',
+    sep="\t",
     index: bool = False,
     **kwargs,
 ) -> None:
@@ -293,7 +298,7 @@ def write_tarfile_csv(
     #        file.write(bytes_io.read())
 
 
-def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep='\t', **kwargs) -> 'pd.DataFrame':
+def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
     """Read an inner CSV file from a tar archive."""
     import pandas as pd
 
@@ -311,39 +316,40 @@ def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
             return etree.parse(file, **kwargs)
 
 
-def read_rdf(path: Union[str, Path], **kwargs) -> 'rdflib.Graph':
+def read_rdf(path: Union[str, Path], **kwargs) -> "rdflib.Graph":
     """Read an RDF file with :mod:`rdflib`."""
     import rdflib
+
     if isinstance(path, str):
         path = Path(path)
     graph = rdflib.Graph()
     with (
-        gzip.open(path, 'rb')  # type: ignore
-        if isinstance(path, Path) and path.suffix == '.gz' else
-        open(path)
+        gzip.open(path, "rb")  # type: ignore
+        if isinstance(path, Path) and path.suffix == ".gz"
+        else open(path)
     ) as file:
         graph.parse(file, **kwargs)
     return graph
 
 
-def get_commit(org: str, repo: str, provider: str = 'git') -> str:
+def get_commit(org: str, repo: str, provider: str = "git") -> str:
     """Get last commit hash for the given repo."""
-    if provider == 'git':
-        output = check_output(['git', 'ls-remote', f'https://github.com/{org}/{repo}'])  # noqa
-        lines = (line.strip().split('\t') for line in output.decode('utf8').splitlines())
-        rv = next(line[0] for line in lines if line[1] == 'HEAD')
-    elif provider == 'github':
-        res = requests.get(f'https://api.github.com/repos/{org}/{repo}/branches/master')
+    if provider == "git":
+        output = check_output(["git", "ls-remote", f"https://github.com/{org}/{repo}"])  # noqa
+        lines = (line.strip().split("\t") for line in output.decode("utf8").splitlines())
+        rv = next(line[0] for line in lines if line[1] == "HEAD")
+    elif provider == "github":
+        res = requests.get(f"https://api.github.com/repos/{org}/{repo}/branches/master")
         res_json = res.json()
-        rv = res_json['commit']['sha']
+        rv = res_json["commit"]["sha"]
     else:
-        raise NotImplementedError(f'invalid implementation: {provider}')
+        raise NotImplementedError(f"invalid implementation: {provider}")
     return rv
 
 
 CHUNK_SIZE = 32768
-DOWNLOAD_URL = 'https://docs.google.com/uc?export=download'
-TOKEN_KEY = 'download_warning'  # noqa:S105
+DOWNLOAD_URL = "https://docs.google.com/uc?export=download"
+TOKEN_KEY = "download_warning"  # noqa:S105
 
 
 def download_from_google(
@@ -374,16 +380,16 @@ def download_from_google(
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
-        logger.debug('did not re-download %s from Google ID %s', path, file_id)
+        logger.debug("did not re-download %s from Google ID %s", path, file_id)
         return
 
     try:
         with requests.Session() as sess:
-            res = sess.get(DOWNLOAD_URL, params={'id': file_id}, stream=True)
+            res = sess.get(DOWNLOAD_URL, params={"id": file_id}, stream=True)
             token = _get_confirm_token(res)
-            res = sess.get(DOWNLOAD_URL, params={'id': file_id, 'confirm': token}, stream=True)
-            with path.open('wb') as file:
-                for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc='writing', unit='chunk'):
+            res = sess.get(DOWNLOAD_URL, params={"id": file_id, "confirm": token}, stream=True)
+            with path.open("wb") as file:
+                for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc="writing", unit="chunk"):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
@@ -398,14 +404,14 @@ def _get_confirm_token(res: requests.Response) -> str:
     for key, value in res.cookies.items():
         if key.startswith(TOKEN_KEY):
             return value
-    raise ValueError(f'no token found with key {TOKEN_KEY} in cookies: {res.cookies}')
+    raise ValueError(f"no token found with key {TOKEN_KEY} in cookies: {res.cookies}")
 
 
 def download_from_s3(
     s3_bucket: str,
     s3_key: str,
     path: Union[str, Path],
-    client: Optional['botocore.client.BaseClient'] = None,
+    client: Optional["botocore.client.BaseClient"] = None,
     client_kwargs: Optional[Mapping[str, Any]] = None,
     download_file_kwargs: Optional[Mapping[str, Any]] = None,
     force: bool = True,
@@ -434,20 +440,26 @@ def download_from_s3(
     if path.is_dir():
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
-        logger.debug('did not re-download %s from %s %s', path, s3_bucket, s3_key)
+        logger.debug("did not re-download %s from %s %s", path, s3_bucket, s3_key)
         return
 
     try:
         import boto3.s3.transfer
+
         if client is None:
             import boto3
             import botocore.client
+
             client_kwargs = {} if client_kwargs is None else dict(client_kwargs)
-            client_kwargs.setdefault('config', botocore.client.Config(signature_version=botocore.UNSIGNED))
-            client = boto3.client('s3', **client_kwargs)
+            client_kwargs.setdefault(
+                "config", botocore.client.Config(signature_version=botocore.UNSIGNED)
+            )
+            client = boto3.client("s3", **client_kwargs)
 
         download_file_kwargs = {} if download_file_kwargs is None else dict(download_file_kwargs)
-        download_file_kwargs.setdefault('Config', boto3.s3.transfer.TransferConfig(use_threads=False))
+        download_file_kwargs.setdefault(
+            "Config", boto3.s3.transfer.TransferConfig(use_threads=False)
+        )
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
