@@ -14,7 +14,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Mapping, Optional, TYPE_CHECKING, Union
+from typing import Any, Collection, Iterable, Mapping, Optional, TYPE_CHECKING, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -71,7 +71,7 @@ class UnexpectedDirectory(FileExistsError):
 
 def get_offending_hexdigests(
     path: Union[str, Path],
-    chunk_size: int = 64 * 2 ** 10,
+    chunk_size: Optional[int] = None,
     hexdigests: Optional[Mapping[str, str]] = None,
 ) -> Collection[HexDigestMismatch]:
     """
@@ -93,17 +93,7 @@ def get_offending_hexdigests(
     logger.info(f"Checking hash sums for file: {path}")
 
     # instantiate algorithms
-    algorithms: Mapping[str, Hash] = {
-        alg: hashlib.new(alg)
-        for alg in hexdigests
-    }
-
-    # calculate hash sums of file incrementally
-    buffer = memoryview(bytearray(chunk_size))
-    with path.open('rb', buffering=0) as file:
-        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
-            for alg in algorithms.values():
-                alg.update(buffer[:this_chunk_size])
+    algorithms = get_hashes(path=path, names=set(hexdigests), chunk_size=chunk_size)
 
     # Compare digests
     mismatches = []
@@ -116,6 +106,41 @@ def get_offending_hexdigests(
             logger.debug(f"Successfully checked with {alg}.")
 
     return mismatches
+
+
+def get_hashes(
+    path: Union[str, Path],
+    names: Iterable[str],
+    *,
+    chunk_size: Optional[int] = None,
+) -> Mapping[str, Hash]:
+    """Calculate several hexdigests of hash algorithms for a file concurrently.
+
+    :param path: The file path.
+    :param names: Names of the hash algorithms in :mod:`hashlib`
+    :param chunk_size: The chunk size for reading the file.
+
+    :return:
+        A collection of observed hexdigests
+    """
+    path = Path(path).resolve()
+    if chunk_size is None:
+        chunk_size = 64 * 2 ** 10
+
+    # instantiate hash algorithms
+    algorithms: Mapping[str, Hash] = {
+        name: hashlib.new(name)
+        for name in names
+    }
+
+    # calculate hash sums of file incrementally
+    buffer = memoryview(bytearray(chunk_size))
+    with path.open('rb', buffering=0) as file:
+        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
+            for alg in algorithms.values():
+                alg.update(buffer[:this_chunk_size])
+
+    return algorithms
 
 
 def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
