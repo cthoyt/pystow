@@ -15,6 +15,7 @@ __all__ = [
     "ensure_untar",
     # Processors
     "ensure_csv",
+    "ensure_json",
     "ensure_excel",
     "ensure_tar_df",
     "ensure_tar_xml",
@@ -192,6 +193,52 @@ def ensure_csv(
         force=force,
         download_kwargs=download_kwargs,
         read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def ensure_json(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Download JSON and open with :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+    :returns: A JSON object (list, dict, etc.)
+
+    Example usage::
+
+    .. code-block:: python
+
+        >>> import pystow
+        >>> url = 'https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json'
+        >>> perturbations = pystow.ensure_csv('bio', 'creeds', '1.0', url=url)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_json(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        json_load_kwargs=json_load_kwargs,
     )
 
 

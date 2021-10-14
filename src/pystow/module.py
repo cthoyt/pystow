@@ -3,6 +3,7 @@
 """Module implementation."""
 
 import gzip
+import json
 import logging
 import os
 import pickle
@@ -341,6 +342,21 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
+
+    def ensure_json(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Download a JSON file and open it with :mod:`json`."""
+        with self.ensure_open(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        ) as file:
+            return json.load(file, **(json_load_kwargs or {}))
 
     def ensure_excel(
         self,

@@ -8,6 +8,7 @@ from .api import (  # noqa
     ensure_excel,
     ensure_from_google,
     ensure_from_s3,
+    ensure_json,
     ensure_rdf,
     ensure_tar_df,
     ensure_tar_xml,
