@@ -2,7 +2,6 @@
 
 """API functions for PyStow."""
 
-import warnings
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence, Union
 
@@ -11,7 +10,6 @@ from .module import Module
 __all__ = [
     "module",
     "join",
-    "get",
     # Downloader functions
     "ensure",
     "ensure_untar",
@@ -65,12 +63,6 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
     return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
-
-
-def get(*args, **kwargs):
-    """Get a subdirectory of the current module, deprecated in favor of :func:`join`."""
-    warnings.warn("Use pystow.join instead of pystow.get", DeprecationWarning)
-    return join(*args, **kwargs)
 
 
 def ensure(

@@ -7,7 +7,6 @@ import logging
 import os
 import pickle
 import tarfile
-import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
@@ -223,11 +222,6 @@ class Module:
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
         return f"sqlite:///{path.as_posix()}"
-
-    def get(self, *args, **kwargs):
-        """Get a subdirectory of the current module, deprecated in favor of :meth:`join`."""
-        warnings.warn("Use Module.join instead of Module.get", DeprecationWarning)
-        return self.join(*args, **kwargs)
 
     def ensure(
         self,
