@@ -13,8 +13,8 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
 
+from . import utils
 from .utils import (
-    download,
     download_from_google,
     download_from_s3,
     getenv_path,
@@ -252,7 +252,7 @@ class Module:
         if name is None:
             name = name_from_url(url)
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        download(
+        utils.download(
             url=url,
             path=path,
             force=force,
