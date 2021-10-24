@@ -1,4 +1,4 @@
 Utils
 =====
-.. automodule:::: pystow.utils
+.. automodule:: pystow.utils
     :members:

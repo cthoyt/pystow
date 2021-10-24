@@ -230,3 +230,4 @@ intersphinx_mapping = {
 }
 
 autoclass_content = 'both'
+set_type_checking_flag = True
