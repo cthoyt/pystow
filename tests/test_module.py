@@ -4,6 +4,7 @@
 
 import contextlib
 import itertools as itt
+import lzma
 import os
 import shutil
 import tempfile
@@ -12,10 +13,12 @@ from pathlib import Path
 from typing import Mapping, Union
 from unittest import mock
 
+import pandas as pd
+
 import pystow
 from pystow import join
 from pystow.module import Module, PYSTOW_HOME_ENVVAR, PYSTOW_NAME_ENVVAR, get_home, get_name
-from pystow.utils import mock_envvar, n
+from pystow.utils import mock_envvar, n, write_tarfile_csv, write_zipfile_csv
 
 HERE = Path(__file__).parent.resolve()
 RESOURCES = HERE.joinpath("resources")
@@ -26,6 +29,13 @@ MOCK_FILES: Mapping[str, Path] = {
     TSV_URL: RESOURCES / "test_1.tsv",
     JSON_URL: RESOURCES / "test_1.json",
 }
+
+TEST_TSV_ROWS = [
+    ("h1", "h2", "h3"),
+    ("v1_1", "v1_2", "v1_3"),
+    ("v2_1", "v2_2", "v2_3"),
+]
+TEST_DF = pd.DataFrame(TEST_TSV_ROWS)
 
 
 class TestMocks(unittest.TestCase):
@@ -85,6 +95,15 @@ class TestGet(unittest.TestCase):
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
+    @staticmethod
+    def mock_download_once(local_path):
+        """Mock connection to the internet using local resource files."""
+
+        def _mock_get_data(path: Union[str, Path], **_kwargs) -> Path:
+            return shutil.copy(local_path, path)
+
+        return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
+
     def join(self, *parts) -> Path:
         """Help join the parts to this test case's temporary directory."""
         return Path(os.path.join(self.directory.name, *parts))
@@ -117,6 +136,42 @@ class TestGet(unittest.TestCase):
                 j = pystow.ensure_json("test", url=JSON_URL)
                 self.assertIn("key", j)
                 self.assertEqual("value", j["key"])
+
+    def test_ensure_open_lzma(self):
+        """Test opening lzma-encoded files."""
+        with tempfile.TemporaryDirectory() as directory, self.mock_directory():
+            path = Path(directory) / n()
+            with self.mock_download_once(path):
+                with lzma.open(path, "wt") as file:
+                    for row in TEST_TSV_ROWS:
+                        print(*row, sep="\t", file=file)
+                with pystow.module("test").ensure_open_lzma(url=n()) as file:
+                    df = pd.read_csv(file, sep="\t")
+                    self.assertEqual(3, len(df.columns))
+
+    def test_ensure_open_zip(self):
+        """Test opening tar-encoded files."""
+        with tempfile.TemporaryDirectory() as directory, self.mock_directory():
+            path = Path(directory) / n()
+            inner_path = n()
+            with self.mock_download_once(path):
+                write_zipfile_csv(TEST_DF, path, inner_path)
+                with pystow.module("test").ensure_open_zip(url=n(), inner_path=inner_path) as file:
+                    df = pd.read_csv(file, sep="\t")
+                    self.assertEqual(3, len(df.columns))
+
+    def test_ensure_open_tarfile(self):
+        """Test opening tarfile-encoded files."""
+        with tempfile.TemporaryDirectory() as directory, self.mock_directory():
+            path = Path(directory) / n()
+            inner_path = n()
+            with self.mock_download_once(path):
+                write_tarfile_csv(TEST_DF, path, inner_path)
+                with pystow.module("test").ensure_open_tarfile(
+                    url=n(), inner_path=inner_path
+                ) as file:
+                    df = pd.read_csv(file, sep="\t")
+                    self.assertEqual(3, len(df.columns))
 
     def test_ensure_module(self):
         """Test that the ``ensure_exist`` argument in :meth:`Module.from_key` works properly."""

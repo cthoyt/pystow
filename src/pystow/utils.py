@@ -6,6 +6,7 @@ import contextlib
 import gzip
 import hashlib
 import logging
+import lzma
 import os
 import shutil
 import tarfile
@@ -259,6 +260,19 @@ def get_df_io(df: "pd.DataFrame", sep: str = "\t", index: bool = False, **kwargs
     return bio
 
 
+def write_lzma_csv(
+    df: "pd.DataFrame",
+    path: Union[str, Path],
+    sep="\t",
+    index: bool = False,
+    **kwargs,
+):
+    """Write a dataframe as an lzma-compressed file."""
+    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
+    with lzma.open(path, "wb") as file:
+        file.write(bytes_io.read())
+
+
 def write_zipfile_csv(
     df: "pd.DataFrame",
     path: Union[str, Path],
@@ -292,11 +306,11 @@ def write_tarfile_csv(
     **kwargs,
 ) -> None:
     """Write a dataframe to an inner CSV file from a tar archive."""
-    raise NotImplementedError
-    # bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
-    # with tarfile.open(path, mode='w') as tar_file:
-    #    with tar_file.open(inner_path, mode='w') as file:  # type: ignore
-    #        file.write(bytes_io.read())
+    s = df.to_csv(sep=sep, index=index, **kwargs)
+    tarinfo = tarfile.TarInfo(name=inner_path)
+    tarinfo.size = len(s)
+    with tarfile.TarFile(path, mode="w") as tar_file:
+        tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
 
 
 def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
