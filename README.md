@@ -47,8 +47,25 @@ pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
 pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
 ```
 
+If you reuse the same directory structure a lot, you can save them in a module:
+
+```python
+import pystow
+
+pykeen_module = pystow.module("pykeen")
+
+# Access the module's directory with .base
+assert pystow.join("pykeen") == pystow.module("pykeen").base
+
+# Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
+pykeen_experiments_directory = pykeen_module.join('experiments')
+
+# You can go as deep as you want past the original "pykeen" module
+pykeen_deep_directory = pykeen_module.join('experiments', 'a', 'b', 'c')
+```
+
 Get a file path for your application by adding the `name` keyword argument. This is made explicit so PyStow knows which
-parent directories to automatically create.
+parent directories to automatically create. This works with `pystow` or any module you create with `pystow.module`.
 
 ```python
 import pystow
