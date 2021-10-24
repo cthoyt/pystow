@@ -5,9 +5,11 @@
 import gzip
 import json
 import logging
+import lzma
 import os
 import pickle
 import tarfile
+import zipfile
 from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
@@ -307,6 +309,65 @@ class Module:
             yield file
 
     @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "rt",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it with :mod:`lzma`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with lzma.open(path, **open_kwargs) as file:
+            yield file
+
+    @contextmanager
+    def ensure_open_tarfile(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it with :mod:`tarfile`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        with tarfile.open(path) as tar_file:
+            with tar_file.extractfile(inner_path) as file:
+                yield file
+
+    @contextmanager
+    def ensure_open_zip(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "r",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with zipfile.ZipFile(file=path) as zip_file:
+            with zip_file.open(inner_path) as file:
+                yield file
+
+    @contextmanager
     def ensure_open_gz(
         self,
         *subkeys: str,
@@ -357,6 +418,8 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
+
+    # TODO ensure_pickle
 
     def ensure_excel(
         self,
