@@ -343,7 +343,7 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
         with tarfile.open(path) as tar_file:
-            with tar_file.extractfile(inner_path) as file:
+            with tar_file.extractfile(inner_path) as file:  # type:ignore
                 yield file
 
     @contextmanager
@@ -358,6 +358,7 @@ class Module:
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
     ):
+        """Ensure a file is downloaded then open it with :mod:`zipfile`."""
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
