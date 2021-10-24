@@ -145,6 +145,7 @@ def ensure_untar(
         directory=directory,
         force=force,
         download_kwargs=download_kwargs,
+        extract_kwargs=extract_kwargs,
     )
 
 

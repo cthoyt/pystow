@@ -5,13 +5,27 @@
 import contextlib
 import itertools as itt
 import os
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Mapping, Union
+from unittest import mock
 
-from pystow import ensure_csv, join
+import pystow
+from pystow import join
 from pystow.module import Module, PYSTOW_HOME_ENVVAR, PYSTOW_NAME_ENVVAR, get_home, get_name
 from pystow.utils import mock_envvar, n
+
+HERE = Path(__file__).parent.resolve()
+RESOURCES = HERE.joinpath("resources")
+
+TSV_URL = n()
+JSON_URL = n()
+MOCK_FILES: Mapping[str, Path] = {
+    TSV_URL: RESOURCES / "test_1.tsv",
+    JSON_URL: RESOURCES / "test_1.json",
+}
 
 
 class TestMocks(unittest.TestCase):
@@ -62,6 +76,15 @@ class TestGet(unittest.TestCase):
         with mock_envvar(PYSTOW_HOME_ENVVAR, self.directory.name) as rv:
             yield rv
 
+    @staticmethod
+    def mock_download():
+        """Mock connection to the internet using local resource files."""
+
+        def _mock_get_data(url: str, path: Union[str, Path], **_kwargs) -> Path:
+            return shutil.copy(MOCK_FILES[url], path)
+
+        return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
+
     def join(self, *parts) -> Path:
         """Help join the parts to this test case's temporary directory."""
         return Path(os.path.join(self.directory.name, *parts))
@@ -85,10 +108,15 @@ class TestGet(unittest.TestCase):
 
     def test_ensure(self):
         """Test ensuring a CSV file."""
-        test_url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
-        with self.mock_directory():
-            df = ensure_csv("test", url=test_url)
-            self.assertEqual(3, len(df.columns))
+        with self.mock_directory(), self.mock_download():
+            with self.subTest(type="tsv"):
+                df = pystow.ensure_csv("test", url=TSV_URL)
+                self.assertEqual(3, len(df.columns))
+
+            with self.subTest(type="json"):
+                j = pystow.ensure_json("test", url=JSON_URL)
+                self.assertIn("key", j)
+                self.assertEqual("value", j["key"])
 
     def test_ensure_module(self):
         """Test that the ``ensure_exist`` argument in :meth:`Module.from_key` works properly."""

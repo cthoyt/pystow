@@ -4,10 +4,13 @@ Usage
 .. autofunction:: pystow.module
 .. autofunction:: pystow.ensure
 .. autofunction:: pystow.ensure_untar
+.. autofunction:: pystow.ensure_from_google
+.. autofunction:: pystow.ensure_from_s3
 
 Ensure with Parsing
 -------------------
 .. autofunction:: pystow.ensure_csv
+.. autofunction:: pystow.ensure_json
 .. autofunction:: pystow.ensure_excel
 .. autofunction:: pystow.ensure_rdf
 
