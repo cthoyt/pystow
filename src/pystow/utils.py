@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     import rdflib
     import pandas as pd
     import botocore.client
+    import lxml.etree
 
 logger = logging.getLogger(__name__)
 
@@ -307,9 +308,9 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
-def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
+def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs) -> "lxml.etree.ElementTree":
     """Read an inner XML file from a tar archive."""
-    import lxml.etree as etree
+    from lxml import etree
 
     with tarfile.open(path) as tar_file:
         with tar_file.extractfile(inner_path) as file:  # type: ignore
