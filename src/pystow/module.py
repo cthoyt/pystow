@@ -13,7 +13,7 @@ import zipfile
 from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
 from .utils import (
@@ -30,9 +30,9 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    import rdflib
-    import pandas as pd
     import botocore.client
+    import pandas as pd
+    import rdflib
 
 logger = logging.getLogger(__name__)
 

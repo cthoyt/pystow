@@ -15,7 +15,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Iterable, Mapping, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Collection, Iterable, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -24,10 +24,10 @@ import requests
 from tqdm import tqdm
 
 if TYPE_CHECKING:
-    import rdflib
-    import pandas as pd
     import botocore.client
     import lxml.etree
+    import pandas as pd
+    import rdflib
 
 logger = logging.getLogger(__name__)
 
