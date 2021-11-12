@@ -7,7 +7,6 @@ import json
 import logging
 import lzma
 import os
-import pickle
 import tarfile
 import zipfile
 from contextlib import contextmanager
@@ -28,6 +27,11 @@ from .utils import (
     read_tarfile_xml,
     read_zipfile_csv,
 )
+
+try:
+    import pickle5 as pickle
+except ImportError:
+    import pickle
 
 if TYPE_CHECKING:
     import botocore.client
