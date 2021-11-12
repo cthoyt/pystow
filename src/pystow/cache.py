@@ -29,10 +29,14 @@ if TYPE_CHECKING:
     import pandas
 
 __all__ = [
+    # Classses
     "Cached",
     "CachedPickle",
     "CachedJSON",
     "CachedCollection",
+    "CachedDataFrame",
+    # Types
+    "Getter",
 ]
 
 logger = logging.getLogger(__name__)
@@ -137,6 +141,7 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
         path: Union[str, Path, os.PathLike],
         force: bool = False,
         sep: Optional[str] = None,
+        dtype: Optional[str] = None,
         read_csv_kwargs: Optional[MutableMapping[str, Any]] = None,
     ):
         """Instantiate the decorator.
@@ -144,6 +149,7 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
         :param path: The path to the cache for the file
         :param force: Should a pre-existing file be disregared/overwritten?
         :param sep: The separator. Defaults to TSV, since this is the only reasonable default.
+        :param dtype: A shortcut for setting the dtype
         :param read_csv_kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
         :raises ValueError: if sep is given as a kwarg and also in ``read_csv_kwargs``.
         """
@@ -155,13 +161,17 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
             raise ValueError
         else:
             self.sep = self.read_csv_kwargs.pop("sep")
+        if dtype is not None:
+            if "dtype" in self.read_csv_kwargs:
+                raise ValueError
+            self.read_csv_kwargs["dtype"] = dtype
+        self.read_csv_kwargs.setdefault("keep_default_na", False)
 
     def load(self) -> "pandas.DataFrame":
         """Load data from the cache as a dataframe."""
         return pandas.read_csv(
             self.path,
             sep=self.sep,
-            keep_default_na=False,
             **self.read_csv_kwargs,
         )
 
