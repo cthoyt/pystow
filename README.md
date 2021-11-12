@@ -105,7 +105,7 @@ rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
-### ⚙️️ Configuration
+## ⚙️️ Configuration
 
 By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
 `$HOME/.data/<app>` folder.
@@ -143,6 +143,18 @@ pykeen_directory = pystow.join('pykeen')
 ```
 
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
+
+### XGD
+
+While PyStow's main goal is to make application data less opaque and less
+hidden, some users might want to use the
+[XGD spec](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+for storing their app data.
+
+If you set `PYSTOW_USE_APPDIRS` to `true` or `True`, then the
+[`appdirs`](https://pypi.org/project/appdirs/) package will be used to choose
+the base directory based on the `user data dir` option. This can still be
+overridden by `PYSTOW_HOME`.
 
 ## 🚀 Installation
 

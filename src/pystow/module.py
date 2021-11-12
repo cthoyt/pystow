@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 PYSTOW_NAME_ENVVAR = "PYSTOW_NAME"
 PYSTOW_HOME_ENVVAR = "PYSTOW_HOME"
+PYSTOW_USE_APPDIRS = "PYSTOW_USE_APPDIRS"
 PYSTOW_NAME_DEFAULT = ".data"
 
 
@@ -50,9 +51,18 @@ def get_name() -> str:
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
 
+def _use_appdirs() -> bool:
+    return os.getenv(PYSTOW_USE_APPDIRS) in {"true", "True"}
+
+
 def get_home(ensure_exists: bool = True) -> Path:
     """Get the PyStow home directory."""
-    default = Path.home() / get_name()
+    if _use_appdirs():
+        from appdirs import user_data_dir
+
+        default = Path(user_data_dir())
+    else:
+        default = Path.home() / get_name()
     return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
@@ -71,7 +81,12 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
     """
     _assert_valid(key)
     envvar = f"{key.upper()}_HOME"
-    default = get_home(ensure_exists=False) / key
+    if _use_appdirs():
+        from appdirs import user_data_dir
+
+        default = Path(user_data_dir(appname=key))
+    else:
+        default = get_home(ensure_exists=False) / key
     return getenv_path(envvar, default, ensure_exists=ensure_exists)
 
 
