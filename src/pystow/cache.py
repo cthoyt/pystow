@@ -7,12 +7,25 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 try:
     import pickle5 as pickle
 except ImportError:
     import pickle  # type:ignore
+
+if TYPE_CHECKING:
+    import pandas
 
 __all__ = [
     "Cached",
@@ -113,3 +126,43 @@ class CachedCollection(Cached[List[str]]):
         with open(self.path, "w") as file:
             for line in rv:
                 print(line, file=file)  # noqa:T001
+
+
+class CachedDataFrame(Cached["pandas.DataFrame"]):
+    """Make a function lazily cache its return value as a dataframe."""
+
+    def __init__(
+        self,
+        path: Union[str, Path, os.PathLike],
+        force: bool = False,
+        sep: Optional[str] = None,
+        read_csv_kwargs: Optional[MutableMapping[str, Any]] = None,
+    ):
+        """Instantiate the decorator.
+
+        :param path: The path to the cache for the file
+        :param force: Should a pre-existing file be disregared/overwritten?
+        :param sep: The separator. Defaults to TSV, since this is the only reasonable default.
+        :param read_csv_kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+        """
+        super().__init__(path=path, force=force)
+        self.read_csv_kwargs = read_csv_kwargs or {}
+        if "sep" not in self.read_csv_kwargs:
+            self.sep = sep or "\t"
+        elif sep is not None:
+            raise ValueError
+        else:
+            self.sep = self.read_csv_kwargs.pop("sep")
+
+    def load(self) -> "pandas.DataFrame":
+        """Load data from the cache as a dataframe."""
+        return pd.read_csv(
+            self.path,
+            sep=self.sep,
+            keep_default_na=False,
+            **self.read_csv_kwargs,
+        )
+
+    def dump(self, rv: "pandas.DataFrame") -> None:
+        """Dump data to the cache as a dataframe."""
+        rv.to_csv(path, sep=sepsep, index=False)
