@@ -17,8 +17,11 @@ except ImportError:
 __all__ = [
     "Cached",
     "CachedPickle",
+    "cached_pickle",
     "CachedJSON",
+    "cached_json",
     "CachedCollection",
+    "cached_collection",
 ]
 
 logger = logging.getLogger(__name__)
@@ -86,6 +89,9 @@ class CachedJSON(Cached[JSONType]):
             json.dump(rv, file, indent=2)
 
 
+cached_json = CachedJSON
+
+
 class CachedPickle(Cached[Any]):
     """Make a function lazily cache its return value as a pickle."""
 
@@ -98,6 +104,9 @@ class CachedPickle(Cached[Any]):
         """Dump data to the cache as a pickle."""
         with open(self.path, "wb") as file:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+cached_pickle = CachedPickle
 
 
 class CachedCollection(Cached[List[str]]):
@@ -113,3 +122,6 @@ class CachedCollection(Cached[List[str]]):
         with open(self.path, "w") as file:
             for line in rv:
                 print(line, file=file)  # noqa:T001
+
+
+cached_collection = CachedCollection
