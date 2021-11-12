@@ -31,7 +31,7 @@ from .utils import (
 try:
     import pickle5 as pickle
 except ImportError:
-    import pickle
+    import pickle  # type:ignore
 
 if TYPE_CHECKING:
     import botocore.client
