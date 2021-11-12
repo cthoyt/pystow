@@ -165,4 +165,4 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
 
     def dump(self, rv: "pandas.DataFrame") -> None:
         """Dump data to the cache as a dataframe."""
-        rv.to_csv(path, sep=sepsep, index=False)
+        rv.to_csv(path, sep=self.sep, index=False)
