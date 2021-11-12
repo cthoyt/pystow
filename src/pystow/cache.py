@@ -14,6 +14,7 @@ from typing import (
     Dict,
     Generic,
     List,
+    MutableMapping,
     Optional,
     TypeVar,
     Union,
@@ -144,6 +145,7 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
         :param force: Should a pre-existing file be disregared/overwritten?
         :param sep: The separator. Defaults to TSV, since this is the only reasonable default.
         :param read_csv_kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+        :raises ValueError: if sep is given as a kwarg and also in ``read_csv_kwargs``.
         """
         super().__init__(path=path, force=force)
         self.read_csv_kwargs = read_csv_kwargs or {}
@@ -156,7 +158,7 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
 
     def load(self) -> "pandas.DataFrame":
         """Load data from the cache as a dataframe."""
-        return pd.read_csv(
+        return pandas.read_csv(
             self.path,
             sep=self.sep,
             keep_default_na=False,
@@ -165,4 +167,4 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
 
     def dump(self, rv: "pandas.DataFrame") -> None:
         """Dump data to the cache as a dataframe."""
-        rv.to_csv(path, sep=self.sep, index=False)
+        rv.to_csv(self.path, sep=self.sep, index=False)
