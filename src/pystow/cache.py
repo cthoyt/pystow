@@ -26,7 +26,7 @@ except ImportError:
     import pickle  # type:ignore
 
 if TYPE_CHECKING:
-    import pandas
+    import pandas as pd
 
 __all__ = [
     # Classses
@@ -133,7 +133,7 @@ class CachedCollection(Cached[List[str]]):
                 print(line, file=file)  # noqa:T001
 
 
-class CachedDataFrame(Cached["pandas.DataFrame"]):
+class CachedDataFrame(Cached["pd.DataFrame"]):
     """Make a function lazily cache its return value as a dataframe."""
 
     def __init__(
@@ -150,7 +150,7 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
         :param force: Should a pre-existing file be disregared/overwritten?
         :param sep: The separator. Defaults to TSV, since this is the only reasonable default.
         :param dtype: A shortcut for setting the dtype
-        :param read_csv_kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+        :param read_csv_kwargs: Additional kwargs to pass to :func:`pd.read_csv`.
         :raises ValueError: if sep is given as a kwarg and also in ``read_csv_kwargs``.
         """
         super().__init__(path=path, force=force)
@@ -167,14 +167,15 @@ class CachedDataFrame(Cached["pandas.DataFrame"]):
             self.read_csv_kwargs["dtype"] = dtype
         self.read_csv_kwargs.setdefault("keep_default_na", False)
 
-    def load(self) -> "pandas.DataFrame":
+    def load(self) -> "pd.DataFrame":
         """Load data from the cache as a dataframe."""
-        return pandas.read_csv(
+        import pandas as pd
+        return pd.read_csv(
             self.path,
             sep=self.sep,
             **self.read_csv_kwargs,
         )
 
-    def dump(self, rv: "pandas.DataFrame") -> None:
+    def dump(self, rv: "pd.DataFrame") -> None:
         """Dump data to the cache as a dataframe."""
         rv.to_csv(self.path, sep=self.sep, index=False)
