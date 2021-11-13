@@ -141,7 +141,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
         path: Union[str, Path, os.PathLike],
         force: bool = False,
         sep: Optional[str] = None,
-        dtype: Optional[str] = None,
+        dtype: Optional[Any] = None,
         read_csv_kwargs: Optional[MutableMapping[str, Any]] = None,
     ):
         """Instantiate the decorator.
