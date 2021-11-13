@@ -170,6 +170,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
     def load(self) -> "pd.DataFrame":
         """Load data from the cache as a dataframe."""
         import pandas as pd
+
         return pd.read_csv(
             self.path,
             sep=self.sep,
