@@ -84,8 +84,8 @@ class TestGet(unittest.TestCase):
     @contextlib.contextmanager
     def mock_directory(self):
         """Use this test case's temporary directory as a mock environment variable."""
-        with mock_envvar(PYSTOW_HOME_ENVVAR, self.directory.name) as rv:
-            yield rv
+        with mock_envvar(PYSTOW_HOME_ENVVAR, self.directory.name):
+            yield
 
     @staticmethod
     def mock_download():
