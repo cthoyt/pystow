@@ -144,11 +144,11 @@ pykeen_directory = pystow.join('pykeen')
 
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
 
-### XGD
+### X Desktop Group (XDG) Compatibility
 
 While PyStow's main goal is to make application data less opaque and less
 hidden, some users might want to use the
-[XGD spec](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+[XDG specifications](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)
 for storing their app data.
 
 If you set `PYSTOW_USE_APPDIRS` to `true` or `True`, then the
