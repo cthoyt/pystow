@@ -10,6 +10,7 @@ import lzma
 import os
 import shutil
 import tarfile
+import tempfile
 import zipfile
 from collections import namedtuple
 from io import BytesIO, StringIO
@@ -22,6 +23,8 @@ from uuid import uuid4
 
 import requests
 from tqdm import tqdm
+
+from .constants import PYSTOW_HOME_ENVVAR
 
 if TYPE_CHECKING:
     import botocore.client
@@ -237,6 +240,14 @@ def mock_envvar(k: str, v: str):
     os.environ[k] = v
     yield
     del os.environ[k]
+
+
+@contextlib.contextmanager
+def mock_home():
+    """Mock the PyStow home environment variable, yields the directory name."""
+    with tempfile.TemporaryDirectory() as directory:
+        with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
+            yield directory
 
 
 def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
