@@ -16,7 +16,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import TYPE_CHECKING, Any, Collection, Iterable, Mapping, Optional, Union
+from typing import Any, Collection, Iterable, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -25,12 +25,6 @@ import requests
 from tqdm import tqdm
 
 from .constants import PYSTOW_HOME_ENVVAR
-
-if TYPE_CHECKING:
-    import botocore.client
-    import lxml.etree
-    import pandas as pd
-    import rdflib
 
 logger = logging.getLogger(__name__)
 
@@ -262,8 +256,16 @@ def n() -> str:
     return str(uuid4())
 
 
-def get_df_io(df: "pd.DataFrame", sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
-    """Get the dataframe as bytes."""
+def get_df_io(df, sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
+    """Get the dataframe as bytes.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param index:  Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs: Additional kwargs to pass to :func:`pandas.DataFrame.to_csv`.
+    :returns: A bytes object that can be used as a file.
+    """
     sio = StringIO()
     df.to_csv(sio, sep=sep, index=index, **kwargs)
     sio.seek(0)
@@ -272,35 +274,63 @@ def get_df_io(df: "pd.DataFrame", sep: str = "\t", index: bool = False, **kwargs
 
 
 def write_lzma_csv(
-    df: "pd.DataFrame",
+    df,
     path: Union[str, Path],
     sep="\t",
     index: bool = False,
     **kwargs,
 ):
-    """Write a dataframe as an lzma-compressed file."""
+    """Write a dataframe as an lzma-compressed file.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param index:  Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs:
+        Additional kwargs to pass to :func:`get_df_io` and transitively
+        to :func:`pandas.DataFrame.to_csv`.
+    """
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with lzma.open(path, "wb") as file:
         file.write(bytes_io.read())
 
 
 def write_zipfile_csv(
-    df: "pd.DataFrame",
+    df,
     path: Union[str, Path],
     inner_path: str,
     sep="\t",
     index: bool = False,
     **kwargs,
 ) -> None:
-    """Write a dataframe to an inner CSV file to a zip archive."""
+    """Write a dataframe to an inner CSV file to a zip archive.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param path: The path to the resulting zip archive
+    :param inner_path: The path inside the zip archive to write the dataframe
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param index:  Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs:
+        Additional kwargs to pass to :func:`get_df_io` and transitively
+        to :func:`pandas.DataFrame.to_csv`.
+    """
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with zipfile.ZipFile(file=path, mode="w") as zip_file:
         with zip_file.open(inner_path, mode="w") as file:
             file.write(bytes_io.read())
 
 
-def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
-    """Read an inner CSV file from a zip archive."""
+def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs):
+    """Read an inner CSV file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the dataframe
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+    :returns: A dataframe
+    :rtype: pandas.DataFrame
+    """
     import pandas as pd
 
     with zipfile.ZipFile(file=path) as zip_file:
@@ -309,14 +339,25 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs
 
 
 def write_tarfile_csv(
-    df: "pd.DataFrame",
+    df,
     path: Union[str, Path],
     inner_path: str,
-    sep="\t",
+    sep: str = "\t",
     index: bool = False,
     **kwargs,
 ) -> None:
-    """Write a dataframe to an inner CSV file from a tar archive."""
+    """Write a dataframe to an inner CSV file from a tar archive.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param path: The path to the resulting tar archive
+    :param inner_path: The path inside the tar archive to write the dataframe
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param index:  Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs:
+        Additional kwargs to pass to :func:`get_df_io` and transitively
+        to :func:`pandas.DataFrame.to_csv`.
+    """
     s = df.to_csv(sep=sep, index=index, **kwargs)
     tarinfo = tarfile.TarInfo(name=inner_path)
     tarinfo.size = len(s)
@@ -324,8 +365,11 @@ def write_tarfile_csv(
         tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
 
 
-def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
-    """Read an inner CSV file from a tar archive."""
+def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs):
+    """Read an inner CSV file from a tar archive.
+
+    :rtype: pandas.DataFrame
+    """
     import pandas as pd
 
     with tarfile.open(path) as tar_file:
@@ -333,8 +377,11 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
-def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs) -> "lxml.etree.ElementTree":
-    """Read an inner XML file from a tar archive."""
+def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
+    """Read an inner XML file from a tar archive.
+
+    :rtype: lxml.etree.ElementTree
+    """
     from lxml import etree
 
     with tarfile.open(path) as tar_file:
@@ -342,8 +389,14 @@ def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs) -> "lxml
             return etree.parse(file, **kwargs)
 
 
-def read_rdf(path: Union[str, Path], **kwargs) -> "rdflib.Graph":
-    """Read an RDF file with :mod:`rdflib`."""
+def read_rdf(path: Union[str, Path], **kwargs):
+    """Read an RDF file with :mod:`rdflib`.
+
+    :param path: The path to the RDF file
+    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
+    :returns: A parsed RDF graph
+    :rtype: rdflib.Graph
+    """
     import rdflib
 
     if isinstance(path, str):
@@ -437,7 +490,7 @@ def download_from_s3(
     s3_bucket: str,
     s3_key: str,
     path: Union[str, Path],
-    client: Optional["botocore.client.BaseClient"] = None,
+    client=None,
     client_kwargs: Optional[Mapping[str, Any]] = None,
     download_file_kwargs: Optional[Mapping[str, Any]] = None,
     force: bool = True,
@@ -450,6 +503,7 @@ def download_from_s3(
     :param path: The place to write the file
     :param client:
         A botocore client. If none given, one will be created automatically
+    :type client: Optional[botocore.client.BaseClient]
     :param client_kwargs:
         Keyword arguments to be passed to the client on instantiation.
     :param download_file_kwargs:
