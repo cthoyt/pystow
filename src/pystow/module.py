@@ -102,7 +102,7 @@ def ensure_readme():
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:
-        print(README_TEXT, file=file)
+        print(README_TEXT, file=file)  # noqa:T001
 
 
 class Module:
