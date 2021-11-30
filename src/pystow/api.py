@@ -179,12 +179,10 @@ def ensure_csv(
 
     Example usage::
 
-    .. code-block:: python
-
-        >>> import pystow
-        >>> import pandas as pd
-        >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-        >>> df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+    >>> import pystow
+    >>> import pandas as pd
+    >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+    >>> df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_csv(
@@ -226,11 +224,9 @@ def ensure_json(
 
     Example usage::
 
-    .. code-block:: python
-
-        >>> import pystow
-        >>> url = 'https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json'
-        >>> perturbations = pystow.ensure_csv('bio', 'creeds', '1.0', url=url)
+    >>> import pystow
+    >>> url = 'https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json'
+    >>> perturbations = pystow.ensure_csv('bio', 'creeds', '1.0', url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_json(
@@ -377,27 +373,26 @@ def ensure_rdf(
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
-    :param parse_kwargs: Keyword arguments to pass through to :func:`pystow.utils.read_rdf`.
+    :param parse_kwargs:
+        Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+        :func:`rdflib.Graph.parse`.
     :return: An RDF graph
     :rtype: rdflib.Graph
 
     Example usage::
 
-    .. code-block:: python
-
-        >>> import pystow
-        >>> import rdflib
-        >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
-        >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
+    >>> import pystow
+    >>> import rdflib
+    >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
+    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
     If :mod:`rdflib` fails to guess the format, you can explicitly specify it using the `parse_kwargs` argument:
 
-    .. code-block:: python
-
-        >>> import pystow
-        >>> import rdflib
-        >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph/v3/suite/memoryalpha-stexpanded/component/reference.xml"
-        >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"})
+    >>> import pystow
+    >>> import rdflib
+    >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph" \
+    ... "/v3/suite/memoryalpha-stexpanded/component/reference.xml"
+    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"})
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(
