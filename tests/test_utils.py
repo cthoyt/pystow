@@ -18,7 +18,9 @@ from pystow.utils import (
     mock_envvar,
     n,
     name_from_url,
+    read_tarfile_csv,
     read_zipfile_csv,
+    write_tarfile_csv,
     write_zipfile_csv,
 )
 
@@ -87,7 +89,7 @@ class TestUtils(unittest.TestCase):
 
         data = [
             ("test.zip", write_zipfile_csv, read_zipfile_csv),
-            # ('test.tar.gz', write_tarfile_csv, read_tarfile_csv),
+            ("test.tar.gz", write_tarfile_csv, read_tarfile_csv),
         ]
         for name, writer, reader in data:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:

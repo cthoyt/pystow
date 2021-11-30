@@ -5,16 +5,23 @@
 import gzip
 import json
 import logging
+import lzma
 import os
-import pickle
 import tarfile
+import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from textwrap import dedent
-from typing import Any, Mapping, Optional, Sequence, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
+from . import utils
+from .constants import (
+    PYSTOW_HOME_ENVVAR,
+    PYSTOW_NAME_DEFAULT,
+    PYSTOW_NAME_ENVVAR,
+    PYSTOW_USE_APPDIRS,
+    README_TEXT,
+)
 from .utils import (
-    download,
     download_from_google,
     download_from_s3,
     getenv_path,
@@ -27,16 +34,17 @@ from .utils import (
     read_zipfile_csv,
 )
 
+try:
+    import pickle5 as pickle
+except ImportError:
+    import pickle  # type:ignore
+
 if TYPE_CHECKING:
-    import rdflib
-    import pandas as pd
     import botocore.client
+    import pandas as pd
+    import rdflib
 
 logger = logging.getLogger(__name__)
-
-PYSTOW_NAME_ENVVAR = "PYSTOW_NAME"
-PYSTOW_HOME_ENVVAR = "PYSTOW_HOME"
-PYSTOW_NAME_DEFAULT = ".data"
 
 
 def get_name() -> str:
@@ -44,9 +52,18 @@ def get_name() -> str:
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
 
+def _use_appdirs() -> bool:
+    return os.getenv(PYSTOW_USE_APPDIRS) in {"true", "True"}
+
+
 def get_home(ensure_exists: bool = True) -> Path:
     """Get the PyStow home directory."""
-    default = Path.home() / get_name()
+    if _use_appdirs():
+        from appdirs import user_data_dir
+
+        default = Path(user_data_dir())
+    else:
+        default = Path.home() / get_name()
     return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
@@ -65,62 +82,18 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
     """
     _assert_valid(key)
     envvar = f"{key.upper()}_HOME"
-    default = get_home(ensure_exists=False) / key
+    if _use_appdirs():
+        from appdirs import user_data_dir
+
+        default = Path(user_data_dir(appname=key))
+    else:
+        default = get_home(ensure_exists=False) / key
     return getenv_path(envvar, default, ensure_exists=ensure_exists)
 
 
 def _assert_valid(key: str) -> None:
     if "." in key:
         raise ValueError(f"The module should not have a dot in it: {key}")
-
-
-README_TEXT = dedent(
-    """\
-# PyStow Data Directory
-
-This directory is used by [`pystow`](https://github.com/cthoyt/pystow) as a
-reproducible location to store and access data.
-
-### ⚙️️ Configuration
-
-By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
-`$HOME/.data/<app>` folder.
-
-If you want to use an alternate folder name to `.data` inside the home directory, you can set the `PYSTOW_NAME`
-environment variable. For example, if you set `PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
-create the `$HOME/mydata/pykeen/` directory:
-
-```python
-import os
-import pystow
-
-# Only for demonstration purposes. You should set environment
-# variables either with your .bashrc or in the command line REPL.
-os.environ['PYSTOW_NAME'] = 'mydata'
-
-# Get a directory (as a pathlib.Path) for ~/mydata/pykeen
-pykeen_directory = pystow.join('pykeen')
-```
-
-If you want to specify a completely custom directory that isn't relative to your home directory, you can set
-the `PYSTOW_HOME` environment variable. For example, if you set `PYSTOW_HOME=/usr/local/`, then the following code for
-the `pykeen` app will create the `/usr/local/pykeen/` directory:
-
-```python
-import os
-import pystow
-
-# Only for demonstration purposes. You should set environment
-# variables either with your .bashrc or in the command line REPL.
-os.environ['PYSTOW_HOME'] = '/usr/local/'
-
-# Get a directory (as a pathlib.Path) for /usr/local/pykeen
-pykeen_directory = pystow.join('pykeen')
-```
-
-Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
-"""
-)
 
 
 def ensure_readme():
@@ -252,7 +225,7 @@ class Module:
         if name is None:
             name = name_from_url(url)
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        download(
+        utils.download(
             url=url,
             path=path,
             force=force,
@@ -307,6 +280,66 @@ class Module:
             yield file
 
     @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "rt",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it with :mod:`lzma`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with lzma.open(path, **open_kwargs) as file:
+            yield file
+
+    @contextmanager
+    def ensure_open_tarfile(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it with :mod:`tarfile`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        with tarfile.open(path) as tar_file:
+            with tar_file.extractfile(inner_path) as file:  # type:ignore
+                yield file
+
+    @contextmanager
+    def ensure_open_zip(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "r",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure a file is downloaded then open it with :mod:`zipfile`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with zipfile.ZipFile(file=path) as zip_file:
+            with zip_file.open(inner_path) as file:
+                yield file
+
+    @contextmanager
     def ensure_open_gz(
         self,
         *subkeys: str,
@@ -357,6 +390,8 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
+
+    # TODO ensure_pickle
 
     def ensure_excel(
         self,

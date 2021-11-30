@@ -6,15 +6,17 @@ import contextlib
 import gzip
 import hashlib
 import logging
+import lzma
 import os
 import shutil
 import tarfile
+import tempfile
 import zipfile
 from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Iterable, Mapping, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Collection, Iterable, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -22,11 +24,13 @@ from uuid import uuid4
 import requests
 from tqdm import tqdm
 
+from .constants import PYSTOW_HOME_ENVVAR
+
 if TYPE_CHECKING:
-    import rdflib
-    import pandas as pd
     import botocore.client
     import lxml.etree
+    import pandas as pd
+    import rdflib
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +242,14 @@ def mock_envvar(k: str, v: str):
     del os.environ[k]
 
 
+@contextlib.contextmanager
+def mock_home():
+    """Mock the PyStow home environment variable, yields the directory name."""
+    with tempfile.TemporaryDirectory() as directory:
+        with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
+            yield directory
+
+
 def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
     """Get an environment variable representing a path, or use the default."""
     rv = Path(os.getenv(envvar, default=default))
@@ -257,6 +269,19 @@ def get_df_io(df: "pd.DataFrame", sep: str = "\t", index: bool = False, **kwargs
     sio.seek(0)
     bio = BytesIO(sio.read().encode("utf-8"))
     return bio
+
+
+def write_lzma_csv(
+    df: "pd.DataFrame",
+    path: Union[str, Path],
+    sep="\t",
+    index: bool = False,
+    **kwargs,
+):
+    """Write a dataframe as an lzma-compressed file."""
+    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
+    with lzma.open(path, "wb") as file:
+        file.write(bytes_io.read())
 
 
 def write_zipfile_csv(
@@ -292,11 +317,11 @@ def write_tarfile_csv(
     **kwargs,
 ) -> None:
     """Write a dataframe to an inner CSV file from a tar archive."""
-    raise NotImplementedError
-    # bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
-    # with tarfile.open(path, mode='w') as tar_file:
-    #    with tar_file.open(inner_path, mode='w') as file:  # type: ignore
-    #        file.write(bytes_io.read())
+    s = df.to_csv(sep=sep, index=index, **kwargs)
+    tarinfo = tarfile.TarInfo(name=inner_path)
+    tarinfo.size = len(s)
+    with tarfile.TarFile(path, mode="w") as tar_file:
+        tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
 
 
 def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep="\t", **kwargs) -> "pd.DataFrame":
