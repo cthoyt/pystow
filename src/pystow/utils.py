@@ -26,6 +26,37 @@ from tqdm import tqdm
 
 from .constants import PYSTOW_HOME_ENVVAR
 
+__all__ = [
+    # Data Structures
+    "HexDigestMismatch",
+    # Exceptions
+    "HexDigestError",
+    "UnexpectedDirectory",
+    # Functions
+    "get_offending_hexdigests",
+    "get_hashes",
+    "raise_on_digest_mismatch",
+    "download",
+    "name_from_url",
+    "name_from_s3_key",
+    "mkdir",
+    "mock_envvar",
+    "mock_home",
+    "getenv_path",
+    "n",
+    "get_df_io",
+    "write_lzma_csv",
+    "write_zipfile_csv",
+    "read_zipfile_csv",
+    "write_tarfile_csv",
+    "read_tarfile_csv",
+    "read_tarfile_xml",
+    "read_rdf",
+    "get_commit",
+    "download_from_google",
+    "download_from_s3",
+]
+
 logger = logging.getLogger(__name__)
 
 # Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
@@ -229,11 +260,11 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
 
 
 @contextlib.contextmanager
-def mock_envvar(k: str, v: str):
+def mock_envvar(envvar: str, value: str):
     """Mock the environment variable then delete it after the test is over."""
-    os.environ[k] = v
+    os.environ[envvar] = value
     yield
-    del os.environ[k]
+    del os.environ[envvar]
 
 
 @contextlib.contextmanager
