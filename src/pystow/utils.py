@@ -264,7 +264,7 @@ def get_df_io(df, sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
     :param kwargs: Additional kwargs to pass to :func:`pandas.DataFrame.to_csv`.
-    :returns: A bytes object that can be used as a file.
+    :return: A bytes object that can be used as a file.
     """
     sio = StringIO()
     df.to_csv(sio, sep=sep, index=index, **kwargs)
@@ -284,6 +284,7 @@ def write_lzma_csv(
 
     :param df: A dataframe
     :type df: pandas.DataFrame
+    :param path: The path to the resulting LZMA compressed dataframe file
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
     :param kwargs:
@@ -328,7 +329,7 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     :param inner_path: The path inside the zip archive to the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
-    :returns: A dataframe
+    :return: A dataframe
     :rtype: pandas.DataFrame
     """
     import pandas as pd
@@ -368,6 +369,11 @@ def write_tarfile_csv(
 def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs):
     """Read an inner CSV file from a tar archive.
 
+    :param path: The path to the tar archive
+    :param inner_path: The path inside the tar archive to the dataframe
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+    :return: A dataframe
     :rtype: pandas.DataFrame
     """
     import pandas as pd
@@ -380,6 +386,10 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
 def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
     """Read an inner XML file from a tar archive.
 
+    :param path: The path to the tar archive
+    :param inner_path: The path inside the tar archive to the xml file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
+    :return: An XML element tree
     :rtype: lxml.etree.ElementTree
     """
     from lxml import etree
@@ -394,7 +404,7 @@ def read_rdf(path: Union[str, Path], **kwargs):
 
     :param path: The path to the RDF file
     :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
-    :returns: A parsed RDF graph
+    :return: A parsed RDF graph
     :rtype: rdflib.Graph
     """
     import rdflib
