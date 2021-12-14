@@ -48,6 +48,7 @@ __all__ = [
     "write_lzma_csv",
     "write_zipfile_csv",
     "read_zipfile_csv",
+    "read_zipfile_rdf",
     "write_tarfile_csv",
     "read_tarfile_csv",
     "read_tarfile_xml",
@@ -368,6 +369,24 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
             return pd.read_csv(file, sep=sep, **kwargs)
+
+
+def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs):
+    """Read an inner RDF file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the dataframe
+    :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+    :return: A dataframe
+    :rtype: rdflib.Graph
+    """
+    import rdflib
+
+    graph = rdflib.Graph()
+    with zipfile.ZipFile(file=path) as zip_file:
+        with zip_file.open(inner_path) as file:
+            graph.load(file, **kwargs)
+    return graph
 
 
 def write_tarfile_csv(
