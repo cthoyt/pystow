@@ -110,10 +110,10 @@ If you're data comes with a lot of different files in an archive you can ensure 
 ```python
 import numpy as np
 from pystow import module
-url = "/my/url/with/data.zip"
+url = "https://cloud.enterprise.informatik.uni-leipzig.de/index.php/s/LHPbMCre7SLqajB/download/MultiKE_D_Y_15K_V1.zip"
 # the path inside the archive to the file you want
-inner_path = "root_folder/embeddings.npy"
-with module("test").ensure_open_zip(url=url, inner_path=inner_path) as file:
+inner_path = "MultiKE/D_Y_15K_V1/721_5fold/1/20210219183115/ent_embeds.npy"
+with module("kiez").ensure_open_zip(url=url, inner_path=inner_path) as file:
     emb = np.load(file)
 ```
 
