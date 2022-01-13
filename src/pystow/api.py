@@ -226,7 +226,7 @@ def ensure_json(
 
     >>> import pystow
     >>> url = 'https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json'
-    >>> perturbations = pystow.ensure_csv('bio', 'creeds', '1.0', url=url)
+    >>> perturbations = pystow.ensure_json('bio', 'creeds', '1.0', url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_json(
