@@ -147,8 +147,7 @@ class TestHashing(unittest.TestCase):
 
     def test_override_hash_error(self):
         """Test hash error on download."""
-        with open(self.path, "w") as file:
-            print("test file content", file)
+        self.path.write_text("test file content")
 
         self.assertTrue(self.path.exists())
         with self.assertRaises(HexDigestError):
@@ -164,8 +163,7 @@ class TestHashing(unittest.TestCase):
     def test_force(self):
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
-        with open(self.path, "w") as file:
-            print("test file content", file)
+        self.path.write_text("test file content")
 
         self.assertTrue(self.path.exists())
         download(

@@ -102,7 +102,7 @@ def ensure_readme():
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:
-        print(README_TEXT, file=file)
+        print(README_TEXT, file=file)  # noqa:T001
 
 
 class Module:
@@ -403,6 +403,8 @@ class Module:
         read_excel_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> "pd.DataFrame":
         """Download an excel file and open as a dataframe with :mod:`pandas`."""
+        import pandas as pd
+
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
