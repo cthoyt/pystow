@@ -181,6 +181,10 @@ The most recent release can be installed from
 $ pip install pystow
 ```
 
+Note, as of v0.3.0, Python 3.6 isn't officially supported (its
+end-of-life was in December 2021). For the time being, `pystow` might still
+work on py36, but this is only coincidental.
+
 The most recent code and data can be installed directly from GitHub with:
 
 ```bash
