@@ -22,6 +22,7 @@ __all__ = [
     "ensure_tar_df",
     "ensure_tar_xml",
     "ensure_zip_df",
+    "ensure_zip_np",
     "ensure_from_s3",
     "ensure_from_google",
     "ensure_rdf",
@@ -372,6 +373,29 @@ def ensure_zip_df(
         inner_path=inner_path,
         download_kwargs=download_kwargs,
         read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def ensure_zip_np(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    load_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Download a zip file and open an inner file as an array with :mod:`numpy`."""
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_zip_np(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        inner_path=inner_path,
+        download_kwargs=download_kwargs,
+        load_kwargs=load_kwargs,
     )
 
 

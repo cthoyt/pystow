@@ -31,6 +31,7 @@ from .utils import (
     read_rdf,
     read_tarfile_csv,
     read_tarfile_xml,
+    read_zip_np,
     read_zipfile_csv,
 )
 
@@ -501,6 +502,43 @@ class Module:
         return read_zipfile_csv(
             path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs)
         )
+
+    def ensure_zip_np(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        load_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> "pd.DataFrame":
+        """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param inner_path:
+            The relative path to the file inside the archive
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs:
+            Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param load_kwargs:
+            Additional keyword arguments that are passed through to :func:`read_zip_np`
+            and transitively to :func:`numpy.load`.
+        :returns: An array-like object
+        """
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        return read_zip_np(path=path, inner_path=inner_path, **(load_kwargs or {}))
 
     def ensure_rdf(
         self,

@@ -15,6 +15,7 @@ from .api import (  # noqa
     ensure_tar_xml,
     ensure_untar,
     ensure_zip_df,
+    ensure_zip_np,
     join,
     module,
 )
