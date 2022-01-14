@@ -31,6 +31,7 @@ from .utils import (
     read_rdf,
     read_tarfile_csv,
     read_tarfile_xml,
+    read_zip_np,
     read_zipfile_csv,
 )
 
@@ -501,6 +502,22 @@ class Module:
         return read_zipfile_csv(
             path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs)
         )
+
+    def ensure_zip_np(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        load_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> "pd.DataFrame":
+        """Download a zip file and open an inner file as an array-like with :mod:`numpy`."""
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        return read_zip_np(path=path, inner_path=inner_path, **(load_kwargs or {}))
 
     def ensure_rdf(
         self,
