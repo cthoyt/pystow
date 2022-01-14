@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from pystow.utils import (
@@ -20,8 +21,10 @@ from pystow.utils import (
     name_from_url,
     read_tarfile_csv,
     read_zipfile_csv,
+    read_zipfile_np,
     write_tarfile_csv,
     write_zipfile_csv,
+    write_zipfile_np,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -101,6 +104,17 @@ class TestUtils(unittest.TestCase):
                 new_df = reader(path=path, inner_path=inner_path)
                 self.assertEqual(list(df.columns), list(new_df.columns))
                 self.assertEqual(df.values.tolist(), new_df.values.tolist())
+
+    def test_numpy_io(self):
+        """Test IO with numpy."""
+        arr = np.array([[0, 1], [2, 3]])
+        inner_path = "okay.npz"
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            path = directory / "test.zip"
+            write_zipfile_np(arr, inner_path=inner_path, path=path)
+            reloaded_arr = read_zipfile_np(path=path, inner_path=inner_path)
+            self.assertTrue(np.array_equal(arr, reloaded_arr))
 
 
 class TestHashing(unittest.TestCase):

@@ -44,18 +44,28 @@ __all__ = [
     "mock_home",
     "getenv_path",
     "n",
+    # Bytes generators
     "get_df_io",
+    "get_np_io",
+    # LZMA utilities
     "write_lzma_csv",
+    # Zipfile utilities
     "write_zipfile_csv",
     "read_zipfile_csv",
+    "write_zipfile_np",
+    "read_zipfile_np",
     "read_zipfile_rdf",
+    # Tarfile utilities
     "write_tarfile_csv",
     "read_tarfile_csv",
     "read_tarfile_xml",
+    # Standard readers
     "read_rdf",
-    "get_commit",
+    # Downloaders
     "download_from_google",
     "download_from_s3",
+    # Misc
+    "get_commit",
 ]
 
 logger = logging.getLogger(__name__)
@@ -305,6 +315,21 @@ def get_df_io(df, sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
     return bio
 
 
+def get_np_io(arr, **kwargs) -> BytesIO:
+    """Get the numpy object as bytes.
+
+    :param arr: Array-like
+    :param kwargs: Additional kwargs to pass to :func:`numpy.save`.
+    :return: A bytes object that can be used as a file.
+    """
+    import numpy as np
+
+    bio = BytesIO()
+    np.save(arr, bio, **kwargs)
+    bio.seek(0)
+    return bio
+
+
 def write_lzma_csv(
     df,
     path: Union[str, Path],
@@ -369,6 +394,42 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
             return pd.read_csv(file, sep=sep, **kwargs)
+
+
+def write_zipfile_np(
+    arr,
+    path: Union[str, Path],
+    inner_path: str,
+    **kwargs,
+) -> None:
+    """Write a dataframe to an inner CSV file to a zip archive.
+
+    :param arr: Array-like
+    :param path: The path to the resulting zip archive
+    :param inner_path: The path inside the zip archive to write the dataframe
+    :param kwargs:
+        Additional kwargs to pass to :func:`get_np_io` and transitively
+        to :func:`numpy.save`.
+    """
+    bytes_io = get_np_io(arr, **kwargs)
+    with zipfile.ZipFile(file=path, mode="w") as zip_file:
+        with zip_file.open(inner_path, mode="w") as file:
+            file.write(bytes_io.read())
+
+
+def read_zipfile_np(path: Union[str, Path], inner_path: str, **kwargs):
+    """Read an inner numpy array-like from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the dataframe
+    :param kwargs: Additional kwargs to pass to :func:`numpy.load`.
+    :return: A numpy array or other object
+    """
+    import numpy as np
+
+    with zipfile.ZipFile(file=path) as zip_file:
+        with zip_file.open(inner_path) as file:
+            return np.load(file, **kwargs)
 
 
 def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs):
