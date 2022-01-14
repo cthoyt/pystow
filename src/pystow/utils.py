@@ -53,7 +53,7 @@ __all__ = [
     "write_zipfile_csv",
     "read_zipfile_csv",
     "write_zipfile_np",
-    "read_zipfile_np",
+    "read_zip_np",
     "read_zipfile_rdf",
     # Tarfile utilities
     "write_tarfile_csv",
@@ -325,7 +325,7 @@ def get_np_io(arr, **kwargs) -> BytesIO:
     import numpy as np
 
     bio = BytesIO()
-    np.save(arr, bio, **kwargs)
+    np.save(bio, arr, **kwargs)
     bio.seek(0)
     return bio
 
@@ -417,7 +417,7 @@ def write_zipfile_np(
             file.write(bytes_io.read())
 
 
-def read_zipfile_np(path: Union[str, Path], inner_path: str, **kwargs):
+def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs):
     """Read an inner numpy array-like from a zip archive.
 
     :param path: The path to the zip archive

@@ -20,8 +20,8 @@ from pystow.utils import (
     n,
     name_from_url,
     read_tarfile_csv,
+    read_zip_np,
     read_zipfile_csv,
-    read_zipfile_np,
     write_tarfile_csv,
     write_zipfile_csv,
     write_zipfile_np,
@@ -113,7 +113,7 @@ class TestUtils(unittest.TestCase):
             directory = Path(directory)
             path = directory / "test.zip"
             write_zipfile_np(arr, inner_path=inner_path, path=path)
-            reloaded_arr = read_zipfile_np(path=path, inner_path=inner_path)
+            reloaded_arr = read_zip_np(path=path, inner_path=inner_path)
             self.assertTrue(np.array_equal(arr, reloaded_arr))
 
 
