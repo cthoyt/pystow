@@ -105,6 +105,22 @@ rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
+If your data comes with a lot of different files in an archive,
+you can ensure the archive is downloaded and get specific files from it:
+
+```python
+import numpy as np
+import pystow
+
+url = "https://cloud.enterprise.informatik.uni-leipzig.de/index.php/s/LHPbMCre7SLqajB/download/MultiKE_D_Y_15K_V1.zip"
+# the path inside the archive to the file you want
+inner_path = "MultiKE/D_Y_15K_V1/721_5fold/1/20210219183115/ent_embeds.npy"
+with pystow.ensure_open_zip("kiez", url=url, inner_path=inner_path) as file:
+    emb = np.load(file)
+```
+
+Also see `pystow.module.ensure_open_lzma()`, `pystow.module.ensure_open_tarfile()` and `pystow.module.ensure_open_gz()`.
+
 ## ⚙️️ Configuration
 
 By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
