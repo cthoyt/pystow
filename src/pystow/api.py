@@ -2,6 +2,7 @@
 
 """API functions for PyStow."""
 
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence, Union
 
@@ -13,6 +14,7 @@ __all__ = [
     # Downloader functions
     "ensure",
     "ensure_untar",
+    "ensure_open_zip",
     # Processors
     "ensure_csv",
     "ensure_json",
@@ -146,6 +148,32 @@ def ensure_untar(
         force=force,
         download_kwargs=download_kwargs,
         extract_kwargs=extract_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_zip(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure a file is downloaded then open it with :mod:`zipfile`."""
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_zip(
+        *subkeys,
+        url=url,
+        inner_path=inner_path,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
     )
 
 
