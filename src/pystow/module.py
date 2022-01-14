@@ -8,6 +8,7 @@ import logging
 import lzma
 import os
 import tarfile
+import warnings
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -143,7 +144,12 @@ class Module:
             rv = rv.submodule(*subkeys, ensure_exists=ensure_exists)
         return rv
 
-    def submodule(self, *subkeys: str, ensure_exists: bool = True) -> "Module":
+    def submodule(self, *args, **kwargs) -> "Module":
+        """Get a module for a subdirectory of the current module."""
+        warnings.warn("Use .module() instead", DeprecationWarning)
+        return self.module(*args, **kwargs)
+
+    def module(self, *subkeys: str, ensure_exists: bool = True) -> "Module":
         """Get a module for a subdirectory of the current module.
 
         :param subkeys:
