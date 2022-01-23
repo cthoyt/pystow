@@ -250,8 +250,8 @@ def ensure_open_zip(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    ) as inner_ensure_open_zip:
-        yield [inner_ensure_open_zip]
+    ) as yv:
+        yield yv
 
 
 @contextmanager
