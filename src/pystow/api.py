@@ -193,7 +193,7 @@ def ensure_open(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open(
+    with _module.ensure_open(
         *subkeys,
         url=url,
         name=name,
@@ -201,7 +201,8 @@ def ensure_open(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 @contextmanager
@@ -242,7 +243,7 @@ def ensure_open_zip(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open_zip(
+    with _module.ensure_open_zip(
         *subkeys,
         url=url,
         inner_path=inner_path,
@@ -251,7 +252,8 @@ def ensure_open_zip(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 @contextmanager
@@ -289,7 +291,7 @@ def ensure_open_lzma(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open_lzma(
+    with _module.ensure_open_lzma(
         *subkeys,
         url=url,
         name=name,
@@ -297,7 +299,8 @@ def ensure_open_lzma(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 @contextmanager
@@ -338,7 +341,7 @@ def ensure_open_tarfile(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open_tarfile(
+    with _module.ensure_open_tarfile(
         *subkeys,
         url=url,
         inner_path=inner_path,
@@ -347,7 +350,8 @@ def ensure_open_tarfile(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 @contextmanager
@@ -385,7 +389,7 @@ def ensure_open_gz(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open_gz(
+    with _module.ensure_open_gz(
         *subkeys,
         url=url,
         name=name,
@@ -393,7 +397,8 @@ def ensure_open_gz(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 def ensure_csv(
