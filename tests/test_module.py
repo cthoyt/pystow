@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Mapping, Union
+from typing import ContextManager, Mapping, Union
 from unittest import mock
 
 import pandas as pd
@@ -82,14 +82,20 @@ class TestGet(unittest.TestCase):
         self.directory.cleanup()
 
     @contextlib.contextmanager
-    def mock_directory(self):
-        """Use this test case's temporary directory as a mock environment variable."""
+    def mock_directory(self) -> ContextManager[Path]:
+        """Use this test case's temporary directory as a mock environment variable.
+
+        :yield: The mock directory's path
+        """
         with mock_envvar(PYSTOW_HOME_ENVVAR, self.directory.name):
-            yield
+            yield Path(self.directory.name)
 
     @staticmethod
     def mock_download():
-        """Mock connection to the internet using local resource files."""
+        """Mock connection to the internet using local resource files.
+
+        :return: A patch object that can be applied to the pystow download function
+        """
 
         def _mock_get_data(url: str, path: Union[str, Path], **_kwargs) -> Path:
             return shutil.copy(MOCK_FILES[url], path)
@@ -97,16 +103,24 @@ class TestGet(unittest.TestCase):
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
     @staticmethod
-    def mock_download_once(local_path):
-        """Mock connection to the internet using local resource files."""
+    def mock_download_once(local_path: Union[str, Path]):
+        """Mock connection to the internet using local resource files.
+
+        :param local_path: the path to the file to mock
+        :return: A patch object that can be applied to the pystow download function
+        """
 
         def _mock_get_data(path: Union[str, Path], **_kwargs) -> Path:
             return shutil.copy(local_path, path)
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
-    def join(self, *parts) -> Path:
-        """Help join the parts to this test case's temporary directory."""
+    def join(self, *parts: str) -> Path:
+        """Help join the parts to this test case's temporary directory.
+
+        :param parts: The file path parts that are joined with this test case's directory
+        :return: A path to the file
+        """
         return Path(os.path.join(self.directory.name, *parts))
 
     def test_mock(self):

@@ -23,12 +23,25 @@ CONFIG_NAME_DEFAULT = ".config"
 
 
 def get_name() -> str:
-    """Get the config home directory name."""
+    """Get the config home directory name.
+
+    :returns: The name of the pystow home directory, either loaded from
+        the :data:`CONFIG_NAME_ENVVAR`` environment variable or given by the default
+        value :data:`CONFIG_NAME_DEFAULT`.
+    """
     return os.getenv(CONFIG_NAME_ENVVAR, default=CONFIG_NAME_DEFAULT)
 
 
 def get_home(ensure_exists: bool = True) -> Path:
-    """Get the config home directory."""
+    """Get the config home directory.
+
+    :param ensure_exists: If true, ensures the directory is created
+    :returns: A path object representing the pystow home directory, as one of:
+
+        1. :data:`CONFIG_HOME_ENVVAR` environment variable or
+        3. The default directory constructed in the user's home directory plus what's
+           returned by :func:`get_name`.
+    """
     default = Path.home() / get_name()
     return getenv_path(CONFIG_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
@@ -109,7 +122,12 @@ def _cast(rv, dtype):
 
 
 def write_config(module: str, key: str, value: str) -> None:
-    """Write a configuration value."""
+    """Write a configuration value.
+
+    :param module: The name of the app (e.g., ``indra``)
+    :param key: The key of the configuration in the app
+    :param value: The value of the configuration in the app
+    """
     _get_cfp.cache_clear()
     cfp = ConfigParser()
     path = get_home() / f"{module}.ini"
