@@ -184,7 +184,14 @@ def get_hashes(
 
 
 def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
-    """Raise a HexDigestError if the digests do not match."""
+    """Raise a HexDigestError if the digests do not match.
+
+    :param path:
+        The file path.
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :raises HexDigestError: if there are any offending hex digests
+    """
     offending_hexdigests = get_offending_hexdigests(path=path, hexdigests=hexdigests)
     if offending_hexdigests:
         raise HexDigestError(offending_hexdigests)
@@ -252,7 +259,11 @@ def download(
 
 
 def name_from_url(url: str) -> str:
-    """Get the filename from the end of the URL."""
+    """Get the filename from the end of the URL.
+
+    :param url: A URL
+    :return: The name of the file at the end of the URL
+    """
     parse_result = urlparse(url)
     path = PurePosixPath(parse_result.path)
     name = path.name
@@ -260,27 +271,49 @@ def name_from_url(url: str) -> str:
 
 
 def name_from_s3_key(key: str) -> str:
-    """Get the filename from the S3 key."""
+    """Get the filename from the S3 key.
+
+    :param key: A S3 path
+    :returns: The name of the file
+    """
     return key.split("/")[-1]
 
 
 def mkdir(path: Path, ensure_exists: bool = True) -> None:
-    """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``."""
+    """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``.
+
+    :param path: The path to a directory
+    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    """
     if ensure_exists:
         path.mkdir(exist_ok=True, parents=True)
 
 
 @contextlib.contextmanager
 def mock_envvar(envvar: str, value: str) -> ContextManager[None]:
-    """Mock the environment variable then delete it after the test is over."""
+    """Mock the environment variable then delete it after the test is over.
+
+    :param envvar: The environment variable to mock
+    :param value: The value to temporarily put in the environment variable
+        during this mock.
+    :yield: None, since this just mocks the environment variable for the
+        time being.
+    """
+    original_value = os.environ.get(envvar)
     os.environ[envvar] = value
     yield
-    del os.environ[envvar]
+    if original_value is None:
+        del os.environ[envvar]
+    else:
+        os.environ[envvar] = original_value
 
 
 @contextlib.contextmanager
 def mock_home() -> ContextManager[Path]:
-    """Mock the PyStow home environment variable, yields the directory name."""
+    """Mock the PyStow home environment variable, yields the directory name.
+
+    :yield: The path to the temporary directory.
+    """
     with tempfile.TemporaryDirectory() as directory:
         with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
             yield Path(directory)
