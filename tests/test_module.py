@@ -160,7 +160,7 @@ class TestGet(unittest.TestCase):
                 with lzma.open(path, "wt") as file:
                     for row in TEST_TSV_ROWS:
                         print(*row, sep="\t", file=file)  # noqa:T001
-                with pystow.module("test").ensure_open_lzma(url=n()) as file:
+                with pystow.ensure_open_lzma("test", url=n()) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
@@ -182,9 +182,7 @@ class TestGet(unittest.TestCase):
             inner_path = n()
             with self.mock_download_once(path):
                 write_tarfile_csv(TEST_DF, path, inner_path)
-                with pystow.module("test").ensure_open_tarfile(
-                    url=n(), inner_path=inner_path
-                ) as file:
+                with pystow.ensure_open_tarfile("test", url=n(), inner_path=inner_path) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
 

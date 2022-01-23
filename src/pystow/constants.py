@@ -3,6 +3,7 @@
 """PyStow constants."""
 
 from textwrap import dedent
+from typing import IO, Iterator
 
 __all__ = [
     "PYSTOW_NAME_ENVVAR",
@@ -10,6 +11,7 @@ __all__ = [
     "PYSTOW_USE_APPDIRS",
     "PYSTOW_NAME_DEFAULT",
     "README_TEXT",
+    "Opener",
 ]
 
 PYSTOW_NAME_ENVVAR = "PYSTOW_NAME"
@@ -63,3 +65,5 @@ pykeen_directory = pystow.join('pykeen')
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
 """
 )
+
+Opener = Iterator[IO]

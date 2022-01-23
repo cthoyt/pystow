@@ -19,6 +19,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    cast,
 )
 
 try:
@@ -58,7 +59,7 @@ class Cached(Generic[X], ABC):
         self,
         path: Union[str, Path, os.PathLike],
         force: bool = False,
-    ):
+    ) -> None:
         """Instantiate the decorator.
 
         :param path: The path to the cache for the file
@@ -107,7 +108,7 @@ class CachedJSON(Cached[JSONType]):
         :returns: A python object with JSON-like data from the cache
         """
         with open(self.path) as file:
-            return json.load(file)
+            return cast(JSONType, json.load(file))
 
     def dump(self, rv: JSONType) -> None:
         """Dump data to the cache as JSON.
@@ -169,7 +170,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
         sep: Optional[str] = None,
         dtype: Optional[Any] = None,
         read_csv_kwargs: Optional[MutableMapping[str, Any]] = None,
-    ):
+    ) -> None:
         """Instantiate the decorator.
 
         :param path: The path to the cache for the file
