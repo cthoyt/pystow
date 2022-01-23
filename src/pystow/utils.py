@@ -16,7 +16,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, ContextManager, Iterable, Mapping, Optional, Union
+from typing import Any, Collection, Iterable, Iterator, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -290,7 +290,7 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
 
 
 @contextlib.contextmanager
-def mock_envvar(envvar: str, value: str) -> ContextManager[None]:
+def mock_envvar(envvar: str, value: str) -> Iterator[None]:
     """Mock the environment variable then delete it after the test is over.
 
     :param envvar: The environment variable to mock
@@ -309,7 +309,7 @@ def mock_envvar(envvar: str, value: str) -> ContextManager[None]:
 
 
 @contextlib.contextmanager
-def mock_home() -> ContextManager[Path]:
+def mock_home() -> Iterator[Path]:
     """Mock the PyStow home environment variable, yields the directory name.
 
     :yield: The path to the temporary directory.
