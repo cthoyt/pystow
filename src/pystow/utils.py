@@ -16,7 +16,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Iterable, Mapping, Optional, Union
+from typing import Any, Collection, Iterable, Iterator, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -184,7 +184,14 @@ def get_hashes(
 
 
 def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
-    """Raise a HexDigestError if the digests do not match."""
+    """Raise a HexDigestError if the digests do not match.
+
+    :param path:
+        The file path.
+    :param hexdigests:
+        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :raises HexDigestError: if there are any offending hex digests
+    """
     offending_hexdigests = get_offending_hexdigests(path=path, hexdigests=hexdigests)
     if offending_hexdigests:
         raise HexDigestError(offending_hexdigests)
@@ -252,7 +259,11 @@ def download(
 
 
 def name_from_url(url: str) -> str:
-    """Get the filename from the end of the URL."""
+    """Get the filename from the end of the URL.
+
+    :param url: A URL
+    :return: The name of the file at the end of the URL
+    """
     parse_result = urlparse(url)
     path = PurePosixPath(parse_result.path)
     name = path.name
@@ -260,41 +271,72 @@ def name_from_url(url: str) -> str:
 
 
 def name_from_s3_key(key: str) -> str:
-    """Get the filename from the S3 key."""
+    """Get the filename from the S3 key.
+
+    :param key: A S3 path
+    :returns: The name of the file
+    """
     return key.split("/")[-1]
 
 
 def mkdir(path: Path, ensure_exists: bool = True) -> None:
-    """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``."""
+    """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``.
+
+    :param path: The path to a directory
+    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    """
     if ensure_exists:
         path.mkdir(exist_ok=True, parents=True)
 
 
 @contextlib.contextmanager
-def mock_envvar(envvar: str, value: str):
-    """Mock the environment variable then delete it after the test is over."""
+def mock_envvar(envvar: str, value: str) -> Iterator[None]:
+    """Mock the environment variable then delete it after the test is over.
+
+    :param envvar: The environment variable to mock
+    :param value: The value to temporarily put in the environment variable
+        during this mock.
+    :yield: None, since this just mocks the environment variable for the
+        time being.
+    """
+    original_value = os.environ.get(envvar)
     os.environ[envvar] = value
     yield
-    del os.environ[envvar]
+    if original_value is None:
+        del os.environ[envvar]
+    else:
+        os.environ[envvar] = original_value
 
 
 @contextlib.contextmanager
-def mock_home():
-    """Mock the PyStow home environment variable, yields the directory name."""
+def mock_home() -> Iterator[Path]:
+    """Mock the PyStow home environment variable, yields the directory name.
+
+    :yield: The path to the temporary directory.
+    """
     with tempfile.TemporaryDirectory() as directory:
         with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
-            yield directory
+            yield Path(directory)
 
 
 def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
-    """Get an environment variable representing a path, or use the default."""
+    """Get an environment variable representing a path, or use the default.
+
+    :param envvar: The environmental variable name to check
+    :param default: The default path to return if the environmental variable is not set
+    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :return: A path either specified by the environmental variable or by the default.
+    """
     rv = Path(os.getenv(envvar, default=default))
     mkdir(rv, ensure_exists=ensure_exists)
     return rv
 
 
 def n() -> str:
-    """Get a random string for testing."""
+    """Get a random string for testing.
+
+    :returns: A random string for testing purposes.
+    """
     return str(uuid4())
 
 
@@ -533,7 +575,14 @@ def read_rdf(path: Union[str, Path], **kwargs):
 
 
 def get_commit(org: str, repo: str, provider: str = "git") -> str:
-    """Get last commit hash for the given repo."""
+    """Get last commit hash for the given repo.
+
+    :param org: The GitHub organization or owner
+    :param repo: The GitHub repository name
+    :param provider: The method for getting the most recent commit
+    :raises ValueError: if an invalid provider is given
+    :returns: A commit hash's hex digest as a string
+    """
     if provider == "git":
         output = check_output(["git", "ls-remote", f"https://github.com/{org}/{repo}"])  # noqa
         lines = (line.strip().split("\t") for line in output.decode("utf8").splitlines())
@@ -543,7 +592,7 @@ def get_commit(org: str, repo: str, provider: str = "git") -> str:
         res_json = res.json()
         rv = res_json["commit"]["sha"]
     else:
-        raise NotImplementedError(f"invalid implementation: {provider}")
+        raise ValueError(f"invalid implementation: {provider}")
     return rv
 
 

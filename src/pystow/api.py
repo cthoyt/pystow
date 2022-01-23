@@ -215,7 +215,31 @@ def ensure_open_zip(
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Ensure a file is downloaded then open it with :mod:`zipfile`."""
+    """Ensure a file is downloaded then open it with :mod:`zipfile`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`zipfile.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
+
+    :yields: An open file object
+    """
     _module = Module.from_key(key, ensure_exists=True)
     yield _module.ensure_open_zip(
         *subkeys,
@@ -284,6 +308,8 @@ def ensure_open_tarfile(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     """Ensure a tar file is downloaded and open a file inside it.
 
@@ -305,6 +331,8 @@ def ensure_open_tarfile(
         Should the download be done again, even if the path already exists?
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`tarfile.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`tarfile.open`
 
     :yields: An open file object
     """
@@ -316,6 +344,8 @@ def ensure_open_tarfile(
         name=name,
         force=force,
         download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
     )
 
 
@@ -504,7 +534,28 @@ def ensure_tar_df(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Download a tar file and open an inner file as a dataframe with :mod:`pandas`."""
+    """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+    :returns: A dataframe
+
+    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_df(
         *subkeys,
@@ -527,7 +578,28 @@ def ensure_tar_xml(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     parse_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Download a tar file and open an inner XML file with :mod:`lxml`."""
+    """Download a tar file and open an inner file as an XML with :mod:`lxml`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+    :returns: An ElementTree object
+
+    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_xml(
         *subkeys,
@@ -550,7 +622,27 @@ def ensure_zip_df(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Download a zip file and open an inner file as a dataframe with :mod:`pandas`."""
+    """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+    :return: A pandas DataFrame
+    :rtype: pandas.DataFrame
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_df(
         *subkeys,
@@ -573,7 +665,29 @@ def ensure_zip_np(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     load_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Download a zip file and open an inner file as an array with :mod:`numpy`."""
+    """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs:
+        Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param load_kwargs:
+        Additional keyword arguments that are passed through to :func:`read_zip_np`
+        and transitively to :func:`numpy.load`.
+    :returns: An array-like object
+    """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_np(
         *subkeys,
