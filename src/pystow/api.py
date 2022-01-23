@@ -308,6 +308,8 @@ def ensure_open_tarfile(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     """Ensure a tar file is downloaded and open a file inside it.
 
@@ -329,6 +331,8 @@ def ensure_open_tarfile(
         Should the download be done again, even if the path already exists?
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`tarfile.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`tarfile.open`
 
     :yields: An open file object
     """
@@ -340,6 +344,8 @@ def ensure_open_tarfile(
         name=name,
         force=force,
         download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
     )
 
 

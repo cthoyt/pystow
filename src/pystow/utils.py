@@ -542,7 +542,14 @@ def read_rdf(path: Union[str, Path], **kwargs):
 
 
 def get_commit(org: str, repo: str, provider: str = "git") -> str:
-    """Get last commit hash for the given repo."""
+    """Get last commit hash for the given repo.
+
+    :param org: The GitHub organization or owner
+    :param repo: The GitHub repository name
+    :param provider: The method for getting the most recent commit
+    :raises ValueError: if an invalid provider is given
+    :returns: A commit hash's hex digest as a string
+    """
     if provider == "git":
         output = check_output(["git", "ls-remote", f"https://github.com/{org}/{repo}"])  # noqa
         lines = (line.strip().split("\t") for line in output.decode("utf8").splitlines())
@@ -552,7 +559,7 @@ def get_commit(org: str, repo: str, provider: str = "git") -> str:
         res_json = res.json()
         rv = res_json["commit"]["sha"]
     else:
-        raise NotImplementedError(f"invalid implementation: {provider}")
+        raise ValueError(f"invalid implementation: {provider}")
     return rv
 
 
