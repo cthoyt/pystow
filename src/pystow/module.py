@@ -12,7 +12,7 @@ import warnings
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
+from typing import IO, TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
 from .constants import (
@@ -21,6 +21,7 @@ from .constants import (
     PYSTOW_NAME_ENVVAR,
     PYSTOW_USE_APPDIRS,
     README_TEXT,
+    Opener,
 )
 from .utils import (
     download_from_google,
@@ -113,7 +114,7 @@ def _assert_valid(key: str) -> None:
         raise ValueError(f"The module should not have a dot in it: {key}")
 
 
-def ensure_readme():
+def ensure_readme() -> None:
     """Ensure there's a README in the PyStow data directory."""
     readme_path = get_home(ensure_exists=True).joinpath("README.md")
     if readme_path.is_file():
@@ -312,7 +313,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Opener:
         """Ensure a file is downloaded and open it.
 
         :param subkeys:
@@ -350,7 +351,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "rt",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Opener:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -389,7 +390,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Opener:
         """Ensure a tar file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -431,7 +432,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Opener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
         :param subkeys:
@@ -472,7 +473,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Opener:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -721,7 +722,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         load_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+    ):
         """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
         :param subkeys:
@@ -743,6 +744,7 @@ class Module:
             Additional keyword arguments that are passed through to :func:`read_zip_np`
             and transitively to :func:`numpy.load`.
         :returns: An array-like object
+        :rtype: numpy.typing.ArrayLike
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs

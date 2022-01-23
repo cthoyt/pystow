@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence, Union
 
+from .constants import Opener
 from .module import Module
 
 __all__ = [
@@ -167,7 +168,7 @@ def ensure_open(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Ensure a file is downloaded and open it.
 
     :param key:
@@ -214,7 +215,7 @@ def ensure_open_zip(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
     :param key:
@@ -263,7 +264,7 @@ def ensure_open_lzma(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
     :param key:
@@ -310,7 +311,7 @@ def ensure_open_tarfile(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Ensure a tar file is downloaded and open a file inside it.
 
     :param key:
@@ -359,7 +360,7 @@ def ensure_open_gz(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key:
@@ -687,6 +688,7 @@ def ensure_zip_np(
         Additional keyword arguments that are passed through to :func:`read_zip_np`
         and transitively to :func:`numpy.load`.
     :returns: An array-like object
+    :rtype: numpy.typing.ArrayLike
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_np(
@@ -836,7 +838,7 @@ def ensure_from_google(
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
 
 
-def joinpath_sqlite(key, *subkeys: str, name: str) -> str:
+def joinpath_sqlite(key: str, *subkeys: str, name: str) -> str:
     """Get an SQLite database connection string.
 
     :param key:

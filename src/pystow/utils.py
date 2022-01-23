@@ -108,7 +108,7 @@ class UnexpectedDirectory(FileExistsError):
         """
         self.path = path
 
-    def __str__(self):  # noqa:D105
+    def __str__(self) -> str:  # noqa:D105
         return f"got directory instead of file: {self.path}"
 
 
@@ -204,7 +204,7 @@ def download(
     clean_on_failure: bool = True,
     backend: str = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
 
@@ -466,6 +466,7 @@ def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs):
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`numpy.load`.
     :return: A numpy array or other object
+    :rtype: numpy.typing.ArrayLike
     """
     import numpy as np
 
