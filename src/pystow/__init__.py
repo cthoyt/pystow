@@ -9,6 +9,10 @@ from .api import (  # noqa
     ensure_from_google,
     ensure_from_s3,
     ensure_json,
+    ensure_open,
+    ensure_open_gz,
+    ensure_open_lzma,
+    ensure_open_tarfile,
     ensure_open_zip,
     ensure_rdf,
     ensure_tar_df,
@@ -16,6 +20,7 @@ from .api import (  # noqa
     ensure_untar,
     ensure_zip_df,
     join,
+    joinpath_sqlite,
     module,
 )
 from .config_api import get_config, write_config  # noqa

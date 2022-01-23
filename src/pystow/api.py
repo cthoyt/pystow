@@ -11,9 +11,14 @@ from .module import Module
 __all__ = [
     "module",
     "join",
+    "joinpath_sqlite",
     # Downloader functions
     "ensure",
     "ensure_untar",
+    "ensure_open",
+    "ensure_open_gz",
+    "ensure_open_lzma",
+    "ensure_open_tarfile",
     "ensure_open_zip",
     # Processors
     "ensure_csv",
@@ -152,6 +157,29 @@ def ensure_untar(
 
 
 @contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
 def ensure_open_zip(
     key: str,
     *subkeys: str,
@@ -169,6 +197,73 @@ def ensure_open_zip(
         *subkeys,
         url=url,
         inner_path=inner_path,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_lzma(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_lzma(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_tarfile(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_tarfile(
+        *subkeys,
+        url=url,
+        inner_path=inner_path,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_gz(
+        *subkeys,
+        url=url,
         name=name,
         force=force,
         download_kwargs=download_kwargs,
@@ -509,3 +604,16 @@ def ensure_from_google(
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
+
+
+def joinpath_sqlite(key, *subkeys: str, name: str) -> str:
+    """Get an SQLite database connection string.
+
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the database file.
+    :return: A SQLite path string.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.joinpath_sqlite(*subkeys, name=name)

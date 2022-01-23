@@ -8,7 +8,7 @@ import unittest
 import pystow
 from pystow import Module
 
-SKIP = {"submodule"}
+SKIP = {"submodule", "__init__"}
 
 
 class TestExposed(unittest.TestCase):
@@ -20,4 +20,8 @@ class TestExposed(unittest.TestCase):
             if not inspect.isfunction(func) or name in SKIP:
                 continue
             with self.subTest(name=name):
-                self.assertTrue(hasattr(pystow, name))
+                self.assertIn(name, pystow.api.__all__)
+                self.assertTrue(
+                    hasattr(pystow, name),
+                    msg=f"Module.{name} is not accessible from `pystow.{name}`",
+                )
