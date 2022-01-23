@@ -241,7 +241,7 @@ def ensure_open_zip(
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    yield _module.ensure_open_zip(
+    with _module.ensure_open_zip(
         *subkeys,
         url=url,
         inner_path=inner_path,
@@ -250,7 +250,8 @@ def ensure_open_zip(
         download_kwargs=download_kwargs,
         mode=mode,
         open_kwargs=open_kwargs,
-    )
+    ) as yv:
+        yield yv
 
 
 @contextmanager

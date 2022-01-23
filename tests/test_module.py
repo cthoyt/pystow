@@ -171,7 +171,7 @@ class TestGet(unittest.TestCase):
             inner_path = n()
             with self.mock_download_once(path):
                 write_zipfile_csv(TEST_DF, path, inner_path)
-                with pystow.module("test").ensure_open_zip(url=n(), inner_path=inner_path) as file:
+                with pystow.ensure_open_zip("test", url=n(), inner_path=inner_path) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
