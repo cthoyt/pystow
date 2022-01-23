@@ -16,7 +16,7 @@ from collections import namedtuple
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Iterable, Mapping, Optional, Union
+from typing import Any, Collection, ContextManager, Iterable, Mapping, Optional, Union
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -271,7 +271,7 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
 
 
 @contextlib.contextmanager
-def mock_envvar(envvar: str, value: str):
+def mock_envvar(envvar: str, value: str) -> ContextManager[None]:
     """Mock the environment variable then delete it after the test is over."""
     os.environ[envvar] = value
     yield
@@ -279,22 +279,31 @@ def mock_envvar(envvar: str, value: str):
 
 
 @contextlib.contextmanager
-def mock_home():
+def mock_home() -> ContextManager[Path]:
     """Mock the PyStow home environment variable, yields the directory name."""
     with tempfile.TemporaryDirectory() as directory:
         with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
-            yield directory
+            yield Path(directory)
 
 
 def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
-    """Get an environment variable representing a path, or use the default."""
+    """Get an environment variable representing a path, or use the default.
+
+    :param envvar: The environmental variable name to check
+    :param default: The default path to return if the environmental variable is not set
+    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :return: A path either specified by the environmental variable or by the default.
+    """
     rv = Path(os.getenv(envvar, default=default))
     mkdir(rv, ensure_exists=ensure_exists)
     return rv
 
 
 def n() -> str:
-    """Get a random string for testing."""
+    """Get a random string for testing.
+
+    :returns: A random string for testing purposes.
+    """
     return str(uuid4())
 
 

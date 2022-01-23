@@ -142,7 +142,7 @@ class Module:
         base = get_base(key, ensure_exists=False)
         rv = cls(base=base, ensure_exists=ensure_exists)
         if subkeys:
-            rv = rv.submodule(*subkeys, ensure_exists=ensure_exists)
+            rv = rv.module(*subkeys, ensure_exists=ensure_exists)
         return rv
 
     def submodule(self, *args, **kwargs) -> "Module":

@@ -215,7 +215,31 @@ def ensure_open_zip(
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
 ):
-    """Ensure a file is downloaded then open it with :mod:`zipfile`."""
+    """Ensure a file is downloaded then open it with :mod:`zipfile`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`zipfile.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
+
+    :yields: An open file object
+    """
     _module = Module.from_key(key, ensure_exists=True)
     yield _module.ensure_open_zip(
         *subkeys,
