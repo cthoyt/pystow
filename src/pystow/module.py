@@ -12,7 +12,7 @@ import warnings
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
 from .constants import (
