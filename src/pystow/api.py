@@ -11,9 +11,14 @@ from .module import Module
 __all__ = [
     "module",
     "join",
+    "joinpath_sqlite",
     # Downloader functions
     "ensure",
     "ensure_untar",
+    "ensure_open",
+    "ensure_open_gz",
+    "ensure_open_lzma",
+    "ensure_open_tarfile",
     "ensure_open_zip",
     # Processors
     "ensure_csv",
@@ -153,6 +158,52 @@ def ensure_untar(
 
 
 @contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure a file is downloaded and open it.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`lzma.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`lzma.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
 def ensure_open_zip(
     key: str,
     *subkeys: str,
@@ -170,6 +221,142 @@ def ensure_open_zip(
         *subkeys,
         url=url,
         inner_path=inner_path,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_lzma(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure a LZMA-compressed file is downloaded and open a file inside it.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`lzma.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`lzma.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_lzma(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_tarfile(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure a tar file is downloaded and open a file inside it.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param inner_path:
+        The relative path to the file inside the archive
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_tarfile(
+        *subkeys,
+        url=url,
+        inner_path=inner_path,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+    )
+
+
+@contextmanager
+def ensure_open_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure a gzipped file is downloaded and open a file inside it.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`gzip.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    yield _module.ensure_open_gz(
+        *subkeys,
+        url=url,
         name=name,
         force=force,
         download_kwargs=download_kwargs,
@@ -533,3 +720,20 @@ def ensure_from_google(
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
+
+
+def joinpath_sqlite(key, *subkeys: str, name: str) -> str:
+    """Get an SQLite database connection string.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the database file.
+    :return: A SQLite path string.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.joinpath_sqlite(*subkeys, name=name)
