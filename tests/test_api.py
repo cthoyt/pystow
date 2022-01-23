@@ -20,8 +20,16 @@ class TestExposed(unittest.TestCase):
             if not inspect.isfunction(func) or name in SKIP:
                 continue
             with self.subTest(name=name):
-                self.assertIn(name, pystow.api.__all__)
+                self.assertIn(
+                    name,
+                    pystow.api.__all__,
+                    msg=f"Module.{name} should be included in from `pystow.api.__all__`.",
+                )
+                self.assertTrue(
+                    hasattr(pystow.api, name),
+                    msg=f"`Module.{name} should be exposed as a top-level function in `pystow.api`.",
+                )
                 self.assertTrue(
                     hasattr(pystow, name),
-                    msg=f"Module.{name} is not accessible from `pystow.{name}`",
+                    msg=f"`pystow.api.{name}` should be imported in `pystow.__init__`.",
                 )
