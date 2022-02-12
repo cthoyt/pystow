@@ -168,7 +168,7 @@ def get_hashes(
     """
     path = Path(path).resolve()
     if chunk_size is None:
-        chunk_size = 64 * 2 ** 10
+        chunk_size = 64 * 2**10
 
     # instantiate hash algorithms
     algorithms: Mapping[str, Hash] = {name: hashlib.new(name) for name in names}
