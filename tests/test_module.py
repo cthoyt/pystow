@@ -18,8 +18,15 @@ import pandas as pd
 import pystow
 from pystow import join
 from pystow.constants import PYSTOW_HOME_ENVVAR, PYSTOW_NAME_ENVVAR
-from pystow.impl import Module, get_home, get_name
-from pystow.utils import mock_envvar, n, write_tarfile_csv, write_zipfile_csv
+from pystow.impl import Module
+from pystow.utils import (
+    get_home,
+    get_name,
+    mock_envvar,
+    n,
+    write_tarfile_csv,
+    write_zipfile_csv,
+)
 
 HERE = Path(__file__).parent.resolve()
 RESOURCES = HERE.joinpath("resources")

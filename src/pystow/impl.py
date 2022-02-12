@@ -6,7 +6,6 @@ import gzip
 import json
 import logging
 import lzma
-import os
 import tarfile
 import warnings
 import zipfile
@@ -15,18 +14,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
-from .constants import (
-    PYSTOW_HOME_ENVVAR,
-    PYSTOW_NAME_DEFAULT,
-    PYSTOW_NAME_ENVVAR,
-    PYSTOW_USE_APPDIRS,
-    README_TEXT,
-    Opener,
-)
+from .constants import Opener
 from .utils import (
     download_from_google,
     download_from_s3,
-    getenv_path,
+    get_base,
     mkdir,
     name_from_s3_key,
     name_from_url,
@@ -47,82 +39,9 @@ if TYPE_CHECKING:
     import pandas as pd
     import rdflib
 
-__all__ = ["get_name", "get_home", "get_base", "Module"]
+__all__ = ["Module"]
 
 logger = logging.getLogger(__name__)
-
-
-def get_name() -> str:
-    """Get the PyStow home directory name.
-
-    :returns: The name of the pystow home directory, either loaded from
-        the :data:`PYSTOW_NAME_ENVVAR`` environment variable or given by the default
-        value :data:`PYSTOW_NAME_DEFAULT`.
-    """
-    return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
-
-
-def _use_appdirs() -> bool:
-    return os.getenv(PYSTOW_USE_APPDIRS) in {"true", "True"}
-
-
-def get_home(ensure_exists: bool = True) -> Path:
-    """Get the PyStow home directory.
-
-    :param ensure_exists: If true, ensures the directory is created
-    :returns: A path object representing the pystow home directory, as one of:
-
-        1. :data:`PYSTOW_HOME_ENVVAR` environment variable or
-        2. The user data directory defined by :mod:`appdirs` if the :data:`PYSTOW_USE_APPDIRS`
-           environment variable is set to ``true`` or
-        3. The default directory constructed in the user's home directory plus what's
-           returned by :func:`get_name`.
-    """
-    if _use_appdirs():
-        from appdirs import user_data_dir
-
-        default = Path(user_data_dir())
-    else:
-        default = Path.home() / get_name()
-    return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
-
-
-def get_base(key: str, ensure_exists: bool = True) -> Path:
-    """Get the base directory for a module.
-
-    :param key:
-        The name of the module. No funny characters. The envvar
-        <key>_HOME where key is uppercased is checked first before using
-        the default home directory.
-    :param ensure_exists:
-        Should all directories be created automatically?
-        Defaults to true.
-    :returns:
-        The path to the given
-    """
-    _assert_valid(key)
-    envvar = f"{key.upper()}_HOME"
-    if _use_appdirs():
-        from appdirs import user_data_dir
-
-        default = Path(user_data_dir(appname=key))
-    else:
-        default = get_home(ensure_exists=False) / key
-    return getenv_path(envvar, default, ensure_exists=ensure_exists)
-
-
-def _assert_valid(key: str) -> None:
-    if "." in key:
-        raise ValueError(f"The module should not have a dot in it: {key}")
-
-
-def ensure_readme() -> None:
-    """Ensure there's a README in the PyStow data directory."""
-    readme_path = get_home(ensure_exists=True).joinpath("README.md")
-    if readme_path.is_file():
-        return
-    with readme_path.open("w", encoding="utf8") as file:
-        print(README_TEXT, file=file)  # noqa:T001
 
 
 class Module:

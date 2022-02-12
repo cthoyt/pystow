@@ -2,6 +2,7 @@
 
 """API functions for PyStow."""
 
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
@@ -42,21 +43,8 @@ __all__ = [
 
 
 def submodule(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
-    """Return a module for the application.
-
-    :param key:
-        The name of the module. No funny characters. The envvar
-        <key>_HOME where key is uppercased is checked first before using
-        the default home directory.
-    :param subkeys:
-        A sequence of additional strings to join. If none are given,
-        returns the directory for this module.
-    :param ensure_exists:
-        Should all directories be created automatically?
-        Defaults to true.
-    :return:
-        The module object that manages getting and ensuring
-    """
+    """Return a module for the application."""  # noqa
+    warnings.warn("Use .module() instead", DeprecationWarning)
     return module(key, *subkeys, ensure_exists=ensure_exists)
 
 

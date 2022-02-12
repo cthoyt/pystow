@@ -26,6 +26,7 @@ from .api import (  # noqa
     submodule,
 )
 from .config_api import get_config, write_config  # noqa
-from .impl import Module, ensure_readme  # noqa
+from .impl import Module  # noqa
+from .utils import ensure_readme  # noqa
 
 ensure_readme()
