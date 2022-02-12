@@ -8,7 +8,7 @@ import unittest
 import pystow
 from pystow import Module
 
-SKIP = {"submodule", "__init__"}
+SKIP = {"__init__"}
 
 
 class TestExposed(unittest.TestCase):

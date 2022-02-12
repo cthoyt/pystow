@@ -23,8 +23,9 @@ from .api import (  # noqa
     join,
     joinpath_sqlite,
     module,
+    submodule,
 )
 from .config_api import get_config, write_config  # noqa
-from .module import Module, ensure_readme  # noqa
+from .impl import Module, ensure_readme  # noqa
 
 ensure_readme()

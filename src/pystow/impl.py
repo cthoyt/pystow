@@ -47,6 +47,8 @@ if TYPE_CHECKING:
     import pandas as pd
     import rdflib
 
+__all__ = ["get_name", "get_home", "get_base", "Module"]
+
 logger = logging.getLogger(__name__)
 
 

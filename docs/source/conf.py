@@ -69,7 +69,7 @@ extensions = [
 ]
 
 # generate autosummary pages
-autosummary_generate = True
+# autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -230,3 +230,4 @@ intersphinx_mapping = {
 }
 
 autoclass_content = 'both'
+autodoc_member_order = 'bysource'

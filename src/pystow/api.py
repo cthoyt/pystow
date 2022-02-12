@@ -4,12 +4,18 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from .constants import Opener
-from .module import Module
+from .impl import Module
+
+if TYPE_CHECKING:
+    import numpy.typing
+    import pandas as pd
+    import rdflib
 
 __all__ = [
+    "submodule",
     "module",
     "join",
     "joinpath_sqlite",
@@ -33,6 +39,25 @@ __all__ = [
     "ensure_from_google",
     "ensure_rdf",
 ]
+
+
+def submodule(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
+    """Return a module for the application.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param ensure_exists:
+        Should all directories be created automatically?
+        Defaults to true.
+    :return:
+        The module object that manages getting and ensuring
+    """
+    return module(key, *subkeys, ensure_exists=ensure_exists)
 
 
 def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
@@ -409,7 +434,7 @@ def ensure_csv(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "pd.DataFrame":
     """Download a CSV and open as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -427,7 +452,6 @@ def ensure_csv(
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
     :return: A pandas DataFrame
-    :rtype: pandas.DataFrame
 
     Example usage::
 
@@ -499,7 +523,7 @@ def ensure_excel(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "pd.DataFrame":
     """Download an excel file and open as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -517,7 +541,6 @@ def ensure_excel(
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
     :return: A pandas DataFrame
-    :rtype: pandas.DataFrame
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_excel(
@@ -627,7 +650,7 @@ def ensure_zip_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "pd.DataFrame":
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -647,7 +670,6 @@ def ensure_zip_df(
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
     :return: A pandas DataFrame
-    :rtype: pandas.DataFrame
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_df(
@@ -670,7 +692,7 @@ def ensure_zip_np(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "numpy.typing.ArrayLike":
     """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
     :param key: The module name
@@ -693,7 +715,6 @@ def ensure_zip_np(
         Additional keyword arguments that are passed through to :func:`read_zip_np`
         and transitively to :func:`numpy.load`.
     :returns: An array-like object
-    :rtype: numpy.typing.ArrayLike
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_zip_np(
@@ -716,7 +737,7 @@ def ensure_rdf(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     precache: bool = True,
     parse_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "rdflib.Graph":
     """Download a RDF file and open with :mod:`rdflib`.
 
     :param key: The module name
@@ -737,7 +758,6 @@ def ensure_rdf(
         Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
         :func:`rdflib.Graph.parse`.
     :return: An RDF graph
-    :rtype: rdflib.Graph
 
     Example usage::
 
@@ -773,6 +793,7 @@ def ensure_from_s3(
     s3_key: Union[str, Sequence[str]],
     name: Optional[str] = None,
     force: bool = False,
+    **kwargs,
 ) -> Path:
     """Ensure a file is downloaded.
 
@@ -792,6 +813,8 @@ def ensure_from_s3(
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param kwargs:
+        Remaining kwargs to forwrad to :class:`Module.ensure_from_s3`.
     :return:
         The path of the file that has been downloaded (or already exists)
 
