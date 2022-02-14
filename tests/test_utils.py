@@ -14,7 +14,7 @@ import pandas as pd
 from pystow.utils import (
     HexDigestError,
     download,
-    get_hexdigest_urls,
+    get_hexdigests_remote,
     getenv_path,
     mkdir,
     mock_envvar,
@@ -156,7 +156,7 @@ class TestHashing(unittest.TestCase):
         download(
             url=TEST_TXT.as_uri(),
             path=self.path,
-            hexdigest_urls={
+            hexdigests_remote={
                 "md5": TEST_TXT_MD5.as_uri(),
             },
         )
@@ -181,7 +181,7 @@ class TestHashing(unittest.TestCase):
             download(
                 url=TEST_TXT.as_uri(),
                 path=self.path,
-                hexdigest_urls={
+                hexdigests_remote={
                     "md5": TEST_TXT_WRONG_MD5.as_uri(),
                 },
             )
@@ -210,7 +210,7 @@ class TestHashing(unittest.TestCase):
             download(
                 url=TEST_TXT.as_uri(),
                 path=self.path,
-                hexdigest_urls={
+                hexdigests_remote={
                     "md5": TEST_TXT_MD5.as_uri(),
                 },
                 force=False,
@@ -240,7 +240,7 @@ class TestHashing(unittest.TestCase):
         download(
             url=TEST_TXT.as_uri(),
             path=self.path,
-            hexdigest_urls={
+            hexdigests_remote={
                 "md5": TEST_TXT_MD5.as_uri(),
             },
             force=True,
@@ -248,7 +248,7 @@ class TestHashing(unittest.TestCase):
 
     def test_hexdigest_urls(self):
         """Test getting hex digests from URLs."""
-        hexdigests = get_hexdigest_urls(
+        hexdigests = get_hexdigests_remote(
             {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
             equals_processing=True,
         )
