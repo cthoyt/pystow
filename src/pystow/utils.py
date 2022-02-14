@@ -122,7 +122,7 @@ class UnexpectedDirectory(FileExistsError):
 
 
 def get_hexdigests_remote(
-    hexdigests_remote: Mapping[str, str], equals_processing: bool = False
+    hexdigests_remote: Optional[Mapping[str, str]], equals_processing: bool = False
 ) -> Mapping[str, str]:
     """Process hexdigests via URLs.
 
@@ -163,9 +163,7 @@ def get_offending_hexdigests(
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
     """
-    if not hexdigests:
-        hexdigests = {}
-    hexdigests.update(get_hexdigests_remote(hexdigests_remote))
+    hexdigests = dict(**(hexdigests or {}), **get_hexdigests_remote(hexdigests_remote))
 
     # If there aren't any keys in the combine dictionaries,
     # then there won't be any mismatches
