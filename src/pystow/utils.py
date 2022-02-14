@@ -121,6 +121,17 @@ class UnexpectedDirectory(FileExistsError):
         return f"got directory instead of file: {self.path}"
 
 
+def get_hexdigest_urls(x: Mapping[str, str], equals_processing: bool = False) -> Mapping[str, str]:
+    """Get hexdigest URLs."""
+    rv = {}
+    for key, url in x.items():
+        text = requests.get(url).text
+        if equals_processing:
+            text = text.rsplit("=", 1)[-1].strip()
+        rv[key] = text
+    return rv
+
+
 def get_offending_hexdigests(
     path: Union[str, Path],
     chunk_size: Optional[int] = None,

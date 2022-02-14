@@ -14,6 +14,7 @@ import pandas as pd
 from pystow.utils import (
     HexDigestError,
     download,
+    get_hexdigest_urls,
     getenv_path,
     mkdir,
     mock_envvar,
@@ -187,4 +188,16 @@ class TestHashing(unittest.TestCase):
                 "md5": self.expected_md5,
             },
             force=True,
+        )
+
+    def test_hexdigest_urls(self):
+        """"""
+        x = get_hexdigest_urls(
+            {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"}
+        )
+        self.assertEqual(
+            {
+                "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
+            },
+            x,
         )
