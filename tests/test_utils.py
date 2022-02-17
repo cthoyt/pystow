@@ -37,7 +37,10 @@ TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
 
 class _Session(requests.sessions.Session):
+    """A mock session."""
+
     def __init__(self):
+        """Instantiate the patched session with an additional file adapter."""
         super().__init__()
         self.mount("file://", FileAdapter())
 
