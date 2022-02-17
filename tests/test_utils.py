@@ -174,6 +174,7 @@ class TestHashing(unittest.TestCase):
             hexdigests_remote={
                 "md5": TEST_TXT_MD5.as_uri(),
             },
+            hexdigests_strict=True,
         )
         self.assertTrue(self.path.exists())
 
@@ -186,6 +187,7 @@ class TestHashing(unittest.TestCase):
             hexdigests_remote={
                 "md5": TEST_TXT_VERBOSE_MD5.as_uri(),
             },
+            hexdigests_strict=False,
         )
         self.assertTrue(self.path.exists())
 
@@ -224,6 +226,7 @@ class TestHashing(unittest.TestCase):
                 hexdigests_remote={
                     "md5": TEST_TXT_WRONG_MD5.as_uri(),
                 },
+                hexdigests_strict=True,
             )
 
     def test_override_hash_error(self):
@@ -253,6 +256,7 @@ class TestHashing(unittest.TestCase):
                 hexdigests_remote={
                     "md5": TEST_TXT_MD5.as_uri(),
                 },
+                hexdigests_strict=True,
                 force=False,
             )
 
@@ -283,6 +287,7 @@ class TestHashing(unittest.TestCase):
             hexdigests_remote={
                 "md5": TEST_TXT_MD5.as_uri(),
             },
+            hexdigests_strict=True,
             force=True,
         )
 

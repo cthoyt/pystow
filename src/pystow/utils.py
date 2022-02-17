@@ -42,6 +42,7 @@ __all__ = [
     "get_offending_hexdigests",
     "get_hashes",
     "raise_on_digest_mismatch",
+    "get_hexdigests_remote",
     "download",
     "name_from_url",
     "name_from_s3_key",
