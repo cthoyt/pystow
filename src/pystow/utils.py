@@ -160,6 +160,8 @@ def get_offending_hexdigests(
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
 
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
@@ -239,6 +241,9 @@ def raise_on_digest_mismatch(
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+
     :raises HexDigestError: if there are any offending hex digests
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
     """
@@ -274,6 +279,8 @@ def download(
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
         depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
 
