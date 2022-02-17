@@ -22,7 +22,6 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 import requests
-from requests_file import FileAdapter
 from tqdm import tqdm
 
 from .constants import (
@@ -135,10 +134,8 @@ def get_hexdigests_remote(
         A mapping of algorithms to hexdigests
     """
     rv = {}
-    session = requests.Session()
-    session.mount("file://", FileAdapter())
     for key, url in (hexdigests_remote or {}).items():
-        text = session.get(url).text
+        text = requests.get(url).text
         if equals_processing:
             text = text.rsplit("=", 1)[-1].strip()
         rv[key] = text
@@ -281,7 +278,9 @@ def download(
     if path.is_dir():
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
-        raise_on_digest_mismatch(path=path, hexdigests=hexdigests, hexdigests_remote=hexdigests_remote)
+        raise_on_digest_mismatch(
+            path=path, hexdigests=hexdigests, hexdigests_remote=hexdigests_remote
+        )
         logger.debug("did not re-download %s from %s", path, url)
         return
 

@@ -10,6 +10,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import requests
+from requests_file import FileAdapter
 
 from pystow.utils import (
     HexDigestError,
@@ -32,6 +34,15 @@ HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
 TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
+
+
+class _Session(requests.sessions.Session):
+    def __init__(self):
+        super().__init__()
+        self.mount("file://", FileAdapter())
+
+
+requests.sessions.Session = _Session
 
 
 class TestUtils(unittest.TestCase):
