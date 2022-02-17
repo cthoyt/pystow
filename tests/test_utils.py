@@ -293,13 +293,36 @@ class TestHashing(unittest.TestCase):
 
     def test_hexdigest_urls(self):
         """Test getting hex digests from URLs."""
+        for url, strict in [
+            (TEST_TXT_MD5, True),
+            (TEST_TXT_MD5, False),
+            (TEST_TXT_VERBOSE_MD5, False),
+        ]:
+            hexdigests = get_hexdigests_remote(
+                {"md5": url.as_uri()},
+                hexdigests_strict=strict,
+            )
+            self.assertEqual(
+                "4221d002ceb5d3c9e9137e495ceaa647",
+                hexdigests["md5"],
+            )
+
         hexdigests = get_hexdigests_remote(
-            {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
-            hexdigests_strict=False,
+            {"md5": TEST_TXT_VERBOSE_MD5.as_uri()}, hexdigests_strict=True
         )
-        self.assertEqual(
-            {
-                "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
-            },
-            hexdigests,
+        self.assertNotEqual(
+            "4221d002ceb5d3c9e9137e495ceaa647",
+            hexdigests["md5"],
         )
+
+        # Live test case
+        # hexdigests = get_hexdigests_remote(
+        #     {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
+        #     hexdigests_strict=False,
+        # )
+        # self.assertEqual(
+        #     {
+        #         "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
+        #     },
+        #     hexdigests,
+        # )
