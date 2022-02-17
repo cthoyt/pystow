@@ -122,21 +122,21 @@ class UnexpectedDirectory(FileExistsError):
 
 
 def get_hexdigests_remote(
-    hexdigests_remote: Optional[Mapping[str, str]], equals_processing: bool = False
+    hexdigests_remote: Optional[Mapping[str, str]], hexdigests_strict: bool = False
 ) -> Mapping[str, str]:
     """Process hexdigests via URLs.
 
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
-    :param equals_processing:
-        Set this to true if the hash file is written in the algorithm(filename)=mash format
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
     :returns:
         A mapping of algorithms to hexdigests
     """
     rv = {}
     for key, url in (hexdigests_remote or {}).items():
         text = requests.get(url).text
-        if equals_processing:
+        if not hexdigests_strict and "=" in text:
             text = text.rsplit("=", 1)[-1].strip()
         rv[key] = text
     return rv
@@ -147,6 +147,7 @@ def get_offending_hexdigests(
     chunk_size: Optional[int] = None,
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
 ) -> Collection[HexDigestMismatch]:
     """
     Check a file for hash sums.
@@ -163,7 +164,10 @@ def get_offending_hexdigests(
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
     """
-    hexdigests = dict(**(hexdigests or {}), **get_hexdigests_remote(hexdigests_remote))
+    hexdigests = dict(
+        **(hexdigests or {}),
+        **get_hexdigests_remote(hexdigests_remote, hexdigests_strict=hexdigests_strict),
+    )
 
     # If there aren't any keys in the combine dictionaries,
     # then there won't be any mismatches
@@ -225,6 +229,7 @@ def raise_on_digest_mismatch(
     path: Path,
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
 ) -> None:
     """Raise a HexDigestError if the digests do not match.
 
@@ -238,7 +243,10 @@ def raise_on_digest_mismatch(
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
     """
     offending_hexdigests = get_offending_hexdigests(
-        path=path, hexdigests=hexdigests, hexdigests_remote=hexdigests_remote
+        path=path,
+        hexdigests=hexdigests,
+        hexdigests_remote=hexdigests_remote,
+        hexdigests_strict=hexdigests_strict,
     )
     if offending_hexdigests:
         raise HexDigestError(offending_hexdigests)
@@ -252,6 +260,7 @@ def download(
     backend: str = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
     **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
@@ -279,7 +288,10 @@ def download(
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
         raise_on_digest_mismatch(
-            path=path, hexdigests=hexdigests, hexdigests_remote=hexdigests_remote
+            path=path,
+            hexdigests=hexdigests,
+            hexdigests_remote=hexdigests_remote,
+            hexdigests_strict=hexdigests_strict,
         )
         logger.debug("did not re-download %s from %s", path, url)
         return
@@ -311,6 +323,7 @@ def download(
         path=path,
         hexdigests=hexdigests,
         hexdigests_remote=hexdigests_remote,
+        hexdigests_strict=hexdigests_strict,
     )
 
 

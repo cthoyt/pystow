@@ -33,6 +33,7 @@ from pystow.utils import (
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
 TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
+TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
 
@@ -176,6 +177,31 @@ class TestHashing(unittest.TestCase):
         )
         self.assertTrue(self.path.exists())
 
+    def test_hash_remote_verbose_success(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests_remote={
+                "md5": TEST_TXT_VERBOSE_MD5.as_uri(),
+            },
+        )
+        self.assertTrue(self.path.exists())
+
+    def test_hash_remote_verbose_failure(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests_remote={
+                    "md5": TEST_TXT_VERBOSE_MD5.as_uri(),
+                },
+                hexdigests_strict=True,
+            )
+
     def test_hash_error(self):
         """Test hash error on download."""
         self.assertFalse(self.path.exists())
@@ -264,7 +290,7 @@ class TestHashing(unittest.TestCase):
         """Test getting hex digests from URLs."""
         hexdigests = get_hexdigests_remote(
             {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
-            equals_processing=True,
+            hexdigests_strict=False,
         )
         self.assertEqual(
             {
