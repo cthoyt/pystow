@@ -500,16 +500,11 @@ class Module:
             useful for URLs that don't have proper filenames with extensions.
         :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
         :return: A pandas DataFrame
-        :rtype: pandas.DataFrame
-
-        :raises FileNotFoundError: if the file does not exist already
         """
         import pandas as pd
 
-        path = self.join(*subkeys, name=name, ensure_exists=False)
-        if not path.is_file():
-            raise FileNotFoundError(path)
-        return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
+        with self.open(*subkeys, name=name) as file:
+            return pd.read_csv(file, **_clean_csv_kwargs(read_csv_kwargs))
 
     def ensure_json(
         self,
@@ -653,7 +648,6 @@ class Module:
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
         :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
         :return: A pandas DataFrame
-        :rtype: pandas.DataFrame
         """
         import pandas as pd
 

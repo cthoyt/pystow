@@ -183,6 +183,15 @@ class TestGet(unittest.TestCase):
                 p2 = pystow.open_pickle("test", name=PICKLE_NAME)
                 self.assertEqual(p, p2)
 
+    def test_open_fail(self):
+        """Test opening a missing file."""
+        with self.assertRaises(FileNotFoundError):
+            with pystow.open("nope", name="nope"):
+                pass
+
+        with self.assertRaises(FileNotFoundError):
+            pystow.open_json("nope", name="nope")
+
     def test_ensure_open_lzma(self):
         """Test opening lzma-encoded files."""
         with tempfile.TemporaryDirectory() as directory, self.mock_directory():
