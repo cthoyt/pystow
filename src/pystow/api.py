@@ -101,7 +101,7 @@ def open(
     name: str,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Path:
+):
     """Open a file that exists already.
 
     :param key:
