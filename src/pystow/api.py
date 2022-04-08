@@ -23,6 +23,8 @@ __all__ = [
     # Opener functions
     "open",
     "open_csv",
+    "open_json",
+    "open_pickle",
     # Downloader functions
     "ensure",
     "ensure_untar",
@@ -34,6 +36,7 @@ __all__ = [
     # Processors
     "ensure_csv",
     "ensure_json",
+    "ensure_pickle",
     "ensure_excel",
     "ensure_tar_df",
     "ensure_tar_xml",
@@ -566,6 +569,18 @@ def ensure_json(
         download_kwargs=download_kwargs,
         json_load_kwargs=json_load_kwargs,
     )
+
+
+def open_json():
+    pass
+
+
+def ensure_pickle():
+    pass
+
+
+def open_pickle():
+    pass
 
 
 def ensure_excel(
