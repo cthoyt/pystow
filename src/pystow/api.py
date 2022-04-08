@@ -571,16 +571,98 @@ def ensure_json(
     )
 
 
-def open_json():
-    pass
+def open_json(
+    key: str,
+    *subkeys: str,
+    name: str,
+    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Open a JSON file :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+    :returns: A JSON object (list, dict, etc.)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.open_json(*subkeys, name=name, json_load_kwargs=json_load_kwargs)
 
 
-def ensure_pickle():
-    pass
+def ensure_pickle(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Download a pickle file and open with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_pickle(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
+    )
 
 
-def open_pickle():
-    pass
+def open_pickle(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Open a pickle file with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.open_pickle(
+        *subkeys,
+        name=name,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
+    )
 
 
 def ensure_excel(
