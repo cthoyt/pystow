@@ -14,6 +14,7 @@ from .api import (  # noqa
     ensure_open_lzma,
     ensure_open_tarfile,
     ensure_open_zip,
+    ensure_pickle,
     ensure_rdf,
     ensure_tar_df,
     ensure_tar_xml,
@@ -23,6 +24,10 @@ from .api import (  # noqa
     join,
     joinpath_sqlite,
     module,
+    open,
+    open_csv,
+    open_json,
+    open_pickle,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa

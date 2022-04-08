@@ -249,14 +249,42 @@ class Module:
             Should the download be done again, even if the path already exists?
             Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param mode: The read mode, passed to :func:`lzma.open`
-        :param open_kwargs: Additional keyword arguments passed to :func:`lzma.open`
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
 
         :yields: An open file object
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with path.open(**open_kwargs) as file:
+            yield file
+
+    @contextmanager
+    def open(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: str = "r",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Opener:
+        """Open a file that exists already.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+
+        :yields: An open file object
+        :raises FileNotFoundError: if the file created by :meth:`join` does not exist already
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=False)
+        if not path.is_file():
+            raise FileNotFoundError(path)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
@@ -456,6 +484,28 @@ class Module:
         )
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
+    def open_csv(
+        self,
+        *subkeys: str,
+        name: str,
+        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> "pd.DataFrame":
+        """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+        :return: A pandas DataFrame
+        """
+        import pandas as pd
+
+        with self.open(*subkeys, name=name) as file:
+            return pd.read_csv(file, **_clean_csv_kwargs(read_csv_kwargs))
+
     def ensure_json(
         self,
         *subkeys: str,
@@ -487,7 +537,91 @@ class Module:
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
 
-    # TODO ensure_pickle
+    def open_json(
+        self,
+        *subkeys: str,
+        name: str,
+        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Open a JSON file :mod:`json`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+        :returns: A JSON object (list, dict, etc.)
+        """
+        with self.open(*subkeys, name=name) as file:
+            return json.load(file, **(json_load_kwargs or {}))
+
+    def ensure_pickle(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "rb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Download a pickle file and open with :mod:`pickle`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :returns: Any object
+        """
+        with self.ensure_open(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return pickle.load(file, **(pickle_load_kwargs or {}))
+
+    def open_pickle(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: str = "rb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Open a pickle file with :mod:`pickle`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :returns: Any object
+        """
+        with self.open(
+            *subkeys,
+            name=name,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return pickle.load(file, **(pickle_load_kwargs or {}))
 
     def ensure_excel(
         self,
@@ -514,7 +648,6 @@ class Module:
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
         :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
         :return: A pandas DataFrame
-        :rtype: pandas.DataFrame
         """
         import pandas as pd
 
