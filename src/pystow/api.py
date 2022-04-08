@@ -20,6 +20,9 @@ __all__ = [
     "module",
     "join",
     "joinpath_sqlite",
+    # Opener functions
+    "open",
+    "open_csv",
     # Downloader functions
     "ensure",
     "ensure_untar",
@@ -86,6 +89,34 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
     return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
+
+
+@contextmanager
+def open(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Path:
+    """Open a file that exists already.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.open(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+        yield file
 
 
 def ensure(
@@ -455,6 +486,40 @@ def ensure_csv(
         name=name,
         force=force,
         download_kwargs=download_kwargs,
+        read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def open_csv(
+    key: str,
+    *subkeys: str,
+    name: str,
+    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "pd.DataFrame":
+    """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+    :return: A pandas DataFrame
+
+    Example usage::
+
+    >>> import pystow
+    >>> import pandas as pd
+    >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+    >>> pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+    >>> df: pd.DataFrame = pystow.open_csv('pykeen', 'datasets', 'nations', name='test.txt')
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.open_csv(
+        *subkeys,
+        name=name,
         read_csv_kwargs=read_csv_kwargs,
     )
 

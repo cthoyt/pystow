@@ -23,6 +23,8 @@ from .api import (  # noqa
     join,
     joinpath_sqlite,
     module,
+    open,
+    open_csv,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa
