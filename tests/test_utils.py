@@ -36,6 +36,11 @@ TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
+skip_on_windows = unittest.skipIf(
+    os.name == "nt",
+    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
+)
+
 
 class _Session(requests.sessions.Session):
     """A mock session."""
@@ -63,6 +68,7 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=name, url=url):
                 self.assertEqual(name, name_from_url(url))
 
+    @skip_on_windows
     def test_file_values(self):
         """Test encodings."""
         for url, value in [
@@ -176,6 +182,7 @@ class TestHashing(unittest.TestCase):
             },
         )
 
+    @skip_on_windows
     def test_hash_remote_success(self):
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
@@ -189,6 +196,7 @@ class TestHashing(unittest.TestCase):
         )
         self.assertTrue(self.path.exists())
 
+    @skip_on_windows
     def test_hash_remote_verbose_success(self):
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
@@ -286,6 +294,7 @@ class TestHashing(unittest.TestCase):
             force=True,
         )
 
+    @skip_on_windows
     def test_remote_force(self):
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
