@@ -777,6 +777,66 @@ class Module:
             path=path, inner_path=inner_path, **_clean_csv_kwargs(read_csv_kwargs)
         )
 
+    def ensure_xml(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        parse_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Download an XML file and open it with :mod:`lxml`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+        :returns: An ElementTree object
+
+        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        """
+        from lxml import etree
+
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        return etree.parse(path, **(parse_kwargs or {}))
+
+    def load_xml(
+        self,
+        *subkeys: str,
+        name: str,
+        parse_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Load an XML file with :mod:`lxml`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+        :returns: An ElementTree object
+
+        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        """
+        from lxml import etree
+
+        path = self.join(*subkeys, name=name, ensure_exists=False)
+        return etree.parse(path, **(parse_kwargs or {}))
+
+    def dump_xml(self):
+        pass
+
     def ensure_tar_xml(
         self,
         *subkeys: str,

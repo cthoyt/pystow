@@ -26,11 +26,13 @@ __all__ = [
     "load_json",
     "load_pickle",
     "load_rdf",
+    "load_xml",
     # Dump functions
     "dump_df",
     "dump_json",
     "dump_pickle",
     "dump_rdf",
+    "dump_xml",
     # Downloader functions
     "ensure",
     "ensure_from_s3",
@@ -48,6 +50,7 @@ __all__ = [
     "ensure_json",
     "ensure_pickle",
     "ensure_excel",
+    "ensure_xml",
     "ensure_rdf",
     "ensure_tar_df",
     "ensure_tar_xml",
@@ -762,6 +765,27 @@ def dump_pickle(
         open_kwargs=open_kwargs,
         pickle_dump_kwargs=pickle_dump_kwargs,
     )
+
+
+def ensure_xml():
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.ensure_xml(
+        *subkeys,
+        name=name,
+        obj=obj,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_dump_kwargs=pickle_dump_kwargs,
+    )
+
+
+
+def load_xml():
+    pass
+
+
+def dump_xml():
+    pass
 
 
 def ensure_excel(
