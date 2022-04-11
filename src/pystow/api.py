@@ -11,6 +11,7 @@ from .constants import JSON, Opener
 from .impl import Module
 
 if TYPE_CHECKING:
+    import lxml.etree
     import numpy.typing
     import pandas as pd
     import rdflib
@@ -542,7 +543,7 @@ def dump_df(
     key: str,
     *subkeys: str,
     name: str,
-    df: "pd.DataFrame",
+    obj: "pd.DataFrame",
     sep: str = "\t",
     index=False,
     to_csv_kwargs: Optional[Mapping[str, Any]] = None,
@@ -556,7 +557,7 @@ def dump_df(
     :param name:
         Overrides the name of the file at the end of the URL, if given. Also
         useful for URLs that don't have proper filenames with extensions.
-    :param df: The dataframe to dump
+    :param obj: The dataframe to dump
     :param sep: The separator to use, defaults to a tab
     :param index: Should the index be dumped? Defaults to false.
     :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
@@ -565,7 +566,7 @@ def dump_df(
     _module.dump_df(
         *subkeys,
         name=name,
-        df=df,
+        obj=obj,
         sep=sep,
         index=index,
         to_csv_kwargs=to_csv_kwargs,
@@ -767,25 +768,99 @@ def dump_pickle(
     )
 
 
-def ensure_xml():
+def ensure_xml(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "lxml.etree.ElementTree":
+    """Download an XML file and open it with :mod:`lxml`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+    :returns: An ElementTree object
+
+    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    """
     _module = Module.from_key(key, ensure_exists=True)
-    _module.ensure_xml(
+    return _module.load_xml(
         *subkeys,
         name=name,
-        obj=obj,
-        mode=mode,
-        open_kwargs=open_kwargs,
-        pickle_dump_kwargs=pickle_dump_kwargs,
+        url=url,
+        force=force,
+        downlaod_kwargs=download_kwargs,
+        parse_kwargs=parse_kwargs,
     )
 
 
+def load_xml(
+    key: str,
+    *subkeys: str,
+    name: str,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "lxml.etree.ElementTree":
+    """Load an XML file with :mod:`lxml`.
 
-def load_xml():
-    pass
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+    :returns: An ElementTree object
+
+    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_xml(
+        *subkeys,
+        name=name,
+        parse_kwargs=parse_kwargs,
+    )
 
 
-def dump_xml():
-    pass
+def dump_xml(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: "lxml.etree.ElementTree",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    write_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump an XML element tree to a file with :mod:`lxml`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param write_kwargs: Keyword arguments to pass through to :func:`lxml.etree.ElementTree.write`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_xml(
+        *subkeys,
+        name=name,
+        obj=obj,
+        open_kwargs=open_kwargs,
+        write_kwargs=write_kwargs,
+    )
 
 
 def ensure_excel(
