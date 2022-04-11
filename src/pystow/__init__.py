@@ -23,11 +23,11 @@ from .api import (  # noqa
     ensure_zip_np,
     join,
     joinpath_sqlite,
+    load_df,
+    load_json,
+    load_pickle,
     module,
     open,
-    open_csv,
-    open_json,
-    open_pickle,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
-from .constants import Opener
+from .constants import JSON, Opener
 from .impl import Module
 
 if TYPE_CHECKING:
@@ -22,12 +22,20 @@ __all__ = [
     "joinpath_sqlite",
     # Opener functions
     "open",
-    "open_csv",
-    "open_json",
-    "open_pickle",
+    "load_df",
+    "load_json",
+    "load_pickle",
+    # Dump functions
+    "dump_df",
+    "dump_json",
+    "dump_pickle",
     # Downloader functions
     "ensure",
+    "ensure_from_s3",
+    "ensure_from_google",
+    # Downloader functions with postprocessing
     "ensure_untar",
+    # Downloader + opener functions
     "ensure_open",
     "ensure_open_gz",
     "ensure_open_lzma",
@@ -38,13 +46,11 @@ __all__ = [
     "ensure_json",
     "ensure_pickle",
     "ensure_excel",
+    "ensure_rdf",
     "ensure_tar_df",
     "ensure_tar_xml",
     "ensure_zip_df",
     "ensure_zip_np",
-    "ensure_from_s3",
-    "ensure_from_google",
-    "ensure_rdf",
 ]
 
 
@@ -493,7 +499,7 @@ def ensure_csv(
     )
 
 
-def open_csv(
+def load_df(
     key: str,
     *subkeys: str,
     name: str,
@@ -517,13 +523,47 @@ def open_csv(
     >>> import pandas as pd
     >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
     >>> pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
-    >>> df: pd.DataFrame = pystow.open_csv('pykeen', 'datasets', 'nations', name='test.txt')
+    >>> df: pd.DataFrame = pystow.load_df('pykeen', 'datasets', 'nations', name='test.txt')
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.open_csv(
+    return _module.load_df(
         *subkeys,
         name=name,
         read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def dump_df(
+    key: str,
+    *subkeys: str,
+    name: str,
+    df: "pd.DataFrame",
+    sep: str = "\t",
+    index=False,
+    to_csv_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump a dataframe to a TSV file with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param df: The dataframe to dump
+    :param sep: The separator to use, defaults to a tab
+    :param index: Should the index be dumped? Defaults to false.
+    :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.dump_df(
+        *subkeys,
+        name=name,
+        df=df,
+        sep=sep,
+        index=index,
+        to_csv_kwargs=to_csv_kwargs,
     )
 
 
@@ -571,7 +611,7 @@ def ensure_json(
     )
 
 
-def open_json(
+def load_json(
     key: str,
     *subkeys: str,
     name: str,
@@ -588,7 +628,32 @@ def open_json(
     :returns: A JSON object (list, dict, etc.)
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.open_json(*subkeys, name=name, json_load_kwargs=json_load_kwargs)
+    return _module.load_json(*subkeys, name=name, json_load_kwargs=json_load_kwargs)
+
+
+def dump_json(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: JSON,
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    json_dump_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump an object to a file with :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param json_dump_kwargs: Keyword arguments to pass through to :func:`json.dump`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.dump_json(
+        *subkeys, name=name, obj=obj, open_kwargs=open_kwargs, json_dump_kwargs=json_dump_kwargs
+    )
 
 
 def ensure_pickle(
@@ -635,7 +700,7 @@ def ensure_pickle(
     )
 
 
-def open_pickle(
+def load_pickle(
     key: str,
     *subkeys: str,
     name: str,
@@ -656,12 +721,44 @@ def open_pickle(
     :returns: Any object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.open_pickle(
+    return _module.load_pickle(
         *subkeys,
         name=name,
         mode=mode,
         open_kwargs=open_kwargs,
         pickle_load_kwargs=pickle_load_kwargs,
+    )
+
+
+def dump_pickle(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: Any,
+    mode: str = "wb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump an object to a file with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_dump_kwargs: Keyword arguments to pass through to :func:`pickle.dump`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.dump_pickle(
+        *subkeys,
+        name=name,
+        obj=obj,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_dump_kwargs=pickle_dump_kwargs,
     )
 
 
