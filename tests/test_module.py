@@ -6,6 +6,7 @@ import contextlib
 import itertools as itt
 import lzma
 import os
+import pickle
 import shutil
 import tempfile
 import unittest
@@ -31,11 +32,17 @@ from pystow.utils import (
 HERE = Path(__file__).parent.resolve()
 RESOURCES = HERE.joinpath("resources")
 
-TSV_URL = n()
-JSON_URL = n()
+TSV_NAME = "test_1.tsv"
+TSV_URL = f"{n()}/{TSV_NAME}"
+JSON_NAME = "test_1.json"
+JSON_URL = f"{n()}/{JSON_NAME}"
+PICKLE_NAME = "test_1.pkl"
+PICKLE_URL = f"{n()}/{PICKLE_NAME}"
+PICKLE_PATH = RESOURCES / PICKLE_NAME
 MOCK_FILES: Mapping[str, Path] = {
-    TSV_URL: RESOURCES / "test_1.tsv",
-    JSON_URL: RESOURCES / "test_1.json",
+    TSV_URL: RESOURCES / TSV_NAME,
+    JSON_URL: RESOURCES / JSON_NAME,
+    PICKLE_URL: PICKLE_PATH,
 }
 
 TEST_TSV_ROWS = [
@@ -44,6 +51,10 @@ TEST_TSV_ROWS = [
     ("v2_1", "v2_2", "v2_3"),
 ]
 TEST_DF = pd.DataFrame(TEST_TSV_ROWS)
+
+# Make the pickle file
+if not PICKLE_PATH.is_file():
+    PICKLE_PATH.write_bytes(pickle.dumps(TEST_TSV_ROWS))
 
 
 class TestMocks(unittest.TestCase):
@@ -148,16 +159,38 @@ class TestGet(unittest.TestCase):
                     self.assertEqual(self.join(*parts), join(*parts))
 
     def test_ensure(self):
-        """Test ensuring a CSV file."""
+        """Test ensuring various files."""
         with self.mock_directory(), self.mock_download():
             with self.subTest(type="tsv"):
                 df = pystow.ensure_csv("test", url=TSV_URL)
                 self.assertEqual(3, len(df.columns))
 
+                df2 = pystow.load_df("test", name=TSV_NAME)
+                self.assertEqual(df.values.tolist(), df2.values.tolist())
+
             with self.subTest(type="json"):
                 j = pystow.ensure_json("test", url=JSON_URL)
                 self.assertIn("key", j)
                 self.assertEqual("value", j["key"])
+
+                j2 = pystow.load_json("test", name=JSON_NAME)
+                self.assertEqual(j, j2)
+
+            with self.subTest(type="pickle"):
+                p = pystow.ensure_pickle("test", url=PICKLE_URL)
+                self.assertEqual(3, len(p))
+
+                p2 = pystow.load_pickle("test", name=PICKLE_NAME)
+                self.assertEqual(p, p2)
+
+    def test_open_fail(self):
+        """Test opening a missing file."""
+        with self.assertRaises(FileNotFoundError):
+            with pystow.open("nope", name="nope"):
+                pass
+
+        with self.assertRaises(FileNotFoundError):
+            pystow.load_json("nope", name="nope")
 
     def test_ensure_open_lzma(self):
         """Test opening lzma-encoded files."""

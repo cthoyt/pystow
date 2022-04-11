@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
-from .constants import Opener
+from .constants import JSON, Opener
 from .impl import Module
 
 if TYPE_CHECKING:
@@ -20,9 +20,24 @@ __all__ = [
     "module",
     "join",
     "joinpath_sqlite",
+    # Opener functions
+    "open",
+    "load_df",
+    "load_json",
+    "load_pickle",
+    "load_rdf",
+    # Dump functions
+    "dump_df",
+    "dump_json",
+    "dump_pickle",
+    "dump_rdf",
     # Downloader functions
     "ensure",
+    "ensure_from_s3",
+    "ensure_from_google",
+    # Downloader functions with postprocessing
     "ensure_untar",
+    # Downloader + opener functions
     "ensure_open",
     "ensure_open_gz",
     "ensure_open_lzma",
@@ -31,14 +46,13 @@ __all__ = [
     # Processors
     "ensure_csv",
     "ensure_json",
+    "ensure_pickle",
     "ensure_excel",
+    "ensure_rdf",
     "ensure_tar_df",
     "ensure_tar_xml",
     "ensure_zip_df",
     "ensure_zip_np",
-    "ensure_from_s3",
-    "ensure_from_google",
-    "ensure_rdf",
 ]
 
 
@@ -86,6 +100,34 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
     return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
+
+
+@contextmanager
+def open(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Open a file that exists already.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.open(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+        yield file
 
 
 def ensure(
@@ -459,6 +501,74 @@ def ensure_csv(
     )
 
 
+def load_df(
+    key: str,
+    *subkeys: str,
+    name: str,
+    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "pd.DataFrame":
+    """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+    :return: A pandas DataFrame
+
+    Example usage::
+
+    >>> import pystow
+    >>> import pandas as pd
+    >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
+    >>> pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+    >>> df: pd.DataFrame = pystow.load_df('pykeen', 'datasets', 'nations', name='test.txt')
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_df(
+        *subkeys,
+        name=name,
+        read_csv_kwargs=read_csv_kwargs,
+    )
+
+
+def dump_df(
+    key: str,
+    *subkeys: str,
+    name: str,
+    df: "pd.DataFrame",
+    sep: str = "\t",
+    index=False,
+    to_csv_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump a dataframe to a TSV file with :mod:`pandas`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param df: The dataframe to dump
+    :param sep: The separator to use, defaults to a tab
+    :param index: Should the index be dumped? Defaults to false.
+    :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_df(
+        *subkeys,
+        name=name,
+        df=df,
+        sep=sep,
+        index=index,
+        to_csv_kwargs=to_csv_kwargs,
+    )
+
+
 def ensure_json(
     key: str,
     *subkeys: str,
@@ -467,7 +577,7 @@ def ensure_json(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     json_load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> JSON:
     """Download JSON and open with :mod:`json`.
 
     :param key: The module name
@@ -500,6 +610,157 @@ def ensure_json(
         force=force,
         download_kwargs=download_kwargs,
         json_load_kwargs=json_load_kwargs,
+    )
+
+
+def load_json(
+    key: str,
+    *subkeys: str,
+    name: str,
+    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> JSON:
+    """Open a JSON file :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+    :returns: A JSON object (list, dict, etc.)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_json(*subkeys, name=name, json_load_kwargs=json_load_kwargs)
+
+
+def dump_json(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: JSON,
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    json_dump_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump an object to a file with :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param json_dump_kwargs: Keyword arguments to pass through to :func:`json.dump`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_json(
+        *subkeys, name=name, obj=obj, open_kwargs=open_kwargs, json_dump_kwargs=json_dump_kwargs
+    )
+
+
+def ensure_pickle(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Any:
+    """Download a pickle file and open with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_pickle(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
+    )
+
+
+def load_pickle(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Any:
+    """Open a pickle file with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_pickle(
+        *subkeys,
+        name=name,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
+    )
+
+
+def dump_pickle(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: Any,
+    mode: str = "wb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Dump an object to a file with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param pickle_dump_kwargs: Keyword arguments to pass through to :func:`pickle.dump`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_pickle(
+        *subkeys,
+        name=name,
+        obj=obj,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_dump_kwargs=pickle_dump_kwargs,
     )
 
 
@@ -772,6 +1033,58 @@ def ensure_rdf(
         precache=precache,
         parse_kwargs=parse_kwargs,
     )
+
+
+def load_rdf(
+    key: str,
+    *subkeys: str,
+    name: Optional[str] = None,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "rdflib.Graph":
+    """Open an RDF file with :mod:`rdflib`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param parse_kwargs:
+        Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+        :func:`rdflib.Graph.parse`.
+    :return: An RDF graph
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_rdf(*subkeys, name=name, parse_kwargs=parse_kwargs)
+
+
+def dump_rdf(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: "rdflib.Graph",
+    format: str = "turtle",
+    serialize_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Dump an RDF graph to a file with :mod:`rdflib`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param format: The format to dump in
+    :param serialize_kwargs:
+        Keyword arguments to through to :func:`rdflib.Graph.serialize`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_rdf(*subkeys, name=name, obj=obj, format=format, serialize_kwargs=serialize_kwargs)
 
 
 def ensure_from_s3(
