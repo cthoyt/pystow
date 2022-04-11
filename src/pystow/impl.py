@@ -282,7 +282,6 @@ class Module:
         :param ensure_exists: Should the file be made? Set to true on write operations.
 
         :yields: An open file object
-        :raises FileNotFoundError: if the file created by :meth:`join` does not exist already
         """
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
