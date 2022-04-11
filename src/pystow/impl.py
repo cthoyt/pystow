@@ -528,8 +528,7 @@ class Module:
         :param index: Should the index be dumped? Defaults to false.
         :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
         """
-        if to_csv_kwargs is None:
-            to_csv_kwargs = {}
+        to_csv_kwargs = {} if to_csv_kwargs is None else dict(to_csv_kwargs)
         to_csv_kwargs.setdefault("sep", sep)
         to_csv_kwargs.setdefault("index", index)
         # should this use unified opener instead? Pandas is pretty smart...
@@ -1013,7 +1012,6 @@ class Module:
 
 
 def _clean_csv_kwargs(read_csv_kwargs):
-    if read_csv_kwargs is None:
-        read_csv_kwargs = {}
+    read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs
