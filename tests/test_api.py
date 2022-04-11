@@ -37,7 +37,13 @@ class TestExposed(unittest.TestCase):
         self.addTypeEqualityFunc(type(etree.ElementTree()), _etree_equal)
 
     def assert_io(self, obj, ext: str, dump, load):
-        """Test an object canbe dumped and loaded."""
+        """Test an object can be  dumped and loaded.
+
+        :param obj: The object to dump
+        :param ext: The extension to use
+        :param dump: The dump function
+        :param load: The load function
+        """
         name = f"test.{ext}"
         path = pystow.join("test", name=name)
         if path.is_file():

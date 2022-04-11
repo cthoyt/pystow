@@ -798,12 +798,12 @@ def ensure_xml(
     .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.load_xml(
+    return _module.ensure_xml(
         *subkeys,
         name=name,
         url=url,
         force=force,
-        downlaod_kwargs=download_kwargs,
+        download_kwargs=download_kwargs,
         parse_kwargs=parse_kwargs,
     )
 
