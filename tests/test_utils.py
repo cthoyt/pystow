@@ -63,6 +63,17 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=name, url=url):
                 self.assertEqual(name, name_from_url(url))
 
+    def test_file_values(self):
+        """Test encodings."""
+        for url, value in [
+            (TEST_TXT, "this is a test file\n"),
+            (TEST_TXT_MD5, "4221d002ceb5d3c9e9137e495ceaa647"),
+            (TEST_TXT_VERBOSE_MD5, "MD5(text.txt)=4221d002ceb5d3c9e9137e495ceaa647"),
+            (TEST_TXT_WRONG_MD5, "yolo"),
+        ]:
+            with self.subTest(name=url.name):
+                self.assertEqual(value, requests.get(url.as_uri()).text)
+
     def test_mkdir(self):
         """Test for ensuring a directory."""
         with tempfile.TemporaryDirectory() as directory:
