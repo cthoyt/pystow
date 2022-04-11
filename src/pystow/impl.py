@@ -946,9 +946,7 @@ class Module:
         :param subkeys:
             A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
+        :param name: The name of the file to open
         :param parse_kwargs:
             Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
             :func:`rdflib.Graph.parse`.
@@ -962,6 +960,7 @@ class Module:
         *subkeys: str,
         name: str,
         obj: "rdflib.Graph",
+        format: str = "turtle",
         serialize_kwargs: Optional[Mapping[str, Any]] = None,
     ):
         """Dump an RDF graph to a file with :mod:`rdflib`.
@@ -971,11 +970,14 @@ class Module:
             returns the directory for this module.
         :param name: The name of the file to open
         :param obj: The object to dump
+        :param format: The format to dump in
         :param serialize_kwargs:
             Keyword arguments to through to :func:`rdflib.Graph.serialize`.
         """
         path = self.join(*subkeys, name=name, ensure_exists=False)
-        obj.serialize(path, **(serialize_kwargs or {}))
+        serialize_kwargs = {} if serialize_kwargs is None else dict(serialize_kwargs)
+        serialize_kwargs.setdefault("format", format)
+        obj.serialize(path, **serialize_kwargs)
 
     def ensure_from_s3(
         self,

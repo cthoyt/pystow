@@ -1065,6 +1065,7 @@ def dump_rdf(
     *subkeys: str,
     name: str,
     obj: "rdflib.Graph",
+    format: str = "turtle",
     serialize_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     """Dump an RDF graph to a file with :mod:`rdflib`.
@@ -1078,11 +1079,12 @@ def dump_rdf(
         returns the directory for this module.
     :param name: The name of the file to open
     :param obj: The object to dump
+    :param format: The format to dump in
     :param serialize_kwargs:
         Keyword arguments to through to :func:`rdflib.Graph.serialize`.
     """
     _module = Module.from_key(key, ensure_exists=True)
-    _module.dump_rdf(*subkeys, name=name, obj=obj, serialize_kwargs=serialize_kwargs)
+    _module.dump_rdf(*subkeys, name=name, obj=obj, format=format, serialize_kwargs=serialize_kwargs)
 
 
 def ensure_from_s3(
