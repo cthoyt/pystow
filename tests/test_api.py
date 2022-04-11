@@ -44,7 +44,8 @@ class TestExposed(unittest.TestCase):
         ]:
             with self.subTest(ext=ext):
                 path = pystow.join("test", name=f"test.{ext}")
-                path.unlink(missing_ok=True)
+                if path.is_file():
+                    path.unlink()
                 self.assertFalse(path.is_file())
 
                 obj = ["a", "b", "c"]
@@ -59,7 +60,8 @@ class TestExposed(unittest.TestCase):
         data = [(1, 2, 3), (4, 5, 6)]
         df = pd.DataFrame(data, columns=columns)
         path = pystow.join("test", name="test.tsv")
-        path.unlink(missing_ok=True)
+        if path.is_file():
+            path.unlink()
         self.assertFalse(path.is_file())
 
         pystow.dump_df("test", name="test.tsv", df=df)
