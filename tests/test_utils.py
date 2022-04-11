@@ -10,10 +10,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import requests
+from requests_file import FileAdapter
 
 from pystow.utils import (
     HexDigestError,
     download,
+    get_hexdigests_remote,
     getenv_path,
     mkdir,
     mock_envvar,
@@ -29,6 +32,26 @@ from pystow.utils import (
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
+TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
+TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
+TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
+
+skip_on_windows = unittest.skipIf(
+    os.name == "nt",
+    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
+)
+
+
+class _Session(requests.sessions.Session):
+    """A mock session."""
+
+    def __init__(self):
+        """Instantiate the patched session with an additional file adapter."""
+        super().__init__()
+        self.mount("file://", FileAdapter())
+
+
+requests.sessions.Session = _Session
 
 
 class TestUtils(unittest.TestCase):
@@ -44,6 +67,18 @@ class TestUtils(unittest.TestCase):
         for name, url in data:
             with self.subTest(name=name, url=url):
                 self.assertEqual(name, name_from_url(url))
+
+    @skip_on_windows
+    def test_file_values(self):
+        """Test encodings."""
+        for url, value in [
+            (TEST_TXT, "this is a test file\n"),
+            (TEST_TXT_MD5, "4221d002ceb5d3c9e9137e495ceaa647"),
+            (TEST_TXT_VERBOSE_MD5, "MD5(text.txt)=4221d002ceb5d3c9e9137e495ceaa647"),
+            (TEST_TXT_WRONG_MD5, "yolo"),
+        ]:
+            with self.subTest(name=url.name):
+                self.assertEqual(value, requests.get(url.as_uri()).text)
 
     def test_mkdir(self):
         """Test for ensuring a directory."""
@@ -147,6 +182,47 @@ class TestHashing(unittest.TestCase):
             },
         )
 
+    @skip_on_windows
+    def test_hash_remote_success(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests_remote={
+                "md5": TEST_TXT_MD5.as_uri(),
+            },
+            hexdigests_strict=True,
+        )
+        self.assertTrue(self.path.exists())
+
+    @skip_on_windows
+    def test_hash_remote_verbose_success(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests_remote={
+                "md5": TEST_TXT_VERBOSE_MD5.as_uri(),
+            },
+            hexdigests_strict=False,
+        )
+        self.assertTrue(self.path.exists())
+
+    def test_hash_remote_verbose_failure(self):
+        """Test checking actually works."""
+        self.assertFalse(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests_remote={
+                    "md5": TEST_TXT_VERBOSE_MD5.as_uri(),
+                },
+                hexdigests_strict=True,
+            )
+
     def test_hash_error(self):
         """Test hash error on download."""
         self.assertFalse(self.path.exists())
@@ -157,6 +233,19 @@ class TestHashing(unittest.TestCase):
                 hexdigests={
                     "md5": self.mismatching_md5_hexdigest,
                 },
+            )
+
+    def test_hash_remote_error(self):
+        """Test hash error on download."""
+        self.assertFalse(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests_remote={
+                    "md5": TEST_TXT_WRONG_MD5.as_uri(),
+                },
+                hexdigests_strict=True,
             )
 
     def test_override_hash_error(self):
@@ -174,6 +263,22 @@ class TestHashing(unittest.TestCase):
                 force=False,
             )
 
+    def test_override_hash_remote_error(self):
+        """Test hash error on download."""
+        self.path.write_text("test file content")
+
+        self.assertTrue(self.path.exists())
+        with self.assertRaises(HexDigestError):
+            download(
+                url=TEST_TXT.as_uri(),
+                path=self.path,
+                hexdigests_remote={
+                    "md5": TEST_TXT_MD5.as_uri(),
+                },
+                hexdigests_strict=True,
+                force=False,
+            )
+
     def test_force(self):
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
@@ -188,3 +293,56 @@ class TestHashing(unittest.TestCase):
             },
             force=True,
         )
+
+    @skip_on_windows
+    def test_remote_force(self):
+        """Test overwriting wrong file."""
+        # now if force=True it should not bother with the hash check
+        self.path.write_text("test file content")
+
+        self.assertTrue(self.path.exists())
+        download(
+            url=TEST_TXT.as_uri(),
+            path=self.path,
+            hexdigests_remote={
+                "md5": TEST_TXT_MD5.as_uri(),
+            },
+            hexdigests_strict=True,
+            force=True,
+        )
+
+    def test_hexdigest_urls(self):
+        """Test getting hex digests from URLs."""
+        for url, strict in [
+            (TEST_TXT_MD5, True),
+            (TEST_TXT_MD5, False),
+            (TEST_TXT_VERBOSE_MD5, False),
+        ]:
+            hexdigests = get_hexdigests_remote(
+                {"md5": url.as_uri()},
+                hexdigests_strict=strict,
+            )
+            self.assertEqual(
+                "4221d002ceb5d3c9e9137e495ceaa647",
+                hexdigests["md5"],
+            )
+
+        hexdigests = get_hexdigests_remote(
+            {"md5": TEST_TXT_VERBOSE_MD5.as_uri()}, hexdigests_strict=True
+        )
+        self.assertNotEqual(
+            "4221d002ceb5d3c9e9137e495ceaa647",
+            hexdigests["md5"],
+        )
+
+        # Live test case
+        # hexdigests = get_hexdigests_remote(
+        #     {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
+        #     hexdigests_strict=False,
+        # )
+        # self.assertEqual(
+        #     {
+        #         "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
+        #     },
+        #     hexdigests,
+        # )
