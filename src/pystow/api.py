@@ -557,7 +557,7 @@ def dump_df(
     :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.dump_df(
+    _module.dump_df(
         *subkeys,
         name=name,
         df=df,
@@ -575,7 +575,7 @@ def ensure_json(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     json_load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> JSON:
     """Download JSON and open with :mod:`json`.
 
     :param key: The module name
@@ -616,7 +616,7 @@ def load_json(
     *subkeys: str,
     name: str,
     json_load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> JSON:
     """Open a JSON file :mod:`json`.
 
     :param key: The module name
@@ -651,7 +651,7 @@ def dump_json(
     :param json_dump_kwargs: Keyword arguments to pass through to :func:`json.dump`.
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.dump_json(
+    _module.dump_json(
         *subkeys, name=name, obj=obj, open_kwargs=open_kwargs, json_dump_kwargs=json_dump_kwargs
     )
 
@@ -666,7 +666,7 @@ def ensure_pickle(
     mode: str = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Any:
     """Download a pickle file and open with :mod:`pickle`.
 
     :param key: The module name
@@ -707,7 +707,7 @@ def load_pickle(
     mode: str = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Any:
     """Open a pickle file with :mod:`pickle`.
 
     :param key: The module name
@@ -752,7 +752,7 @@ def dump_pickle(
     :param pickle_dump_kwargs: Keyword arguments to pass through to :func:`pickle.dump`.
     """
     _module = Module.from_key(key, ensure_exists=True)
-    return _module.dump_pickle(
+    _module.dump_pickle(
         *subkeys,
         name=name,
         obj=obj,
