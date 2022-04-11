@@ -3,6 +3,9 @@
 """PyStow: Easily pick a place to store data for your python package."""
 
 from .api import (  # noqa
+    dump_df,
+    dump_json,
+    dump_pickle,
     ensure,
     ensure_csv,
     ensure_excel,
