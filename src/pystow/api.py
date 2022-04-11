@@ -1050,9 +1050,7 @@ def load_rdf(
     :param subkeys:
         A sequence of additional strings to join. If none are given,
         returns the directory for this module.
-    :param name:
-        Overrides the name of the file at the end of the URL, if given. Also
-        useful for URLs that don't have proper filenames with extensions.
+    :param name: The name of the file to open
     :param parse_kwargs:
         Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
         :func:`rdflib.Graph.parse`.
