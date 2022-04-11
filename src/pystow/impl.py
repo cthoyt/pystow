@@ -935,6 +935,48 @@ class Module:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)  # type: ignore
         return rv
 
+    def load_rdf(
+        self,
+        *subkeys: str,
+        name: Optional[str] = None,
+        parse_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> "rdflib.Graph":
+        """Open an RDF file with :mod:`rdflib`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param parse_kwargs:
+            Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+            :func:`rdflib.Graph.parse`.
+        :return: An RDF graph
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=False)
+        return read_rdf(path=path, **(parse_kwargs or {}))
+
+    def dump_rdf(
+        self,
+        *subkeys: str,
+        name: str,
+        obj: "rdflib.Graph",
+        serialize_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Dump an RDF graph to a file with :mod:`rdflib`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param obj: The object to dump
+        :param serialize_kwargs:
+            Keyword arguments to through to :func:`rdflib.Graph.serialize`.
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=False)
+        obj.serialize(path, **(serialize_kwargs or {}))
+
     def ensure_from_s3(
         self,
         *subkeys: str,

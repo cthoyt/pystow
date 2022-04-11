@@ -25,10 +25,12 @@ __all__ = [
     "load_df",
     "load_json",
     "load_pickle",
+    "load_rdf",
     # Dump functions
     "dump_df",
     "dump_json",
     "dump_pickle",
+    "dump_rdf",
     # Downloader functions
     "ensure",
     "ensure_from_s3",
@@ -1031,6 +1033,58 @@ def ensure_rdf(
         precache=precache,
         parse_kwargs=parse_kwargs,
     )
+
+
+def load_rdf(
+    key: str,
+    *subkeys: str,
+    name: Optional[str] = None,
+    parse_kwargs: Optional[Mapping[str, Any]] = None,
+) -> "rdflib.Graph":
+    """Open an RDF file with :mod:`rdflib`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param parse_kwargs:
+        Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+        :func:`rdflib.Graph.parse`.
+    :return: An RDF graph
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_rdf(*subkeys, name=name, parse_kwargs=parse_kwargs)
+
+
+def dump_rdf(
+    key: str,
+    *subkeys: str,
+    name: str,
+    obj: "rdflib.Graph",
+    serialize_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Dump an RDF graph to a file with :mod:`rdflib`.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param obj: The object to dump
+    :param serialize_kwargs:
+        Keyword arguments to through to :func:`rdflib.Graph.serialize`.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    _module.dump_rdf(*subkeys, name=name, obj=obj, serialize_kwargs=serialize_kwargs)
 
 
 def ensure_from_s3(
