@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
-from .constants import Opener
+from .constants import JSON, Opener
 from .utils import (
     download_from_google,
     download_from_s3,
@@ -269,6 +269,7 @@ class Module:
         name: str,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
+        ensure_exists: bool = False,
     ) -> Opener:
         """Open a file that exists already.
 
@@ -278,13 +279,11 @@ class Module:
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param ensure_exists: Should the file be made? Set to true on write operations.
 
         :yields: An open file object
-        :raises FileNotFoundError: if the file created by :meth:`join` does not exist already
         """
-        path = self.join(*subkeys, name=name, ensure_exists=False)
-        if not path.is_file():
-            raise FileNotFoundError(path)
+        path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
@@ -484,7 +483,7 @@ class Module:
         )
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
-    def open_csv(
+    def load_df(
         self,
         *subkeys: str,
         name: str,
@@ -506,6 +505,35 @@ class Module:
         with self.open(*subkeys, name=name) as file:
             return pd.read_csv(file, **_clean_csv_kwargs(read_csv_kwargs))
 
+    def dump_df(
+        self,
+        *subkeys: str,
+        name: str,
+        df: "pd.DataFrame",
+        sep: str = "\t",
+        index=False,
+        to_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        """Dump a dataframe to a TSV file with :mod:`pandas`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param df: The dataframe to dump
+        :param sep: The separator to use, defaults to a tab
+        :param index: Should the index be dumped? Defaults to false.
+        :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
+        """
+        to_csv_kwargs = {} if to_csv_kwargs is None else dict(to_csv_kwargs)
+        to_csv_kwargs.setdefault("sep", sep)
+        to_csv_kwargs.setdefault("index", index)
+        # should this use unified opener instead? Pandas is pretty smart...
+        path = self.join(*subkeys, name=name)
+        df.to_csv(path, **to_csv_kwargs)
+
     def ensure_json(
         self,
         *subkeys: str,
@@ -514,7 +542,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         json_load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> JSON:
         """Download JSON and open with :mod:`json`.
 
         :param subkeys:
@@ -537,23 +565,50 @@ class Module:
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
 
-    def open_json(
+    def load_json(
         self,
         *subkeys: str,
         name: str,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
         json_load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> JSON:
         """Open a JSON file :mod:`json`.
 
         :param subkeys:
             A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
         :returns: A JSON object (list, dict, etc.)
         """
-        with self.open(*subkeys, name=name) as file:
+        with self.open(
+            *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=True
+        ) as file:
             return json.load(file, **(json_load_kwargs or {}))
+
+    def dump_json(
+        self,
+        *subkeys: str,
+        name: str,
+        obj: JSON,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        json_dump_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        """Dump an object to a file with :mod:`json`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param obj: The object to dump
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param json_dump_kwargs: Keyword arguments to pass through to :func:`json.dump`.
+        """
+        with self.open(
+            *subkeys, name=name, mode="w", open_kwargs=open_kwargs, ensure_exists=True
+        ) as file:
+            json.dump(obj, file, **(json_dump_kwargs or {}))
 
     def ensure_pickle(
         self,
@@ -565,7 +620,7 @@ class Module:
         mode: str = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Any:
         """Download a pickle file and open with :mod:`pickle`.
 
         :param subkeys:
@@ -596,14 +651,14 @@ class Module:
         ) as file:
             return pickle.load(file, **(pickle_load_kwargs or {}))
 
-    def open_pickle(
+    def load_pickle(
         self,
         *subkeys: str,
         name: str,
         mode: str = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Any:
         """Open a pickle file with :mod:`pickle`.
 
         :param subkeys:
@@ -622,6 +677,34 @@ class Module:
             open_kwargs=open_kwargs,
         ) as file:
             return pickle.load(file, **(pickle_load_kwargs or {}))
+
+    def dump_pickle(
+        self,
+        *subkeys: str,
+        name: str,
+        obj: Any,
+        mode: str = "wb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        """Dump an object to a file with :mod:`pickle`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param obj: The object to dump
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param pickle_dump_kwargs: Keyword arguments to pass through to :func:`pickle.dump`.
+        """
+        with self.open(
+            *subkeys,
+            name=name,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            pickle.dump(obj, file, **(pickle_dump_kwargs or {}))
 
     def ensure_excel(
         self,
@@ -932,7 +1015,6 @@ class Module:
 
 
 def _clean_csv_kwargs(read_csv_kwargs):
-    if read_csv_kwargs is None:
-        read_csv_kwargs = {}
+    read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs

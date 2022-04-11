@@ -3,6 +3,9 @@
 """PyStow: Easily pick a place to store data for your python package."""
 
 from .api import (  # noqa
+    dump_df,
+    dump_json,
+    dump_pickle,
     ensure,
     ensure_csv,
     ensure_excel,
@@ -23,11 +26,11 @@ from .api import (  # noqa
     ensure_zip_np,
     join,
     joinpath_sqlite,
+    load_df,
+    load_json,
+    load_pickle,
     module,
     open,
-    open_csv,
-    open_json,
-    open_pickle,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa

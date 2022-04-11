@@ -165,7 +165,7 @@ class TestGet(unittest.TestCase):
                 df = pystow.ensure_csv("test", url=TSV_URL)
                 self.assertEqual(3, len(df.columns))
 
-                df2 = pystow.open_csv("test", name=TSV_NAME)
+                df2 = pystow.load_df("test", name=TSV_NAME)
                 self.assertEqual(df.values.tolist(), df2.values.tolist())
 
             with self.subTest(type="json"):
@@ -173,14 +173,14 @@ class TestGet(unittest.TestCase):
                 self.assertIn("key", j)
                 self.assertEqual("value", j["key"])
 
-                j2 = pystow.open_json("test", name=JSON_NAME)
+                j2 = pystow.load_json("test", name=JSON_NAME)
                 self.assertEqual(j, j2)
 
             with self.subTest(type="pickle"):
                 p = pystow.ensure_pickle("test", url=PICKLE_URL)
                 self.assertEqual(3, len(p))
 
-                p2 = pystow.open_pickle("test", name=PICKLE_NAME)
+                p2 = pystow.load_pickle("test", name=PICKLE_NAME)
                 self.assertEqual(p, p2)
 
     def test_open_fail(self):
@@ -190,7 +190,7 @@ class TestGet(unittest.TestCase):
                 pass
 
         with self.assertRaises(FileNotFoundError):
-            pystow.open_json("nope", name="nope")
+            pystow.load_json("nope", name="nope")
 
     def test_ensure_open_lzma(self):
         """Test opening lzma-encoded files."""
