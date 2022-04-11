@@ -58,13 +58,13 @@ class TestExposed(unittest.TestCase):
         columns = list("abc")
         data = [(1, 2, 3), (4, 5, 6)]
         df = pd.DataFrame(data, columns=columns)
-        path = pystow.join("test", name=f"test.tsv")
+        path = pystow.join("test", name="test.tsv")
         path.unlink(missing_ok=True)
         self.assertFalse(path.is_file())
 
-        pystow.dump_df("test", name=f"test.tsv", df=df)
+        pystow.dump_df("test", name="test.tsv", df=df)
         self.assertTrue(path.is_file())
 
         self.assertEqual(
-            df.values.tolist(), pystow.load_df("test", name=f"test.tsv").values.tolist()
+            df.values.tolist(), pystow.load_df("test", name="test.tsv").values.tolist()
         )
