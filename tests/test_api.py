@@ -5,6 +5,8 @@
 import inspect
 import unittest
 
+import pandas as pd
+
 import pystow
 from pystow import Module
 
@@ -33,3 +35,36 @@ class TestExposed(unittest.TestCase):
                     hasattr(pystow, name),
                     msg=f"`pystow.api.{name}` should be imported in `pystow.__init__`.",
                 )
+
+    def test_io(self):
+        """Test IO functions."""
+        for ext, dump, load in [
+            ("json", pystow.dump_json, pystow.load_json),
+            ("pkl", pystow.dump_pickle, pystow.load_pickle),
+        ]:
+            with self.subTest(ext=ext):
+                path = pystow.join("test", name=f"test.{ext}")
+                path.unlink(missing_ok=True)
+                self.assertFalse(path.is_file())
+
+                obj = ["a", "b", "c"]
+                dump("test", name=f"test.{ext}", obj=obj)
+                self.assertTrue(path.is_file())
+
+                self.assertEqual(obj, load("test", name=f"test.{ext}"))
+
+    def test_pd_io(self):
+        """Test pandas IO."""
+        columns = list("abc")
+        data = [(1, 2, 3), (4, 5, 6)]
+        df = pd.DataFrame(data, columns=columns)
+        path = pystow.join("test", name=f"test.tsv")
+        path.unlink(missing_ok=True)
+        self.assertFalse(path.is_file())
+
+        pystow.dump_df("test", name=f"test.tsv", df=df)
+        self.assertTrue(path.is_file())
+
+        self.assertEqual(
+            df.values.tolist(), pystow.load_df("test", name=f"test.tsv").values.tolist()
+        )

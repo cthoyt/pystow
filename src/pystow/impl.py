@@ -269,6 +269,7 @@ class Module:
         name: str,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
+        ensure_exists: bool = False,
     ) -> Opener:
         """Open a file that exists already.
 
@@ -278,13 +279,12 @@ class Module:
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param ensure_exists: Should the file be made? Set to true on write operations.
 
         :yields: An open file object
         :raises FileNotFoundError: if the file created by :meth:`join` does not exist already
         """
-        path = self.join(*subkeys, name=name, ensure_exists=False)
-        if not path.is_file():
-            raise FileNotFoundError(path)
+        path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
@@ -583,7 +583,9 @@ class Module:
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
         :returns: A JSON object (list, dict, etc.)
         """
-        with self.open(*subkeys, name=name, mode="r", open_kwargs=open_kwargs) as file:
+        with self.open(
+            *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=True
+        ) as file:
             return json.load(file, **(json_load_kwargs or {}))
 
     def dump_json(
@@ -604,7 +606,9 @@ class Module:
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param json_dump_kwargs: Keyword arguments to pass through to :func:`json.dump`.
         """
-        with self.open(*subkeys, name=name, mode="w", open_kwargs=open_kwargs) as file:
+        with self.open(
+            *subkeys, name=name, mode="w", open_kwargs=open_kwargs, ensure_exists=True
+        ) as file:
             json.dump(obj, file, **(json_dump_kwargs or {}))
 
     def ensure_pickle(
