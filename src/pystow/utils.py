@@ -42,6 +42,7 @@ __all__ = [
     "get_offending_hexdigests",
     "get_hashes",
     "raise_on_digest_mismatch",
+    "get_hexdigests_remote",
     "download",
     "name_from_url",
     "name_from_s3_key",
@@ -121,10 +122,33 @@ class UnexpectedDirectory(FileExistsError):
         return f"got directory instead of file: {self.path}"
 
 
+def get_hexdigests_remote(
+    hexdigests_remote: Optional[Mapping[str, str]], hexdigests_strict: bool = False
+) -> Mapping[str, str]:
+    """Process hexdigests via URLs.
+
+    :param hexdigests_remote:
+        The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+    :returns:
+        A mapping of algorithms to hexdigests
+    """
+    rv = {}
+    for key, url in (hexdigests_remote or {}).items():
+        text = requests.get(url).text
+        if not hexdigests_strict and "=" in text:
+            text = text.rsplit("=", 1)[-1].strip()
+        rv[key] = text
+    return rv
+
+
 def get_offending_hexdigests(
     path: Union[str, Path],
     chunk_size: Optional[int] = None,
     hexdigests: Optional[Mapping[str, str]] = None,
+    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
 ) -> Collection[HexDigestMismatch]:
     """
     Check a file for hash sums.
@@ -135,10 +159,21 @@ def get_offending_hexdigests(
         The chunk size for reading the file.
     :param hexdigests:
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :param hexdigests_remote:
+        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
 
     :return:
         A collection of observed / expected hexdigests where the digests do not match.
     """
+    hexdigests = dict(
+        **(hexdigests or {}),
+        **get_hexdigests_remote(hexdigests_remote, hexdigests_strict=hexdigests_strict),
+    )
+
+    # If there aren't any keys in the combine dictionaries,
+    # then there won't be any mismatches
     if not hexdigests:
         return []
 
@@ -192,16 +227,33 @@ def get_hashes(
     return algorithms
 
 
-def raise_on_digest_mismatch(*, path: Path, hexdigests: Optional[Mapping[str, str]] = None) -> None:
+def raise_on_digest_mismatch(
+    *,
+    path: Path,
+    hexdigests: Optional[Mapping[str, str]] = None,
+    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
+) -> None:
     """Raise a HexDigestError if the digests do not match.
 
     :param path:
         The file path.
     :param hexdigests:
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :param hexdigests_remote:
+        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+
     :raises HexDigestError: if there are any offending hex digests
+        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
     """
-    offending_hexdigests = get_offending_hexdigests(path=path, hexdigests=hexdigests)
+    offending_hexdigests = get_offending_hexdigests(
+        path=path,
+        hexdigests=hexdigests,
+        hexdigests_remote=hexdigests_remote,
+        hexdigests_strict=hexdigests_strict,
+    )
     if offending_hexdigests:
         raise HexDigestError(offending_hexdigests)
 
@@ -213,6 +265,8 @@ def download(
     clean_on_failure: bool = True,
     backend: str = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
+    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests_strict: bool = False,
     **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
@@ -224,6 +278,10 @@ def download(
     :param backend: The downloader to use. Choose 'urllib' or 'requests'
     :param hexdigests:
         The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :param hexdigests_remote:
+        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :param hexdigests_strict:
+        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
         depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
 
@@ -237,7 +295,12 @@ def download(
     if path.is_dir():
         raise UnexpectedDirectory(path)
     if path.is_file() and not force:
-        raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
+        raise_on_digest_mismatch(
+            path=path,
+            hexdigests=hexdigests,
+            hexdigests_remote=hexdigests_remote,
+            hexdigests_strict=hexdigests_strict,
+        )
         logger.debug("did not re-download %s from %s", path, url)
         return
 
@@ -264,7 +327,12 @@ def download(
             _unlink(path)
         raise
 
-    raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
+    raise_on_digest_mismatch(
+        path=path,
+        hexdigests=hexdigests,
+        hexdigests_remote=hexdigests_remote,
+        hexdigests_strict=hexdigests_strict,
+    )
 
 
 def name_from_url(url: str) -> str:
