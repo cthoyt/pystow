@@ -1116,6 +1116,7 @@ class Module:
         name: str,
         file_id: str,
         force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
         """Ensure a file is downloaded from Google Drive.
 
@@ -1131,11 +1132,13 @@ class Module:
         :param force:
             Should the download be done again, even if the path already exists?
             Defaults to false.
+        :param download_kwargs:
+            Keyword arguments to pass through to :func:`pystow.utils.download_from_google`.
         :return:
             The path of the file that has been downloaded (or already exists)
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        download_from_google(file_id, path, force=force)
+        download_from_google(file_id, path, force=force, **download_kwargs)
         return path
 
 
