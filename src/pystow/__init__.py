@@ -38,6 +38,7 @@ from .api import (  # noqa
     load_xml,
     module,
     open,
+    open_gz,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa
