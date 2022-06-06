@@ -457,7 +457,13 @@ def write_pickle_gz(
     path: Union[str, Path],
     **kwargs,
 ) -> None:
-    """Write an object to a gzipped pickle."""
+    """Write an object to a gzipped pickle.
+
+    :param obj: The object to write
+    :param path: The path of the file to write to
+    :param kwargs:
+        Additional kwargs to pass to :func:`pickle.dump`
+    """
     with gzip.open(path, mode="wb") as file:
         pickle.dump(obj, file, **kwargs)
 
