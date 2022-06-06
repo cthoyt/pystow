@@ -8,6 +8,7 @@ import hashlib
 import logging
 import lzma
 import os
+import pickle
 import shutil
 import tarfile
 import tempfile
@@ -66,6 +67,8 @@ __all__ = [
     "write_tarfile_csv",
     "read_tarfile_csv",
     "read_tarfile_xml",
+    # GZ utilities
+    "write_pickle_gz",
     # Standard readers
     "read_rdf",
     # Downloaders
@@ -447,6 +450,16 @@ def get_np_io(arr, **kwargs) -> BytesIO:
     np.save(bio, arr, **kwargs)
     bio.seek(0)
     return bio
+
+
+def write_pickle_gz(
+    obj,
+    path: Union[str, Path],
+    **kwargs,
+) -> None:
+    """Write an object to a gzipped pickle."""
+    with gzip.open(path, mode="wb") as file:
+        pickle.dump(obj, file, **kwargs)
 
 
 def write_lzma_csv(

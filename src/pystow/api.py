@@ -26,6 +26,7 @@ __all__ = [
     "load_df",
     "load_json",
     "load_pickle",
+    "load_pickle_gz",
     "load_rdf",
     "load_xml",
     # Dump functions
@@ -50,6 +51,7 @@ __all__ = [
     "ensure_csv",
     "ensure_json",
     "ensure_pickle",
+    "ensure_pickle_gz",
     "ensure_excel",
     "ensure_xml",
     "ensure_rdf",
@@ -765,6 +767,80 @@ def dump_pickle(
         mode=mode,
         open_kwargs=open_kwargs,
         pickle_dump_kwargs=pickle_dump_kwargs,
+    )
+
+
+def ensure_pickle_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Any:
+    """Download a gzipped pickle file and open with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`gzip.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_pickle_gz(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
+    )
+
+
+def load_pickle_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Any:
+    """Open a gzipped pickle file with :mod:`pickle`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+    :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+    :returns: Any object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_pickle_gz(
+        *subkeys,
+        name=name,
+        mode=mode,
+        open_kwargs=open_kwargs,
+        pickle_load_kwargs=pickle_load_kwargs,
     )
 
 
