@@ -291,6 +291,33 @@ class Module:
             yield file
 
     @contextmanager
+    def open_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: str = "rt",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        ensure_exists: bool = False,
+    ) -> Opener:
+        """Open a gzipped file that exists already.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param mode: The read mode, passed to :func:`gzip.open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+        :param ensure_exists: Should the file be made? Set to true on write operations.
+
+        :yields: An open file object
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with gzip.open(path, **open_kwargs) as file:
+            yield file
+
+    @contextmanager
     def ensure_open_lzma(
         self,
         *subkeys: str,
@@ -706,6 +733,74 @@ class Module:
             open_kwargs=open_kwargs,
         ) as file:
             pickle.dump(obj, file, **(pickle_dump_kwargs or {}))
+
+    def ensure_pickle_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "rb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Any:
+        """Download a gzipped pickle file and open with :mod:`pickle`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param mode: The read mode, passed to :func:`gzip.open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :returns: Any object
+        """
+        with self.ensure_open_gz(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return pickle.load(file, **(pickle_load_kwargs or {}))
+
+    def load_pickle_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: str = "rb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Any:
+        """Open a gzipped pickle file with :mod:`pickle`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :returns: Any object
+        """
+        with self.open_gz(
+            *subkeys,
+            name=name,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return pickle.load(file, **(pickle_load_kwargs or {}))
 
     def ensure_excel(
         self,

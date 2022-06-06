@@ -20,6 +20,7 @@ from .api import (  # noqa
     ensure_open_tarfile,
     ensure_open_zip,
     ensure_pickle,
+    ensure_pickle_gz,
     ensure_rdf,
     ensure_tar_df,
     ensure_tar_xml,
@@ -32,10 +33,12 @@ from .api import (  # noqa
     load_df,
     load_json,
     load_pickle,
+    load_pickle_gz,
     load_rdf,
     load_xml,
     module,
     open,
+    open_gz,
     submodule,
 )
 from .config_api import get_config, write_config  # noqa

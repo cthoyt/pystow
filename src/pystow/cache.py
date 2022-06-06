@@ -157,7 +157,7 @@ class CachedCollection(Cached[List[str]]):
         """
         with open(self.path, "w") as file:
             for line in rv:
-                print(line, file=file)  # noqa:T001
+                print(line, file=file)  # noqa:T001,T201
 
 
 class CachedDataFrame(Cached["pd.DataFrame"]):

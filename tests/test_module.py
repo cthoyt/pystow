@@ -25,6 +25,7 @@ from pystow.utils import (
     get_name,
     mock_envvar,
     n,
+    write_pickle_gz,
     write_tarfile_csv,
     write_zipfile_csv,
 )
@@ -34,15 +35,23 @@ RESOURCES = HERE.joinpath("resources")
 
 TSV_NAME = "test_1.tsv"
 TSV_URL = f"{n()}/{TSV_NAME}"
+
 JSON_NAME = "test_1.json"
 JSON_URL = f"{n()}/{JSON_NAME}"
+
 PICKLE_NAME = "test_1.pkl"
 PICKLE_URL = f"{n()}/{PICKLE_NAME}"
 PICKLE_PATH = RESOURCES / PICKLE_NAME
+
+PICKLE_GZ_NAME = "test_1.pkl.gz"
+PICKLE_GZ_URL = f"{n()}/{PICKLE_GZ_NAME}"
+PICKLE_GZ_PATH = RESOURCES / PICKLE_GZ_NAME
+
 MOCK_FILES: Mapping[str, Path] = {
     TSV_URL: RESOURCES / TSV_NAME,
     JSON_URL: RESOURCES / JSON_NAME,
     PICKLE_URL: PICKLE_PATH,
+    PICKLE_GZ_URL: PICKLE_GZ_PATH,
 }
 
 TEST_TSV_ROWS = [
@@ -160,6 +169,8 @@ class TestGet(unittest.TestCase):
 
     def test_ensure(self):
         """Test ensuring various files."""
+        write_pickle_gz(TEST_TSV_ROWS, path=PICKLE_GZ_PATH)
+
         with self.mock_directory(), self.mock_download():
             with self.subTest(type="tsv"):
                 df = pystow.ensure_csv("test", url=TSV_URL)
@@ -183,6 +194,13 @@ class TestGet(unittest.TestCase):
                 p2 = pystow.load_pickle("test", name=PICKLE_NAME)
                 self.assertEqual(p, p2)
 
+            with self.subTest(type="pickle_gz"):
+                p = pystow.ensure_pickle_gz("test", url=PICKLE_GZ_URL)
+                self.assertEqual(3, len(p))
+
+                p2 = pystow.load_pickle_gz("test", name=PICKLE_GZ_NAME)
+                self.assertEqual(p, p2)
+
     def test_open_fail(self):
         """Test opening a missing file."""
         with self.assertRaises(FileNotFoundError):
@@ -199,7 +217,7 @@ class TestGet(unittest.TestCase):
             with self.mock_download_once(path):
                 with lzma.open(path, "wt") as file:
                     for row in TEST_TSV_ROWS:
-                        print(*row, sep="\t", file=file)  # noqa:T001
+                        print(*row, sep="\t", file=file)  # noqa:T001,T201
                 with pystow.ensure_open_lzma("test", url=n()) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
