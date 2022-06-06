@@ -217,7 +217,7 @@ class TestGet(unittest.TestCase):
             with self.mock_download_once(path):
                 with lzma.open(path, "wt") as file:
                     for row in TEST_TSV_ROWS:
-                        print(*row, sep="\t", file=file)  # noqa:T001
+                        print(*row, sep="\t", file=file)  # noqa:T001,T201
                 with pystow.ensure_open_lzma("test", url=n()) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))

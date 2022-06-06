@@ -894,4 +894,4 @@ def ensure_readme() -> None:
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:
-        print(README_TEXT, file=file)  # noqa:T001
+        print(README_TEXT, file=file)  # noqa:T001,T201
