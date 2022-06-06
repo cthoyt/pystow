@@ -1237,6 +1237,23 @@ class Module:
         return path
 
 
+class GitHubModule(Module):
+    """A module for downloading files from a GitHub repository."""
+
+    def __init__(self, owner: str, repo: str, **kwargs):
+        super().__init__(**kwargs)
+        self.owner = owner
+        self.repo = repo
+
+    def join(
+        self,
+        *subkeys: str,
+        name: Optional[str] = None,
+        ensure_exists: bool = True,
+    ) -> Path:
+        return super().join(self.owner, self.repo, *subkeys, name=name, ensure_exists=ensure_exists)
+
+
 def _clean_csv_kwargs(read_csv_kwargs):
     read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
