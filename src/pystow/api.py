@@ -23,6 +23,8 @@ __all__ = [
     "joinpath_sqlite",
     # Opener functions
     "open",
+    "open_gz",
+    # Loader functions
     "load_df",
     "load_json",
     "load_pickle",
@@ -133,6 +135,34 @@ def open(
     """
     _module = Module.from_key(key, ensure_exists=True)
     with _module.open(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+        yield file
+
+
+@contextmanager
+def open_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: str = "rt",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Open a gzipped file that exists already.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name: The name of the file to open
+    :param mode: The read mode, passed to :func:`gzip.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.open_gz(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
         yield file
 
 
