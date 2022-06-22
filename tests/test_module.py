@@ -272,7 +272,14 @@ class TestGet(unittest.TestCase):
 
             # create a minimal provider
             def touch_file(path: Path, **_kwargs):
-                """Create a file."""
+                """
+                Create a file.
+
+                :param path:
+                    the file path
+                :param _kwargs:
+                    ignored keywords
+                """
                 path.touch()
 
             # wrap to record calls
