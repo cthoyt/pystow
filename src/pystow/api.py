@@ -51,6 +51,7 @@ __all__ = [
     "ensure_open_zip",
     # Processors
     "ensure_csv",
+    "ensure_custom",
     "ensure_json",
     "ensure_pickle",
     "ensure_pickle_gz",

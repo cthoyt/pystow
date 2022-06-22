@@ -9,6 +9,7 @@ from .api import (  # noqa
     dump_rdf,
     dump_xml,
     ensure,
+    ensure_custom,
     ensure_csv,
     ensure_excel,
     ensure_from_google,
