@@ -198,6 +198,8 @@ class Module:
         :param provider:
             The file provider. Will be run with the path as the first positional argument,
             if the file needs to be generated.
+        :param kwargs:
+            Additional keyword-based parameters passed to the provider.
 
         :raises ValueError:
             If the provider was called but the file was not created by it.
