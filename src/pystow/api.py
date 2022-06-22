@@ -229,9 +229,6 @@ def ensure_custom(
     :param kwargs:
         Additional keyword-based parameters passed to the provider.
 
-    :raises ValueError:
-        If the provider was called but the file was not created by it.
-
     :return:
         The path of the file that has been created (or already exists)
     """
