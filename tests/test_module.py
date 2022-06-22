@@ -265,3 +265,34 @@ class TestGet(unittest.TestCase):
                     ensure_exists,
                     msg=f'{expected_directory} should{"" if ensure_exists else " not"} exist.',
                 )
+
+    def test_ensure_custom(self):
+        """Test ensure with custom provider."""
+        with self.mock_directory():
+
+            # create a minimal provider
+            def touch_file(path: Path, **_kwargs):
+                """Create a file."""
+                path.touch()
+
+            # wrap to record calls
+            provider = mock.Mock(wraps=touch_file)
+
+            # the keyword-based parameters for the provider
+            kwargs = {"a": 4, "c": {0: 1, 5: 7}}
+
+            # call first time
+            name = n()
+            path = pystow.ensure_custom("test", name=name, provider=provider, **kwargs)
+            self.assertTrue(path.is_file())
+            # call a second time
+            path = pystow.ensure_custom("test", name=name, provider=provider, **kwargs)
+            # ensure that the provider was only called once
+            provider.assert_called_once()
+            # check parameters
+            call = provider.call_args_list[0]
+            # one positional argument: the output path
+            self.assertEqual(len(call.args), 1)
+            self.assertEqual(call.args[0], path)
+            # keyword-based params are passed through
+            self.assertEqual(call.kwargs, kwargs)
