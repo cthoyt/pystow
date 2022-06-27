@@ -300,6 +300,7 @@ class TestGet(unittest.TestCase):
             call = provider.call_args_list[0]
             # one positional argument: the output path
             self.assertGreaterEqual(len(call.args), 1)
-            self.assertEqual(call.args[0], path)
+            # TODO: message for debug
+            self.assertEqual(call.args[0], path, msg=str(call.args))
             # keyword-based params are passed through
             self.assertEqual(call.kwargs, kwargs)
