@@ -294,13 +294,5 @@ class TestGet(unittest.TestCase):
             self.assertTrue(path.is_file())
             # call a second time
             path = pystow.ensure_custom("test", name=name, provider=provider, **kwargs)
-            # ensure that the provider was only called once
-            provider.assert_called_once()
-            # check parameters
-            call = provider.call_args_list[0]
-            # one positional argument: the output path
-            self.assertGreaterEqual(len(call.args), 1)
-            # TODO: message for debug
-            self.assertEqual(call.args[0], path, msg=str(call.args))
-            # keyword-based params are passed through
-            self.assertEqual(call.kwargs, kwargs)
+            # ensure that the provider was only called once with the given parameters
+            provider.assert_called_once_with(path, **kwargs)
