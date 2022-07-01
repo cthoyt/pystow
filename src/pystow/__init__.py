@@ -10,6 +10,7 @@ from .api import (  # noqa
     dump_xml,
     ensure,
     ensure_csv,
+    ensure_custom,
     ensure_excel,
     ensure_from_google,
     ensure_from_s3,

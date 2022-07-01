@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
-from .constants import JSON, Opener
+from .constants import JSON, Opener, Provider
 from .utils import (
     download_from_google,
     download_from_s3,
@@ -176,6 +176,43 @@ class Module:
             force=force,
             **(download_kwargs or {}),
         )
+        return path
+
+    def ensure_custom(
+        self,
+        *subkeys: str,
+        name: str,
+        force: bool = False,
+        provider: Provider,
+        **kwargs,
+    ) -> Path:
+        """Ensure a file is present, and run a custom create function otherwise.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name:
+            The file name.
+        :param force:
+            Should the file be re-created, even if the path already exists?
+        :param provider:
+            The file provider. Will be run with the path as the first positional argument,
+            if the file needs to be generated.
+        :param kwargs:
+            Additional keyword-based parameters passed to the provider.
+
+        :raises ValueError:
+            If the provider was called but the file was not created by it.
+
+        :return:
+            The path of the file that has been created (or already exists)
+        """
+        path = self.join(*subkeys, name=name, ensure_exists=True)
+        if path.is_file() and not force:
+            return path
+        provider(path, **kwargs)
+        if not path.is_file():
+            raise ValueError(f"Provider {provider} did not create the file at {path}!")
         return path
 
     def ensure_untar(

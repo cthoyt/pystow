@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
-from .constants import JSON, Opener
+from .constants import JSON, Opener, Provider
 from .impl import Module
 
 if TYPE_CHECKING:
@@ -51,6 +51,7 @@ __all__ = [
     "ensure_open_zip",
     # Processors
     "ensure_csv",
+    "ensure_custom",
     "ensure_json",
     "ensure_pickle",
     "ensure_pickle_gz",
@@ -199,6 +200,40 @@ def ensure(
     return _module.ensure(
         *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
     )
+
+
+def ensure_custom(
+    key: str,
+    *subkeys: str,
+    name: str,
+    force: bool = False,
+    provider: Provider,
+    **kwargs,
+) -> Path:
+    """Ensure a file is present, and run a custom create function otherwise.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param name:
+        The file name.
+    :param force:
+        Should the file be re-created, even if the path already exists?
+    :param provider:
+        The file provider. Will be run with the path as the first positional argument,
+        if the file needs to be generated.
+    :param kwargs:
+        Additional keyword-based parameters passed to the provider.
+
+    :return:
+        The path of the file that has been created (or already exists)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_custom(*subkeys, name=name, force=force, provider=provider, **kwargs)
 
 
 def ensure_untar(
