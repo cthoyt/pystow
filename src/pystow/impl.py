@@ -11,10 +11,10 @@ import warnings
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
-from .constants import JSON, Opener
+from .constants import JSON, Opener, Provider
 from .utils import (
     download_from_google,
     download_from_s3,
@@ -183,7 +183,7 @@ class Module:
         *subkeys: str,
         name: str,
         force: bool = False,
-        provider: Callable[..., None],
+        provider: Provider,
         **kwargs,
     ) -> Path:
         """Ensure a file is present, and run a custom create function otherwise.

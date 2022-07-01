@@ -5,9 +5,9 @@
 import warnings
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
-from .constants import JSON, Opener
+from .constants import JSON, Opener, Provider
 from .impl import Module
 
 if TYPE_CHECKING:
@@ -207,7 +207,7 @@ def ensure_custom(
     *subkeys: str,
     name: str,
     force: bool = False,
-    provider: Callable[..., None],
+    provider: Provider,
     **kwargs,
 ) -> Path:
     """Ensure a file is present, and run a custom create function otherwise.
