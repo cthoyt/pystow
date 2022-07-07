@@ -6,6 +6,7 @@ import os
 from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
+from textwrap import dedent
 from typing import Optional, Type, TypeVar
 
 from .utils import getenv_path
@@ -20,6 +21,27 @@ X = TypeVar("X")
 CONFIG_NAME_ENVVAR = "PYSTOW_CONFIG_NAME"
 CONFIG_HOME_ENVVAR = "PYSTOW_CONFIG_HOME"
 CONFIG_NAME_DEFAULT = ".config"
+
+
+class ConfigError(ValueError):
+    """Raised when configuration can not be looked up."""
+
+    def __init__(self, module: str, key: str):
+        self.module = module
+        self.key = key
+
+    def __str__(self) -> str:
+        return dedent(
+            f"""\
+        f"Could not look up {self.module}/{self.key} and no default given"
+        
+        1. Set the {self.module.upper()}_{self.key.upper()}
+        2. Create a file in {get_home()}/{self.module}.ini, create a section inside it
+           called [{self.module}] and set a value for {self.key} = ...
+           
+        See https://github.com/cthoyt/pystow#%EF%B8%8F%EF%B8%8F-configuration for more information.
+        """
+        )
 
 
 def get_name() -> str:
@@ -99,7 +121,7 @@ def get_config(
     rv = _get_cfp(module).get(module, key, fallback=None)
     if rv is None:
         if default is None and raise_on_missing:
-            raise ValueError(f"Could not look up {module}/{key} and no default given")
+            raise ConfigError(module=module, key=key)
         return default
     return _cast(rv, dtype)
 
