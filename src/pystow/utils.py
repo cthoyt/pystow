@@ -22,7 +22,6 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
 
-import pandas
 import requests
 from tqdm import tqdm
 
@@ -674,7 +673,14 @@ def read_rdf(path: Union[str, Path], **kwargs):
 
 
 def write_sql(df, name: str, path: Union[str, Path], **kwargs) -> None:
-    """Write a dataframe as a SQL table."""
+    """Write a dataframe as a SQL table.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param name: The table the database to write to
+    :param path: The path to the resulting tar archive
+    :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
+    """
     import sqlite3
 
     with contextlib.closing(sqlite3.connect(path)) as conn:
@@ -908,6 +914,10 @@ def ensure_readme() -> None:
 
 
 def path_to_sqlite(path: Union[str, Path]) -> str:
-    """Convert a path to a SQLite connection string."""
+    """Convert a path to a SQLite connection string.
+
+    :param path: A path to a SQLite database file
+    :returns: A standard connection string to the database
+    """
     path = Path(path).expanduser().resolve()
     return f"sqlite:///{path.as_posix()}"

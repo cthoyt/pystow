@@ -3,7 +3,7 @@
 """API functions for PyStow."""
 
 import warnings
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 

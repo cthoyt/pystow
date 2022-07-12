@@ -311,5 +311,5 @@ class TestGet(unittest.TestCase):
         """Test caching SQLite."""
         with self.mock_directory(), self.mock_download():
             with pystow.ensure_open_sqlite("test", url=SQLITE_URL) as conn:
-                df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)
+                df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)  # noqa:S608
                 self.assertEqual(3, len(df.columns))
