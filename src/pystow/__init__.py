@@ -23,6 +23,7 @@ from .api import (  # noqa
     ensure_pickle,
     ensure_pickle_gz,
     ensure_rdf,
+    ensure_sqlite,
     ensure_tar_df,
     ensure_tar_xml,
     ensure_untar,

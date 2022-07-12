@@ -9,7 +9,7 @@ import lzma
 import tarfile
 import warnings
 import zipfile
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
@@ -22,6 +22,7 @@ from .utils import (
     mkdir,
     name_from_s3_key,
     name_from_url,
+    path_to_sqlite,
     read_rdf,
     read_tarfile_csv,
     read_tarfile_xml,
@@ -140,7 +141,7 @@ class Module:
         :return: A SQLite path string.
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        return f"sqlite:///{path.as_posix()}"
+        return path_to_sqlite(path)
 
     def ensure(
         self,
@@ -1272,6 +1273,16 @@ class Module:
         path = self.join(*subkeys, name=name, ensure_exists=True)
         download_from_google(file_id, path, force=force, **(download_kwargs or {}))
         return path
+
+    @contextmanager
+    def ensure_sqlite(self, *args, **kwargs):
+        """Ensure and connect to a SQLite database."""
+        import sqlite3
+
+        path = self.ensure(*args, **kwargs)
+        uri = path_to_sqlite(path)
+        with closing(sqlite3.connect(uri)) as conn:
+            yield conn
 
 
 def _clean_csv_kwargs(read_csv_kwargs):

@@ -3,7 +3,7 @@
 """API functions for PyStow."""
 
 import warnings
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
@@ -49,6 +49,7 @@ __all__ = [
     "ensure_open_lzma",
     "ensure_open_tarfile",
     "ensure_open_zip",
+    "ensure_sqlite",
     # Processors
     "ensure_csv",
     "ensure_custom",
@@ -1422,3 +1423,10 @@ def joinpath_sqlite(key: str, *subkeys: str, name: str) -> str:
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.joinpath_sqlite(*subkeys, name=name)
+
+
+@contextmanager
+def ensure_sqlite(key: str, *subkeys: str, **kwargs):
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.ensure_sqlite(*subkeys, **kwargs) as yv:
+        yield yv

@@ -26,6 +26,7 @@ from pystow.utils import (
     mock_envvar,
     n,
     write_pickle_gz,
+    write_sql,
     write_tarfile_csv,
     write_zipfile_csv,
 )
@@ -35,6 +36,11 @@ RESOURCES = HERE.joinpath("resources")
 
 TSV_NAME = "test_1.tsv"
 TSV_URL = f"{n()}/{TSV_NAME}"
+
+SQLITE_NAME = "test_1.db"
+SQLITE_URL = f"{n()}/{SQLITE_NAME}"
+SQLITE_PATH = RESOURCES / SQLITE_NAME
+SQLITE_TABLE = "testtable"
 
 JSON_NAME = "test_1.json"
 JSON_URL = f"{n()}/{JSON_NAME}"
@@ -52,6 +58,7 @@ MOCK_FILES: Mapping[str, Path] = {
     JSON_URL: RESOURCES / JSON_NAME,
     PICKLE_URL: PICKLE_PATH,
     PICKLE_GZ_URL: PICKLE_GZ_PATH,
+    SQLITE_URL: SQLITE_NAME,
 }
 
 TEST_TSV_ROWS = [
@@ -64,6 +71,9 @@ TEST_DF = pd.DataFrame(TEST_TSV_ROWS)
 # Make the pickle file
 if not PICKLE_PATH.is_file():
     PICKLE_PATH.write_bytes(pickle.dumps(TEST_TSV_ROWS))
+
+if not SQLITE_PATH.is_file():
+    write_sql(TEST_DF, name=SQLITE_TABLE, path=SQLITE_PATH)
 
 
 class TestMocks(unittest.TestCase):
@@ -296,3 +306,13 @@ class TestGet(unittest.TestCase):
             path = pystow.ensure_custom("test", name=name, provider=provider, **kwargs)
             # ensure that the provider was only called once with the given parameters
             provider.assert_called_once_with(path, **kwargs)
+
+    def test_ensure_sqlite(self):
+        """Test caching SQLite."""
+        with tempfile.TemporaryDirectory() as directory, self.mock_directory():
+            path = Path(directory) / n()
+
+            with self.mock_download_once(path):
+                with pystow.ensure_sqlite("test", url=n()) as conn:
+                    df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)
+                    self.assertEqual(3, len(df.columns))

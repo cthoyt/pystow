@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
 
+import pandas
 import requests
 from tqdm import tqdm
 
@@ -79,6 +80,7 @@ __all__ = [
     "get_home",
     "get_name",
     "get_base",
+    "path_to_sqlite",
 ]
 
 logger = logging.getLogger(__name__)
@@ -671,6 +673,20 @@ def read_rdf(path: Union[str, Path], **kwargs):
     return graph
 
 
+def write_sql(df, name: str, path: Union[str, Path]) -> None:
+    """Write a dataframe as a SQL table.
+
+    :type df: pandas.DataFrame
+    """
+    import sqlite3
+
+    path.parent.mkdir(exist_ok=True, parents=True)
+    print(path)
+    uri = path_to_sqlite(path)
+    with contextlib.closing(sqlite3.connect(uri)) as conn:
+        df.to_sql(name, conn)
+
+
 def get_commit(org: str, repo: str, provider: str = "git") -> str:
     """Get last commit hash for the given repo.
 
@@ -895,3 +911,9 @@ def ensure_readme() -> None:
         return
     with readme_path.open("w", encoding="utf8") as file:
         print(README_TEXT, file=file)  # noqa:T001,T201
+
+
+def path_to_sqlite(path: Union[str, Path]) -> str:
+    """Convert a path to a SQLite connection string."""
+    path = Path(path).expanduser().resolve()
+    return f"sqlite:///{path.as_posix()}"
