@@ -79,6 +79,7 @@ __all__ = [
     "get_home",
     "get_name",
     "get_base",
+    "path_to_sqlite",
 ]
 
 logger = logging.getLogger(__name__)
@@ -671,6 +672,21 @@ def read_rdf(path: Union[str, Path], **kwargs):
     return graph
 
 
+def write_sql(df, name: str, path: Union[str, Path], **kwargs) -> None:
+    """Write a dataframe as a SQL table.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param name: The table the database to write to
+    :param path: The path to the resulting tar archive
+    :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
+    """
+    import sqlite3
+
+    with contextlib.closing(sqlite3.connect(path)) as conn:
+        df.to_sql(name, conn, **kwargs)
+
+
 def get_commit(org: str, repo: str, provider: str = "git") -> str:
     """Get last commit hash for the given repo.
 
@@ -895,3 +911,13 @@ def ensure_readme() -> None:
         return
     with readme_path.open("w", encoding="utf8") as file:
         print(README_TEXT, file=file)  # noqa:T001,T201
+
+
+def path_to_sqlite(path: Union[str, Path]) -> str:
+    """Convert a path to a SQLite connection string.
+
+    :param path: A path to a SQLite database file
+    :returns: A standard connection string to the database
+    """
+    path = Path(path).expanduser().resolve()
+    return f"sqlite:///{path.as_posix()}"
