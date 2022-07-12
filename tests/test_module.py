@@ -58,7 +58,7 @@ MOCK_FILES: Mapping[str, Path] = {
     JSON_URL: RESOURCES / JSON_NAME,
     PICKLE_URL: PICKLE_PATH,
     PICKLE_GZ_URL: PICKLE_GZ_PATH,
-    SQLITE_URL: SQLITE_NAME,
+    SQLITE_URL: SQLITE_PATH,
 }
 
 TEST_TSV_ROWS = [
@@ -73,7 +73,7 @@ if not PICKLE_PATH.is_file():
     PICKLE_PATH.write_bytes(pickle.dumps(TEST_TSV_ROWS))
 
 if not SQLITE_PATH.is_file():
-    write_sql(TEST_DF, name=SQLITE_TABLE, path=SQLITE_PATH)
+    write_sql(TEST_DF, name=SQLITE_TABLE, path=SQLITE_PATH, index=False)
 
 
 class TestMocks(unittest.TestCase):
@@ -309,10 +309,7 @@ class TestGet(unittest.TestCase):
 
     def test_ensure_sqlite(self):
         """Test caching SQLite."""
-        with tempfile.TemporaryDirectory() as directory, self.mock_directory():
-            path = Path(directory) / n()
-
-            with self.mock_download_once(path):
-                with pystow.ensure_sqlite("test", url=n()) as conn:
-                    df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)
-                    self.assertEqual(3, len(df.columns))
+        with self.mock_directory(), self.mock_download():
+            with pystow.ensure_sqlite("test", url=SQLITE_URL) as conn:
+                df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)
+                self.assertEqual(3, len(df.columns))

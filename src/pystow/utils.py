@@ -673,18 +673,12 @@ def read_rdf(path: Union[str, Path], **kwargs):
     return graph
 
 
-def write_sql(df, name: str, path: Union[str, Path]) -> None:
-    """Write a dataframe as a SQL table.
-
-    :type df: pandas.DataFrame
-    """
+def write_sql(df, name: str, path: Union[str, Path], **kwargs) -> None:
+    """Write a dataframe as a SQL table."""
     import sqlite3
 
-    path.parent.mkdir(exist_ok=True, parents=True)
-    print(path)
-    uri = path_to_sqlite(path)
-    with contextlib.closing(sqlite3.connect(uri)) as conn:
-        df.to_sql(name, conn)
+    with contextlib.closing(sqlite3.connect(path)) as conn:
+        df.to_sql(name, conn, **kwargs)
 
 
 def get_commit(org: str, repo: str, provider: str = "git") -> str:

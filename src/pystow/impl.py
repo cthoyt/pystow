@@ -1280,8 +1280,7 @@ class Module:
         import sqlite3
 
         path = self.ensure(*args, **kwargs)
-        uri = path_to_sqlite(path)
-        with closing(sqlite3.connect(uri)) as conn:
+        with closing(sqlite3.connect(path.as_posix())) as conn:
             yield conn
 
 
