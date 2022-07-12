@@ -1297,7 +1297,7 @@ class Module:
             Should the download be done again, even if the path already exists?
             Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :yields: A connection from :func:`sqlite3.connect`
+        :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
 
         Example usage:
         >>> import pystow
