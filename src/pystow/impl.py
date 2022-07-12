@@ -1275,11 +1275,43 @@ class Module:
         return path
 
     @contextmanager
-    def ensure_sqlite(self, *args, **kwargs):
-        """Ensure and connect to a SQLite database."""
+    def ensure_open_sqlite(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure and connect to a SQLite database.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :yields: A connection from :func:`sqlite3.connect`
+
+        Example usage:
+        >>> import pystow
+        >>> import pandas as pd
+        >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+        >>> module = pystow.module("test")
+        >>> with module.ensure_open_sqlite(url=url) as conn:
+        >>>     df = pd.read_sql(" <query> ", conn)
+        """
         import sqlite3
 
-        path = self.ensure(*args, **kwargs)
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
         with closing(sqlite3.connect(path.as_posix())) as conn:
             yield conn
 

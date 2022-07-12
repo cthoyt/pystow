@@ -307,9 +307,9 @@ class TestGet(unittest.TestCase):
             # ensure that the provider was only called once with the given parameters
             provider.assert_called_once_with(path, **kwargs)
 
-    def test_ensure_sqlite(self):
+    def test_ensure_open_sqlite(self):
         """Test caching SQLite."""
         with self.mock_directory(), self.mock_download():
-            with pystow.ensure_sqlite("test", url=SQLITE_URL) as conn:
+            with pystow.ensure_open_sqlite("test", url=SQLITE_URL) as conn:
                 df = pd.read_sql(f"SELECT * from {SQLITE_TABLE}", conn)
                 self.assertEqual(3, len(df.columns))
