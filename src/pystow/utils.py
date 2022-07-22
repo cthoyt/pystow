@@ -57,6 +57,7 @@ __all__ = [
     "get_np_io",
     # LZMA utilities
     "write_lzma_csv",
+    "gunzip",
     # Zipfile utilities
     "write_zipfile_csv",
     "read_zipfile_csv",
@@ -349,6 +350,10 @@ def name_from_url(url: str) -> str:
     path = PurePosixPath(parse_result.path)
     name = path.name
     return name
+
+
+def base_from_gzip_name(path: Union[str, Path]) -> str:
+    pass
 
 
 def name_from_s3_key(key: str) -> str:
@@ -921,3 +926,8 @@ def path_to_sqlite(path: Union[str, Path]) -> str:
     """
     path = Path(path).expanduser().resolve()
     return f"sqlite:///{path.as_posix()}"
+
+
+def gunzip(source, target) -> None:
+    """Unzip a file in the source to the target."""
+    raise NotImplementedError

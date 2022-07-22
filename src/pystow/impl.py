@@ -16,9 +16,11 @@ from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 from . import utils
 from .constants import JSON, Opener, Provider
 from .utils import (
+    base_from_gzip_name,
     download_from_google,
     download_from_s3,
     get_base,
+    gunzip,
     mkdir,
     name_from_s3_key,
     name_from_url,
@@ -262,6 +264,32 @@ class Module:
         with tarfile.open(path) as tar_file:
             tar_file.extractall(unzipped_path, **(extract_kwargs or {}))
         return unzipped_path
+
+    def ensure_gunzip(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Path:
+        """Ensure a tar.gz file is downloaded and unarchived."""
+        if name is None:
+            name = name_from_url(url)
+        gunzipped_name = base_from_gzip_name(name)
+        gunzipped_path = self.join(*subkeys, name=gunzipped_name, ensure_exists=True)
+        if gunzipped_path.is_file() and not force:
+            return gunzipped_path
+        path = self.ensure(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+        )
+        gunzip(path, gunzipped_path)
+        # TODO cleanup of original file?
+        return gunzipped_path
 
     @contextmanager
     def ensure_open(

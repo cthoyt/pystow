@@ -14,6 +14,7 @@ from .api import (  # noqa
     ensure_excel,
     ensure_from_google,
     ensure_from_s3,
+    ensure_gunzip,
     ensure_json,
     ensure_open,
     ensure_open_gz,

@@ -43,6 +43,7 @@ __all__ = [
     "ensure_from_google",
     # Downloader functions with postprocessing
     "ensure_untar",
+    "ensure_gunzip",
     # Downloader + opener functions
     "ensure_open",
     "ensure_open_gz",
@@ -282,6 +283,25 @@ def ensure_untar(
         force=force,
         download_kwargs=download_kwargs,
         extract_kwargs=extract_kwargs,
+    )
+
+
+def ensure_gunzip(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Path:
+    """Ensure a file is downloaded and gunzipped."""
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_gunzip(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
     )
 
 
