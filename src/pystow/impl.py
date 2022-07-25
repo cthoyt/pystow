@@ -274,7 +274,25 @@ class Module:
         autoclean: bool = True,
         download_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
-        """Ensure a tar.gz file is downloaded and unarchived."""
+        """Ensure a tar.gz file is downloaded and unarchived.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param autoclean: Should the zipped file be deleted?
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :return:
+            The path of the directory where the file that has been downloaded
+            gets extracted to
+        """
         if name is None:
             name = name_from_url(url)
         gunzipped_name = base_from_gzip_name(name)

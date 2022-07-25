@@ -352,8 +352,13 @@ def name_from_url(url: str) -> str:
     return name
 
 
-def base_from_gzip_name(name: Union[str, Path]) -> str:
-    """Get the base name for a file after stripping the gz ending."""
+def base_from_gzip_name(name: str) -> str:
+    """Get the base name for a file after stripping the gz ending.
+
+    :param name: The name of the gz file
+    :returns: The cleaned name of the file, with no gz ending
+    :raises ValueError: if the file does not end with ".gz"
+    """
     if not name.endswith(".gz"):
         raise ValueError(f"Name does not end with .gz: {name}")
     return name[: -len(".gz")]
