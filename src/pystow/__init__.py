@@ -20,6 +20,7 @@ from .api import (  # noqa
     ensure_open_gz,
     ensure_open_lzma,
     ensure_open_sqlite,
+    ensure_open_sqlite_gz,
     ensure_open_tarfile,
     ensure_open_zip,
     ensure_pickle,
