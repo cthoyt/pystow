@@ -27,6 +27,11 @@ class ConfigError(ValueError):
     """Raised when configuration can not be looked up."""
 
     def __init__(self, module: str, key: str):
+        """Initialize the configuration error.
+
+        :param module: Name of the module, e.g., ``bioportal``
+        :param key: Name of the key inside the module, e.g., ``api_key``
+        """
         self.module = module
         self.key = key
 
