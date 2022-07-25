@@ -33,12 +33,12 @@ class ConfigError(ValueError):
     def __str__(self) -> str:
         return dedent(
             f"""\
-        f"Could not look up {self.module}/{self.key} and no default given"
-        
+        Could not look up {self.module}/{self.key} and no default given
+
         1. Set the {self.module.upper()}_{self.key.upper()}
         2. Create a file in {get_home()}/{self.module}.ini, create a section inside it
            called [{self.module}] and set a value for {self.key} = ...
-           
+
         See https://github.com/cthoyt/pystow#%EF%B8%8F%EF%B8%8F-configuration for more information.
         """
         )
@@ -61,7 +61,7 @@ def get_home(ensure_exists: bool = True) -> Path:
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`CONFIG_HOME_ENVVAR` environment variable or
-        3. The default directory constructed in the user's home directory plus what's
+        2. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
     default = Path.home() / get_name()
@@ -111,7 +111,7 @@ def get_config(
     :param raise_on_missing: If true, will raise a value error if no data is found and no default
         is given
     :returns: The config value or the default.
-    :raises ValueError: If ``raise_on_missing`` conditions are met
+    :raises ConfigError: If ``raise_on_missing`` conditions are met
     """
     if passthrough is not None:
         return _cast(passthrough, dtype)
