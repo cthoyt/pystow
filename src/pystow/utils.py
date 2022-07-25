@@ -938,4 +938,4 @@ def gunzip(source: Union[str, Path], target: Union[str, Path]) -> None:
     :param target: The path to an output file
     """
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
-        out_file.write(in_file.read())
+        shutil.copyfileobj(in_file, out_file)
