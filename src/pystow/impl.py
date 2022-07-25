@@ -271,6 +271,7 @@ class Module:
         url: str,
         name: Optional[str] = None,
         force: bool = False,
+        autoclean: bool = True,
         download_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
         """Ensure a tar.gz file is downloaded and unarchived."""
@@ -288,7 +289,9 @@ class Module:
             download_kwargs=download_kwargs,
         )
         gunzip(path, gunzipped_path)
-        # TODO cleanup of original file?
+        if autoclean:
+            logger.info("removing original gzipped file %s", path)
+            path.unlink()
         return gunzipped_path
 
     @contextmanager

@@ -292,6 +292,7 @@ def ensure_gunzip(
     url: str,
     name: Optional[str] = None,
     force: bool = False,
+    autoclean: bool = True,
     download_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Path:
     """Ensure a file is downloaded and gunzipped."""
@@ -301,6 +302,7 @@ def ensure_gunzip(
         url=url,
         name=name,
         force=force,
+        autoclean=autoclean,
         download_kwargs=download_kwargs,
     )
 
