@@ -57,6 +57,7 @@ __all__ = [
     "get_np_io",
     # LZMA utilities
     "write_lzma_csv",
+    "gunzip",
     # Zipfile utilities
     "write_zipfile_csv",
     "read_zipfile_csv",
@@ -79,6 +80,7 @@ __all__ = [
     "get_home",
     "get_name",
     "get_base",
+    "path_to_sqlite",
 ]
 
 logger = logging.getLogger(__name__)
@@ -348,6 +350,18 @@ def name_from_url(url: str) -> str:
     path = PurePosixPath(parse_result.path)
     name = path.name
     return name
+
+
+def base_from_gzip_name(name: str) -> str:
+    """Get the base name for a file after stripping the gz ending.
+
+    :param name: The name of the gz file
+    :returns: The cleaned name of the file, with no gz ending
+    :raises ValueError: if the file does not end with ".gz"
+    """
+    if not name.endswith(".gz"):
+        raise ValueError(f"Name does not end with .gz: {name}")
+    return name[: -len(".gz")]
 
 
 def name_from_s3_key(key: str) -> str:
@@ -671,6 +685,21 @@ def read_rdf(path: Union[str, Path], **kwargs):
     return graph
 
 
+def write_sql(df, name: str, path: Union[str, Path], **kwargs) -> None:
+    """Write a dataframe as a SQL table.
+
+    :param df: A dataframe
+    :type df: pandas.DataFrame
+    :param name: The table the database to write to
+    :param path: The path to the resulting tar archive
+    :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
+    """
+    import sqlite3
+
+    with contextlib.closing(sqlite3.connect(path)) as conn:
+        df.to_sql(name, conn, **kwargs)
+
+
 def get_commit(org: str, repo: str, provider: str = "git") -> str:
     """Get last commit hash for the given repo.
 
@@ -895,3 +924,23 @@ def ensure_readme() -> None:
         return
     with readme_path.open("w", encoding="utf8") as file:
         print(README_TEXT, file=file)  # noqa:T001,T201
+
+
+def path_to_sqlite(path: Union[str, Path]) -> str:
+    """Convert a path to a SQLite connection string.
+
+    :param path: A path to a SQLite database file
+    :returns: A standard connection string to the database
+    """
+    path = Path(path).expanduser().resolve()
+    return f"sqlite:///{path.as_posix()}"
+
+
+def gunzip(source: Union[str, Path], target: Union[str, Path]) -> None:
+    """Unzip a file in the source to the target.
+
+    :param source: The path to an input file
+    :param target: The path to an output file
+    """
+    with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
+        shutil.copyfileobj(in_file, out_file)

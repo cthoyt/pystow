@@ -9,19 +9,22 @@ import lzma
 import tarfile
 import warnings
 import zipfile
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
 
 from . import utils
 from .constants import JSON, Opener, Provider
 from .utils import (
+    base_from_gzip_name,
     download_from_google,
     download_from_s3,
     get_base,
+    gunzip,
     mkdir,
     name_from_s3_key,
     name_from_url,
+    path_to_sqlite,
     read_rdf,
     read_tarfile_csv,
     read_tarfile_xml,
@@ -140,7 +143,7 @@ class Module:
         :return: A SQLite path string.
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
-        return f"sqlite:///{path.as_posix()}"
+        return path_to_sqlite(path)
 
     def ensure(
         self,
@@ -261,6 +264,53 @@ class Module:
         with tarfile.open(path) as tar_file:
             tar_file.extractall(unzipped_path, **(extract_kwargs or {}))
         return unzipped_path
+
+    def ensure_gunzip(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        autoclean: bool = True,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Path:
+        """Ensure a tar.gz file is downloaded and unarchived.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param autoclean: Should the zipped file be deleted?
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :return:
+            The path of the directory where the file that has been downloaded
+            gets extracted to
+        """
+        if name is None:
+            name = name_from_url(url)
+        gunzipped_name = base_from_gzip_name(name)
+        gunzipped_path = self.join(*subkeys, name=gunzipped_name, ensure_exists=True)
+        if gunzipped_path.is_file() and not force:
+            return gunzipped_path
+        path = self.ensure(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+        )
+        gunzip(path, gunzipped_path)
+        if autoclean:
+            logger.info("removing original gzipped file %s", path)
+            path.unlink()
+        return gunzipped_path
 
     @contextmanager
     def ensure_open(
@@ -1272,6 +1322,93 @@ class Module:
         path = self.join(*subkeys, name=name, ensure_exists=True)
         download_from_google(file_id, path, force=force, **(download_kwargs or {}))
         return path
+
+    @contextmanager
+    def ensure_open_sqlite(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure and connect to a SQLite database.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
+
+        Example usage:
+        >>> import pystow
+        >>> import pandas as pd
+        >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+        >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
+        >>> module = pystow.module("test")
+        >>> with module.ensure_open_sqlite(url=url) as conn:
+        >>>     df = pd.read_sql(sql, conn)
+        """
+        import sqlite3
+
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        with closing(sqlite3.connect(path.as_posix())) as conn:
+            yield conn
+
+    @contextmanager
+    def ensure_open_sqlite_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Ensure and connect to a SQLite database that's gzipped.
+
+        Unfortunately, it's a paid feature to directly read gzipped sqlite files,
+        so this automatically gunzips it first.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
+
+        Example usage:
+        >>> import pystow
+        >>> import pandas as pd
+        >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db.gz"
+        >>> module = pystow.module("test")
+        >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
+        >>> with module.ensure_open_sqlite_gz(url=url) as conn:
+        >>>     df = pd.read_sql(sql, conn)
+        """
+        import sqlite3
+
+        path = self.ensure_gunzip(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        with closing(sqlite3.connect(path.as_posix())) as conn:
+            yield conn
 
 
 def _clean_csv_kwargs(read_csv_kwargs):

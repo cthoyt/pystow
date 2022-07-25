@@ -43,12 +43,15 @@ __all__ = [
     "ensure_from_google",
     # Downloader functions with postprocessing
     "ensure_untar",
+    "ensure_gunzip",
     # Downloader + opener functions
     "ensure_open",
     "ensure_open_gz",
     "ensure_open_lzma",
     "ensure_open_tarfile",
     "ensure_open_zip",
+    "ensure_open_sqlite",
+    "ensure_open_sqlite_gz",
     # Processors
     "ensure_csv",
     "ensure_custom",
@@ -281,6 +284,49 @@ def ensure_untar(
         force=force,
         download_kwargs=download_kwargs,
         extract_kwargs=extract_kwargs,
+    )
+
+
+def ensure_gunzip(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    autoclean: bool = True,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Path:
+    """Ensure a file is downloaded and gunzipped.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        <key>_HOME where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param autoclean: Should the zipped file be deleted?
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :return:
+        The path of the directory where the file that has been downloaded
+        gets extracted to
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_gunzip(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        autoclean=autoclean,
+        download_kwargs=download_kwargs,
     )
 
 
@@ -1422,3 +1468,91 @@ def joinpath_sqlite(key: str, *subkeys: str, name: str) -> str:
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.joinpath_sqlite(*subkeys, name=name)
+
+
+@contextmanager
+def ensure_open_sqlite(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure and connect to a SQLite database.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
+
+    Example usage:
+    >>> import pystow
+    >>> import pandas as pd
+    >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+    >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
+    >>> with pystow.ensure_open_sqlite("test", url=url) as conn:
+    >>>     df = pd.read_sql(sql, conn)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.ensure_open_sqlite(
+        *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+    ) as yv:
+        yield yv
+
+
+@contextmanager
+def ensure_open_sqlite_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+):
+    """Ensure and connect to a gzipped SQLite database.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
+
+    Example usage:
+    >>> import pystow
+    >>> import pandas as pd
+    >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db.gz"
+    >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
+    >>> with pystow.ensure_open_sqlite_gz("test", url=url) as conn:
+    >>>     df = pd.read_sql(sql, conn)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.ensure_open_sqlite_gz(
+        *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+    ) as yv:
+        yield yv
