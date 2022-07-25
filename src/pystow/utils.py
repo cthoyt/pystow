@@ -928,6 +928,11 @@ def path_to_sqlite(path: Union[str, Path]) -> str:
     return f"sqlite:///{path.as_posix()}"
 
 
-def gunzip(source, target) -> None:
-    """Unzip a file in the source to the target."""
-    raise NotImplementedError
+def gunzip(source: Union[str, Path], target: Union[str, Path]) -> None:
+    """Unzip a file in the source to the target.
+
+    :param source: The path to an input file
+    :param target: The path to an output file
+    """
+    with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
+        out_file.write(in_file.read())
