@@ -6,6 +6,7 @@ import os
 from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
+from textwrap import dedent
 from typing import Optional, Type, TypeVar
 
 from .utils import getenv_path
@@ -20,6 +21,32 @@ X = TypeVar("X")
 CONFIG_NAME_ENVVAR = "PYSTOW_CONFIG_NAME"
 CONFIG_HOME_ENVVAR = "PYSTOW_CONFIG_HOME"
 CONFIG_NAME_DEFAULT = ".config"
+
+
+class ConfigError(ValueError):
+    """Raised when configuration can not be looked up."""
+
+    def __init__(self, module: str, key: str):
+        """Initialize the configuration error.
+
+        :param module: Name of the module, e.g., ``bioportal``
+        :param key: Name of the key inside the module, e.g., ``api_key``
+        """
+        self.module = module
+        self.key = key
+
+    def __str__(self) -> str:
+        return dedent(
+            f"""\
+        Could not look up {self.module}/{self.key} and no default given
+
+        1. Set the {self.module.upper()}_{self.key.upper()}
+        2. Create a file in {get_home()}/{self.module}.ini, create a section inside it
+           called [{self.module}] and set a value for {self.key} = ...
+
+        See https://github.com/cthoyt/pystow#%EF%B8%8F%EF%B8%8F-configuration for more information.
+        """
+        )
 
 
 def get_name() -> str:
@@ -39,7 +66,7 @@ def get_home(ensure_exists: bool = True) -> Path:
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`CONFIG_HOME_ENVVAR` environment variable or
-        3. The default directory constructed in the user's home directory plus what's
+        2. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
     default = Path.home() / get_name()
@@ -89,7 +116,7 @@ def get_config(
     :param raise_on_missing: If true, will raise a value error if no data is found and no default
         is given
     :returns: The config value or the default.
-    :raises ValueError: If ``raise_on_missing`` conditions are met
+    :raises ConfigError: If ``raise_on_missing`` conditions are met
     """
     if passthrough is not None:
         return _cast(passthrough, dtype)
@@ -99,7 +126,7 @@ def get_config(
     rv = _get_cfp(module).get(module, key, fallback=None)
     if rv is None:
         if default is None and raise_on_missing:
-            raise ValueError(f"Could not look up {module}/{key} and no default given")
+            raise ConfigError(module=module, key=key)
         return default
     return _cast(rv, dtype)
 
