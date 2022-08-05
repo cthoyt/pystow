@@ -15,7 +15,7 @@ If you've ever written the following few lines of code, :mod:`pystow` is for you
     os.makedirs(ADEFT_HOME, exist_ok=True)
 
 Many projects (let's use `Adeft <https://github.com/indralab/adeft>`_ as an example) create a folder in the home
-directory as a dot-file such as ``$HOME/.adeft``. I found that I had so many of these that I stared grouping
+directory as a dot-file such as ``$HOME/.adeft``. I found that I had so many of these that I started grouping
 them inside a ``$HOME/.data`` folder. It's also the case that every time you create one of these folders,
 you need to ensure its existence.
 
