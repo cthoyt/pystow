@@ -93,6 +93,16 @@ url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/dataset
 df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
 ```
 
+Ensure a comma-separated tabular data file from the internet and load it for usage (requires `pip install pandas`):
+
+```python
+import pystow
+import pandas as pd
+
+url = 'https://raw.githubusercontent.com/cthoyt/pystow/main/tests/resources/test_1.csv'
+df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url, read_csv_kwargs=dict(sep=","))
+```
+
 Ensure a RDF file from the internet and load it for usage (requires `pip install rdflib`)
 
 ```python
