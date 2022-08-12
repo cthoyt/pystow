@@ -583,12 +583,6 @@ def ensure_csv(
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> "pd.DataFrame":
     """Download a CSV and open as a dataframe with :mod:`pandas`.
-    
-    It is assumed that the CSV uses tab separators, as this is the
-    only safe option. For more information, see
-    `Wikipedia <https://en.wikipedia.org/wiki/Comma-separated_values>`_ and
-    `Issue #51 <https://github.com/cthoyt/pystow/issues/51>`_. To override this
-    behavior and load using the comma separator, specify ``read_csv_kwargs=dict(sep=",")``.
 
     :param key: The module name
     :param subkeys:
@@ -604,6 +598,15 @@ def ensure_csv(
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+
+        .. note::
+
+            It is assumed that the CSV uses tab separators, as this is the
+            only safe option. For more information, see
+            `Wikipedia <https://en.wikipedia.org/wiki/Comma-separated_values>`_ and
+            `Issue #51 <https://github.com/cthoyt/pystow/issues/51>`_. To override this
+            behavior and load using the comma separator, specify ``read_csv_kwargs=dict(sep=",")``.
+
     :return: A pandas DataFrame
 
     Example usage::
