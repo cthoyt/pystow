@@ -47,6 +47,7 @@ __all__ = [
     # Downloader + opener functions
     "ensure_open",
     "ensure_open_gz",
+    "ensure_open_bz2",
     "ensure_open_lzma",
     "ensure_open_tarfile",
     "ensure_open_zip",
@@ -56,6 +57,7 @@ __all__ = [
     "ensure_csv",
     "ensure_custom",
     "ensure_json",
+    "ensure_json_bz2",
     "ensure_pickle",
     "ensure_pickle_gz",
     "ensure_excel",
@@ -573,6 +575,53 @@ def ensure_open_gz(
         yield yv
 
 
+@contextmanager
+def ensure_open_bz2(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: str = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Opener:
+    """Ensure a BZ2-compressed file is downloaded and open a file inside it.
+
+    :param key:
+        The name of the module. No funny characters. The envvar
+        `<key>_HOME` where key is uppercased is checked first before using
+        the default home directory.
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`bz2.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.ensure_open_bz2(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    ) as yv:
+        yield yv
+
+
 def ensure_csv(
     key: str,
     *subkeys: str,
@@ -702,6 +751,7 @@ def ensure_json(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Optional[Mapping[str, Any]] = None,
     json_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> JSON:
     """Download JSON and open with :mod:`json`.
@@ -719,6 +769,7 @@ def ensure_json(
         Should the download be done again, even if the path already exists?
         Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
     :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
     :returns: A JSON object (list, dict, etc.)
 
@@ -735,6 +786,54 @@ def ensure_json(
         name=name,
         force=force,
         download_kwargs=download_kwargs,
+        open_kwargs=open_kwargs,
+        json_load_kwargs=json_load_kwargs,
+    )
+
+
+def ensure_json_bz2(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+) -> JSON:
+    """Download BZ2-compressed JSON and open with :mod:`json`.
+
+    :param key: The module name
+    :param subkeys:
+        A sequence of additional strings to join. If none are given,
+        returns the directory for this module.
+    :param url:
+        The URL to download.
+    :param name:
+        Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force:
+        Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+    :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
+    :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+    :returns: A JSON object (list, dict, etc.)
+
+    Example usage::
+
+    >>> import pystow
+    >>> url = 'https://github.com/hetio/hetionet/raw/master/hetnet/json/hetionet-v1.0.json.bz2'
+    >>> hetionet = pystow.ensure_json_bz2('bio', 'hetionet', '1.0', url=url)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_json_bz2(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        open_kwargs=open_kwargs,
         json_load_kwargs=json_load_kwargs,
     )
 

@@ -2,6 +2,7 @@
 
 """Module implementation."""
 
+import bz2
 import gzip
 import json
 import logging
@@ -564,6 +565,44 @@ class Module:
         with gzip.open(path, **open_kwargs) as file:
             yield file
 
+    @contextmanager
+    def ensure_open_bz2(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: str = "rb",
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+    ) -> Opener:
+        """Ensure a BZ2-compressed file is downloaded and open a file inside it.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param mode: The read mode, passed to :func:`bz2.open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
+
+        :yields: An open file object
+        """
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with bz2.open(path, **open_kwargs) as file:
+            yield file
+
     def ensure_csv(
         self,
         *subkeys: str,
@@ -656,6 +695,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
         json_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> JSON:
         """Download JSON and open with :mod:`json`.
@@ -672,11 +712,55 @@ class Module:
             Should the download be done again, even if the path already exists?
             Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
         :returns: A JSON object (list, dict, etc.)
         """
         with self.ensure_open(
-            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return json.load(file, **(json_load_kwargs or {}))
+
+    def ensure_json_bz2(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str] = None,
+        force: bool = False,
+        download_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    ):
+        """Download BZ2-compressed JSON and open with :mod:`json`.
+
+        :param subkeys:
+            A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url:
+            The URL to download.
+        :param name:
+            Overrides the name of the file at the end of the URL, if given. Also
+            useful for URLs that don't have proper filenames with extensions.
+        :param force:
+            Should the download be done again, even if the path already exists?
+            Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
+        :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+        :returns: A JSON object (list, dict, etc.)
+        """
+        with self.ensure_open_bz2(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+            open_kwargs=open_kwargs,
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
 

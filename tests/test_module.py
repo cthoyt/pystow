@@ -2,8 +2,10 @@
 
 """Tests for PyStow."""
 
+import bz2
 import contextlib
 import itertools as itt
+import json
 import lzma
 import os
 import pickle
@@ -44,6 +46,7 @@ SQLITE_TABLE = "testtable"
 
 JSON_NAME = "test_1.json"
 JSON_URL = f"{n()}/{JSON_NAME}"
+JSON_PATH = RESOURCES / JSON_NAME
 
 PICKLE_NAME = "test_1.pkl"
 PICKLE_URL = f"{n()}/{PICKLE_NAME}"
@@ -53,9 +56,15 @@ PICKLE_GZ_NAME = "test_1.pkl.gz"
 PICKLE_GZ_URL = f"{n()}/{PICKLE_GZ_NAME}"
 PICKLE_GZ_PATH = RESOURCES / PICKLE_GZ_NAME
 
+JSON_BZ2_NAME = "test_1.json.bz2"
+JSON_BZ2_URL = f"{n()}/{JSON_BZ2_NAME}"
+JSON_BZ2_PATH = RESOURCES / JSON_BZ2_NAME
+
+
 MOCK_FILES: Mapping[str, Path] = {
     TSV_URL: RESOURCES / TSV_NAME,
-    JSON_URL: RESOURCES / JSON_NAME,
+    JSON_URL: JSON_PATH,
+    JSON_BZ2_URL: JSON_BZ2_PATH,
     PICKLE_URL: PICKLE_PATH,
     PICKLE_GZ_URL: PICKLE_GZ_PATH,
     SQLITE_URL: SQLITE_PATH,
@@ -67,6 +76,7 @@ TEST_TSV_ROWS = [
     ("v2_1", "v2_2", "v2_3"),
 ]
 TEST_DF = pd.DataFrame(TEST_TSV_ROWS)
+TEST_JSON = {"key": "value"}
 
 # Make the pickle file
 if not PICKLE_PATH.is_file():
@@ -74,6 +84,13 @@ if not PICKLE_PATH.is_file():
 
 if not SQLITE_PATH.is_file():
     write_sql(TEST_DF, name=SQLITE_TABLE, path=SQLITE_PATH, index=False)
+
+if not JSON_PATH.is_file():
+    JSON_PATH.write_text(json.dumps(TEST_JSON))
+
+if not JSON_BZ2_PATH.is_file():
+    with bz2.open(JSON_BZ2_PATH, mode="wt") as file:
+        json.dump(TEST_JSON, file, indent=2)
 
 
 class TestMocks(unittest.TestCase):
@@ -191,8 +208,7 @@ class TestGet(unittest.TestCase):
 
             with self.subTest(type="json"):
                 j = pystow.ensure_json("test", url=JSON_URL)
-                self.assertIn("key", j)
-                self.assertEqual("value", j["key"])
+                self.assertEqual(TEST_JSON, j)
 
                 j2 = pystow.load_json("test", name=JSON_NAME)
                 self.assertEqual(j, j2)
@@ -210,6 +226,10 @@ class TestGet(unittest.TestCase):
 
                 p2 = pystow.load_pickle_gz("test", name=PICKLE_GZ_NAME)
                 self.assertEqual(p, p2)
+
+            with self.subTest(type="json_bz2"):
+                p = pystow.ensure_json_bz2("test", url=JSON_BZ2_URL)
+                self.assertEqual(TEST_JSON, p)
 
     def test_open_fail(self):
         """Test opening a missing file."""
