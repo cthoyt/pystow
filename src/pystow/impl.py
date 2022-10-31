@@ -576,7 +576,7 @@ class Module:
         mode: str = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Opener:
-        """Ensure a bz2-compressed file is downloaded and open a file inside it.
+        """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
             A sequence of additional strings to join. If none are given,
@@ -590,8 +590,8 @@ class Module:
             Should the download be done again, even if the path already exists?
             Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param mode: The read mode, passed to :func:`gzip.open`
-        :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+        :param mode: The read mode, passed to :func:`bz2.open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
 
         :yields: An open file object
         """
@@ -736,7 +736,7 @@ class Module:
         open_kwargs: Optional[Mapping[str, Any]] = None,
         json_load_kwargs: Optional[Mapping[str, Any]] = None,
     ):
-        """Download bz2-compressed JSON and open with :mod:`json`.
+        """Download BZ2-compressed JSON and open with :mod:`json`.
 
         :param subkeys:
             A sequence of additional strings to join. If none are given,
