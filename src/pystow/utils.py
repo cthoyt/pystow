@@ -61,6 +61,8 @@ __all__ = [
     # Zipfile utilities
     "write_zipfile_csv",
     "read_zipfile_csv",
+    "write_zipfile_xml",
+    "read_zipfile_xml",
     "write_zipfile_np",
     "read_zip_np",
     "read_zipfile_rdf",
@@ -546,6 +548,44 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
             return pd.read_csv(file, sep=sep, **kwargs)
+
+
+def write_zipfile_xml(
+    element_tree,
+    path: Union[str, Path],
+    inner_path: str,
+    **kwargs,
+) -> None:
+    """Write an XML element tree to an inner XML file to a zip archive.
+
+    :param element_tree: An XML element tree
+    :type element_tree: lxml.etree.ElementTree
+    :param path: The path to the resulting zip archive
+    :param inner_path: The path inside the zip archive to write the dataframe
+    :param kwargs: Additional kwargs to pass to :func:`tostring`
+    """
+    from lxml import etree
+
+    kwargs.setdefault("pretty_print", True)
+    with zipfile.ZipFile(file=path, mode="w") as zip_file:
+        with zip_file.open(inner_path, mode="w") as file:
+            file.write(etree.tostring(element_tree, **kwargs))
+
+
+def read_zipfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
+    """Read an inner XML file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the xml file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
+    :return: An XML element tree
+    :rtype: lxml.etree.ElementTree
+    """
+    from lxml import etree
+
+    with zipfile.ZipFile(file=path) as zip_file:
+        with zip_file.open(inner_path) as file:
+            return etree.parse(file, **kwargs)
 
 
 def write_zipfile_np(

@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import requests
+from lxml import etree
 from requests_file import FileAdapter
 
 from pystow.utils import (
@@ -25,9 +26,11 @@ from pystow.utils import (
     read_tarfile_csv,
     read_zip_np,
     read_zipfile_csv,
+    read_zipfile_xml,
     write_tarfile_csv,
     write_zipfile_csv,
     write_zipfile_np,
+    write_zipfile_xml,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -139,6 +142,45 @@ class TestUtils(unittest.TestCase):
                 new_df = reader(path=path, inner_path=inner_path)
                 self.assertEqual(list(df.columns), list(new_df.columns))
                 self.assertEqual(df.values.tolist(), new_df.values.tolist())
+
+    def test_xml_io(self):
+        """Test that read/write for XML element tree works."""
+        root = etree.Element("Doc")
+        level1 = etree.SubElement(root, "S")
+        main = etree.SubElement(level1, "Text")
+        main.text = "Thanks for contributing an answer to Stack Overflow!"
+        second = etree.SubElement(level1, "Tokens")
+        level2 = etree.SubElement(second, "Token", word="low")
+
+        level3 = etree.SubElement(level2, "Morph")
+        second1 = etree.SubElement(level3, "Lemma")
+        second1.text = "sdfs"
+        second1 = etree.SubElement(level3, "info")
+        second1.text = "qw"
+
+        level4 = etree.SubElement(level3, "Aff")
+        second1 = etree.SubElement(level4, "Type")
+        second1.text = "sdfs"
+        second1 = etree.SubElement(level4, "Suf")
+        second1.text = "qw"
+
+        tree = etree.ElementTree(root)
+        inner_path = "okay.tsv"
+        data = [
+            ("test.zip", write_zipfile_xml, read_zipfile_xml),
+        ]
+        for name, writer, reader in data:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                directory = Path(directory)
+                path = directory / name
+                self.assertFalse(path.exists())
+                writer(tree, path=path, inner_path=inner_path)
+                self.assertTrue(path.exists())
+                new_tree = reader(path=path, inner_path=inner_path)
+                self.assertEqual(
+                    etree.tostring(tree, pretty_print=True),
+                    etree.tostring(new_tree, pretty_print=True),
+                )
 
     def test_numpy_io(self):
         """Test IO with numpy."""
