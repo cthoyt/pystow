@@ -2,10 +2,12 @@
 
 """Test configuration loading."""
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import pystow
-from pystow.config_api import _get_cfp
+from pystow.config_api import CONFIG_HOME_ENVVAR, _get_cfp
 from pystow.utils import mock_envvar
 
 
@@ -91,3 +93,18 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             True, pystow.get_config(self.test_section, self.test_option, passthrough=1, dtype=bool)
         )
+
+    def test_subsection(self):
+        """Test subsections."""
+        with tempfile.TemporaryDirectory() as directory, mock_envvar(CONFIG_HOME_ENVVAR, directory):
+            directory = Path(directory)
+            path = directory.joinpath("test.ini")
+            self.assertFalse(path.is_file(), msg="file should not already exist")
+
+            self.assertIsNone(pystow.get_config("test:subtest", "key"))
+            self.assertFalse(path.is_file(), msg="getting config should not create a file")
+
+            pystow.write_config("test:subtest", "key", "value")
+            self.assertTrue(path.is_file(), msg=f"{list(directory.iterdir())}")
+
+            self.assertEqual("value", pystow.get_config("test:subtest", "key"))
