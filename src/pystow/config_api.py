@@ -159,6 +159,14 @@ def write_config(module: str, key: str, value: str) -> None:
     cfp = ConfigParser()
     path = get_home() / f"{module}.ini"
     cfp.read(path)
-    cfp.set(module, key, value)
+
+    # If the file did not exist, then this section will be empty
+    # and running set() would raise a configparser.NoSectionError.
+    if not cfp.has_section(module):
+        cfp.add_section(module)
+
+    # Note that the section duplicates the file name
+    cfp.set(section=module, option=key, value=value)
+
     with path.open("w") as file:
         cfp.write(file)
