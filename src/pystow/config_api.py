@@ -77,6 +77,12 @@ def get_home(ensure_exists: bool = True) -> Path:
 def _get_cfp(module: str) -> ConfigParser:
     cfp = ConfigParser()
     directory = get_home()
+
+    # If a multi-part module was given like "zenodo:sandbox",
+    # then only look for the first part "zenodo" as the file name
+    if ":" in module:
+        module = module.split(":", 1)[0]
+
     filenames = [
         os.path.join(directory, "config.cfg"),
         os.path.join(directory, "config.ini"),
@@ -157,7 +163,12 @@ def write_config(module: str, key: str, value: str) -> None:
     """
     _get_cfp.cache_clear()
     cfp = ConfigParser()
-    path = get_home() / f"{module}.ini"
+
+    # If there's a multi-part module such as "zenodo:sandbox",
+    # then write to zenodo.ini with section [zenodo:sandbox]
+    fname = module.split(":", 1)[0] if ":" in module else module
+
+    path = get_home().joinpath(fname).with_suffix(".ini")
     cfp.read(path)
 
     # If the file did not exist, then this section will be empty
