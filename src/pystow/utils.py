@@ -274,8 +274,8 @@ class TqdmReportHook(tqdm):
 
     def update_to(
         self,
-        blocks: Optional[int] = 1,
-        block_size: Optional[int] = 1,
+        blocks: int = 1,
+        block_size: int = 1,
         total_size: Optional[int] = None,
     ) -> None:
         """Update the internal state based on a urllib report hook.
