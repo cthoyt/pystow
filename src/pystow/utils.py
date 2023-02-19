@@ -23,7 +23,7 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 import requests
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from .constants import (
     PYSTOW_HOME_ENVVAR,
@@ -265,6 +265,29 @@ def raise_on_digest_mismatch(
         raise HexDigestError(offending_hexdigests)
 
 
+class TqdmReportHook(tqdm):
+    """A custom progress bar that can be used with urllib.
+
+    Based on https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
+    """
+
+    def update_to(
+        self,
+        blocks: Optional[int] = 1,
+        block_size: Optional[int] = 1,
+        total_size: Optional[int] = None,
+    ) -> None:
+        """Update the internal state based on a urllib report hook.
+
+        :param blocks: Number of blocks transferred so far
+        :param block_size: Size of each block (in tqdm units)
+        :param total_size: Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if total_size is not None:
+            self.total = total_size
+        self.update(blocks * block_size - self.n)  # will also set self.n = b * bsize
+
+
 def download(
     url: str,
     path: Union[str, Path],
@@ -274,6 +297,8 @@ def download(
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
     hexdigests_strict: bool = False,
+    progress_bar: bool = True,
+    tqdm_kwargs: Optional[Mapping[str, Any]] = None,
     **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
@@ -289,6 +314,10 @@ def download(
         The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
     :param hexdigests_strict:
         Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+    :param progress_bar:
+        Set to true to show a progress bar while downloading
+    :param tqdm_kwargs:
+        Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
         depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
 
@@ -311,10 +340,23 @@ def download(
         logger.debug("did not re-download %s from %s", path, url)
         return
 
+    _tqdm_kwargs = dict(
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        miniters=1,
+        disable=not progress_bar,
+        desc=f"Downloading {path.name}",
+        leave=False,
+    )
+    if tqdm_kwargs:
+        _tqdm_kwargs.update(tqdm_kwargs)
+
     try:
         if backend == "urllib":
             logger.info("downloading with urllib from %s to %s", url, path)
-            urlretrieve(url, path, **kwargs)  # noqa:S310
+            with TqdmReportHook(**_tqdm_kwargs) as t:
+                urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
         elif backend == "requests":
             kwargs.setdefault("stream", True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
