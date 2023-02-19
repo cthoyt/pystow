@@ -15,6 +15,7 @@ import tempfile
 import zipfile
 from collections import namedtuple
 from io import BytesIO, StringIO
+from functools import partial
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
 from typing import Any, Collection, Iterable, Iterator, Mapping, Optional, Union
@@ -368,7 +369,12 @@ def download(
                     url,
                     path,
                 )
-                shutil.copyfileobj(response.raw, file)
+                # Solution for progres bar from https://stackoverflow.com/a/63831344/5775947
+                total_size = int(response.headers.get("Content-Length", 0))
+                # Decompress if needed
+                response.raw.read = partial(response.raw.read, decode_content=True)
+                with tqdm.wrapattr(response.raw, "read", total=total_size, **_tqdm_kwargs) as fsrc:
+                    shutil.copyfileobj(fsrc, file)
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
