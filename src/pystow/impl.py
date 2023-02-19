@@ -8,7 +8,6 @@ import json
 import logging
 import lzma
 import tarfile
-import warnings
 import zipfile
 from contextlib import closing, contextmanager
 from pathlib import Path
