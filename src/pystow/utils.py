@@ -298,7 +298,7 @@ def download(
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
     hexdigests_strict: bool = False,
-    progress_bar: bool = True,
+    progress_bar: bool = False,
     tqdm_kwargs: Optional[Mapping[str, Any]] = None,
     **kwargs: Any,
 ) -> None:
