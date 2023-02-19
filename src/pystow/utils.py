@@ -14,8 +14,8 @@ import tarfile
 import tempfile
 import zipfile
 from collections import namedtuple
-from io import BytesIO, StringIO
 from functools import partial
+from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
 from typing import Any, Collection, Iterable, Iterator, Mapping, Optional, Union
