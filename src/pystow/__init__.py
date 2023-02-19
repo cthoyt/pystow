@@ -45,7 +45,6 @@ from .api import (  # noqa
     module,
     open,
     open_gz,
-    submodule,
 )
 from .config_api import get_config, write_config  # noqa
 from .impl import Module  # noqa

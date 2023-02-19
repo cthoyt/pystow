@@ -299,7 +299,6 @@ class TestGet(unittest.TestCase):
     def test_ensure_custom(self):
         """Test ensure with custom provider."""
         with self.mock_directory():
-
             # create a minimal provider
             def touch_file(path: Path, **_kwargs):
                 """

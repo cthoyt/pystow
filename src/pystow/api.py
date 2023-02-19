@@ -2,7 +2,6 @@
 
 """API functions for PyStow."""
 
-import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
@@ -17,7 +16,6 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
-    "submodule",
     "module",
     "join",
     "joinpath_sqlite",
@@ -68,12 +66,6 @@ __all__ = [
     "ensure_zip_df",
     "ensure_zip_np",
 ]
-
-
-def submodule(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
-    """Return a module for the application."""  # noqa
-    warnings.warn("Use .module() instead", DeprecationWarning)
-    return module(key, *subkeys, ensure_exists=ensure_exists)
 
 
 def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
