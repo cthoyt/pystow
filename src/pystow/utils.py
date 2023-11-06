@@ -1006,7 +1006,11 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
 
 
 def ensure_readme() -> None:
-    """Ensure there's a README in the PyStow data directory."""
+    """Ensure there's a README in the PyStow data directory.
+
+    :raises PermissionError: If the script calling this function does not have
+        adequate permissions to write a file into the PyStow home directory.
+    """
     try:
         readme_path = get_home(ensure_exists=True).joinpath("README.md")
     except PermissionError as e:
