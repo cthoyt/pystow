@@ -1006,8 +1006,20 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
 
 
 def ensure_readme() -> None:
-    """Ensure there's a README in the PyStow data directory."""
-    readme_path = get_home(ensure_exists=True).joinpath("README.md")
+    """Ensure there's a README in the PyStow data directory.
+
+    :raises PermissionError: If the script calling this function does not have
+        adequate permissions to write a file into the PyStow home directory.
+    """
+    try:
+        readme_path = get_home(ensure_exists=True).joinpath("README.md")
+    except PermissionError as e:
+        raise PermissionError(
+            f"PyStow was not able to create its home directory in {readme_path.parent} due to a lack of "
+            "permissions. This can happen, e.g., if you're working on a server where you don't have full "
+            "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
+            "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
+        ) from e
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:
