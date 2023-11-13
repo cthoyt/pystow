@@ -138,13 +138,13 @@ def get_hexdigests_remote(
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
     :param hexdigests_strict:
-        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+        Set this to alse to stop automatically checking for the `algorithm(filename)=hash` format
     :returns:
         A mapping of algorithms to hexdigests
     """
     rv = {}
     for key, url in (hexdigests_remote or {}).items():
-        text = requests.get(url).text
+        text = requests.get(url, timeout=15).text
         if not hexdigests_strict and "=" in text:
             text = text.rsplit("=", 1)[-1].strip()
         rv[key] = text
@@ -362,7 +362,7 @@ def download(
             kwargs.setdefault("stream", True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
             # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, path.open("wb") as file:
+            with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
                 logger.info(
                     "downloading (stream=%s) with requests from %s to %s",
                     kwargs["stream"],
@@ -802,7 +802,7 @@ def get_commit(org: str, repo: str, provider: str = "git") -> str:
         lines = (line.strip().split("\t") for line in output.decode("utf8").splitlines())
         rv = next(line[0] for line in lines if line[1] == "HEAD")
     elif provider == "github":
-        res = requests.get(f"https://api.github.com/repos/{org}/{repo}/branches/master")
+        res = requests.get(f"https://api.github.com/repos/{org}/{repo}/branches/master", timeout=15)
         res_json = res.json()
         rv = res_json["commit"]["sha"]
     else:
@@ -1006,8 +1006,20 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
 
 
 def ensure_readme() -> None:
-    """Ensure there's a README in the PyStow data directory."""
-    readme_path = get_home(ensure_exists=True).joinpath("README.md")
+    """Ensure there's a README in the PyStow data directory.
+
+    :raises PermissionError: If the script calling this function does not have
+        adequate permissions to write a file into the PyStow home directory.
+    """
+    try:
+        readme_path = get_home(ensure_exists=True).joinpath("README.md")
+    except PermissionError as e:
+        raise PermissionError(
+            f"PyStow was not able to create its home directory in {readme_path.parent} due to a lack of "
+            "permissions. This can happen, e.g., if you're working on a server where you don't have full "
+            "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
+            "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
+        ) from e
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:

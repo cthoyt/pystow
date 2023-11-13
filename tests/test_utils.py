@@ -81,7 +81,7 @@ class TestUtils(unittest.TestCase):
             (TEST_TXT_WRONG_MD5, "yolo"),
         ]:
             with self.subTest(name=url.name):
-                self.assertEqual(value, requests.get(url.as_uri()).text)
+                self.assertEqual(value, requests.get(url.as_uri(), timeout=15).text)
 
     def test_mkdir(self):
         """Test for ensuring a directory."""

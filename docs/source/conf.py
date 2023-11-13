@@ -27,7 +27,7 @@ copyright = f'{date.today().year}, Charles Tapley Hoyt'
 author = 'Charles Tapley Hoyt'
 
 # The full version, including alpha/beta/rc tags.
-release = '0.5.1-dev'
+release = '0.5.3-dev'
 
 # The short X.Y version.
 parsed_version = re.match(
@@ -224,7 +224,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/3/': None,
+    "python": ('https://docs.python.org/3/', None),
     'rdflib': ('https://rdflib.readthedocs.io/en/latest/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/dev', None),
 }

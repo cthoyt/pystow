@@ -257,7 +257,7 @@ class Module:
             return unzipped_path
         unzipped_path.mkdir(exist_ok=True, parents=True)
         with tarfile.open(path) as tar_file:
-            tar_file.extractall(unzipped_path, **(extract_kwargs or {}))
+            tar_file.extractall(unzipped_path, **(extract_kwargs or {}))  # noqa:S202
         return unzipped_path
 
     def ensure_gunzip(
