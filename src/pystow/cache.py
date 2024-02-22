@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     import pandas as pd
 
 __all__ = [
-    # Classses
+    # Classes
     "Cached",
     "CachedPickle",
     "CachedJSON",
