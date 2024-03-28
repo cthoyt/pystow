@@ -46,7 +46,7 @@ from .api import (  # noqa
     open,
     open_gz,
 )
-from .config_api import get_config, write_config  # noqa
+from .config_api import ConfigError, get_config, write_config  # noqa
 from .impl import Module  # noqa
 from .utils import ensure_readme  # noqa
 
