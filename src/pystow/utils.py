@@ -471,7 +471,7 @@ def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
     :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
     :return: A path either specified by the environmental variable or by the default.
     """
-    rv = Path(os.getenv(envvar, default=default))
+    rv = Path(os.getenv(envvar, default=default)).expanduser()
     mkdir(rv, ensure_exists=ensure_exists)
     return rv
 
