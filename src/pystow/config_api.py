@@ -91,7 +91,7 @@ def get_home(ensure_exists: bool = True) -> Path:
         2. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
-    default = Path.home().joinpath(get_name()).expanduser().resolve()
+    default = Path.home().joinpath(get_name()).expanduser()
     return getenv_path(CONFIG_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
