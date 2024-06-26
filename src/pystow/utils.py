@@ -94,6 +94,21 @@ Hash = Any
 HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
 
 
+def _get_tqdm_global_config():
+    c = os.getenv("PYSTOW_TQDM")
+    if not c:
+        return True
+    if c.lower() in {"t", "true", "si", "ja", "1", 1, "y", "yes"}:
+        return True
+    if c.lower() in {"n", "no", "nein", "f", "false", "nope", "0", 0}:
+        return False
+    raise EnvironmentError(f"invalid value for PYSTOW_TQDM: {c}")
+
+
+#: Set this to false to disable the global progress bar
+GLOBAL_PROGRESS_BAR = _get_tqdm_global_config()
+
+
 class HexDigestError(ValueError):
     """Thrown if the hashsums do not match expected hashsums."""
 
@@ -220,7 +235,7 @@ def get_hashes(
     """
     path = Path(path).resolve()
     if chunk_size is None:
-        chunk_size = 64 * 2**10
+        chunk_size = 64 * 2 ** 10
 
     # instantiate hash algorithms
     algorithms: Mapping[str, Hash] = {name: hashlib.new(name) for name in names}
@@ -298,7 +313,7 @@ def download(
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
     hexdigests_strict: bool = False,
-    progress_bar: bool = True,
+    progress_bar: Optional[bool] = None,
     tqdm_kwargs: Optional[Mapping[str, Any]] = None,
     **kwargs: Any,
 ) -> None:
@@ -316,7 +331,8 @@ def download(
     :param hexdigests_strict:
         Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
     :param progress_bar:
-        Set to true to show a progress bar while downloading
+        Set to false to remove the progress bar. Can also be globally set off with the following:
+
     :param tqdm_kwargs:
         Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
     :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
