@@ -18,7 +18,16 @@ from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output  # noqa: S404
-from typing import Any, Collection, Iterable, Iterator, Mapping, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    Optional,
+    Union,
+)
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -33,6 +42,12 @@ from .constants import (
     PYSTOW_USE_APPDIRS,
     README_TEXT,
 )
+
+if TYPE_CHECKING:
+    import lxml.etree
+    import numpy.typing
+    import pandas
+    import rdflib
 
 __all__ = [
     # Data Structures
@@ -484,11 +499,12 @@ def n() -> str:
     return str(uuid4())
 
 
-def get_df_io(df, sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
+def get_df_io(
+    df: "pandas.DataFrame", sep: str = "\t", index: bool = False, **kwargs: Any
+) -> BytesIO:
     """Get the dataframe as bytes.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
     :param kwargs: Additional kwargs to pass to :func:`pandas.DataFrame.to_csv`.
@@ -501,7 +517,7 @@ def get_df_io(df, sep: str = "\t", index: bool = False, **kwargs) -> BytesIO:
     return bio
 
 
-def get_np_io(arr, **kwargs) -> BytesIO:
+def get_np_io(arr, **kwargs: Any) -> BytesIO:
     """Get the numpy object as bytes.
 
     :param arr: Array-like
@@ -519,7 +535,7 @@ def get_np_io(arr, **kwargs) -> BytesIO:
 def write_pickle_gz(
     obj,
     path: Union[str, Path],
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Write an object to a gzipped pickle.
 
@@ -533,11 +549,11 @@ def write_pickle_gz(
 
 
 def write_lzma_csv(
-    df,
+    df: "pandas.DataFrame",
     path: Union[str, Path],
     sep="\t",
     index: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ):
     """Write a dataframe as an lzma-compressed file.
 
@@ -556,12 +572,12 @@ def write_lzma_csv(
 
 
 def write_zipfile_csv(
-    df,
+    df: "pandas.DataFrame",
     path: Union[str, Path],
     inner_path: str,
     sep="\t",
     index: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Write a dataframe to an inner CSV file to a zip archive.
 
@@ -581,7 +597,9 @@ def write_zipfile_csv(
             file.write(bytes_io.read())
 
 
-def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs):
+def read_zipfile_csv(
+    path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs: Any
+) -> "pandas.DataFrame":
     """Read an inner CSV file from a zip archive.
 
     :param path: The path to the zip archive
@@ -589,7 +607,6 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
     :return: A dataframe
-    :rtype: pandas.DataFrame
     """
     import pandas as pd
 
@@ -599,7 +616,7 @@ def read_zipfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
 
 
 def write_zipfile_xml(
-    element_tree,
+    element_tree: "lxml.etree.ElementTree",
     path: Union[str, Path],
     inner_path: str,
     **kwargs,
@@ -607,7 +624,6 @@ def write_zipfile_xml(
     """Write an XML element tree to an inner XML file to a zip archive.
 
     :param element_tree: An XML element tree
-    :type element_tree: lxml.etree.ElementTree
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
     :param kwargs: Additional kwargs to pass to :func:`tostring`
@@ -620,14 +636,15 @@ def write_zipfile_xml(
             file.write(etree.tostring(element_tree, **kwargs))
 
 
-def read_zipfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
+def read_zipfile_xml(
+    path: Union[str, Path], inner_path: str, **kwargs: Any
+) -> "lxml.etree.ElementTree":
     """Read an inner XML file from a zip archive.
 
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the xml file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
     :return: An XML element tree
-    :rtype: lxml.etree.ElementTree
     """
     from lxml import etree
 
@@ -637,7 +654,7 @@ def read_zipfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
 
 
 def write_zipfile_np(
-    arr,
+    arr: "numpy.typing.ArrayLike",
     path: Union[str, Path],
     inner_path: str,
     **kwargs,
@@ -657,14 +674,13 @@ def write_zipfile_np(
             file.write(bytes_io.read())
 
 
-def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs):
+def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "numpy.typing.ArrayLike":
     """Read an inner numpy array-like from a zip archive.
 
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`numpy.load`.
     :return: A numpy array or other object
-    :rtype: numpy.typing.ArrayLike
     """
     import numpy as np
 
@@ -673,14 +689,13 @@ def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs):
             return np.load(file, **kwargs)
 
 
-def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs):
+def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "rdflib.Graph":
     """Read an inner RDF file from a zip archive.
 
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
     :return: A dataframe
-    :rtype: rdflib.Graph
     """
     import rdflib
 
@@ -692,7 +707,7 @@ def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs):
 
 
 def write_tarfile_csv(
-    df,
+    df: "pandas.DataFrame",
     path: Union[str, Path],
     inner_path: str,
     sep: str = "\t",
@@ -718,7 +733,9 @@ def write_tarfile_csv(
         tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
 
 
-def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs):
+def read_tarfile_csv(
+    path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs: Any
+) -> "pandas.DataFrame":
     """Read an inner CSV file from a tar archive.
 
     :param path: The path to the tar archive
@@ -726,7 +743,6 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
     :return: A dataframe
-    :rtype: pandas.DataFrame
     """
     import pandas as pd
 
@@ -735,7 +751,9 @@ def read_tarfile_csv(path: Union[str, Path], inner_path: str, sep: str = "\t", *
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
-def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
+def read_tarfile_xml(
+    path: Union[str, Path], inner_path: str, **kwargs: Any
+) -> "lxml.etree.ElementTree":
     """Read an inner XML file from a tar archive.
 
     :param path: The path to the tar archive
@@ -751,13 +769,12 @@ def read_tarfile_xml(path: Union[str, Path], inner_path: str, **kwargs):
             return etree.parse(file, **kwargs)
 
 
-def read_rdf(path: Union[str, Path], **kwargs):
+def read_rdf(path: Union[str, Path], **kwargs: Any) -> "rdflib.Graph":
     """Read an RDF file with :mod:`rdflib`.
 
     :param path: The path to the RDF file
     :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
     :return: A parsed RDF graph
-    :rtype: rdflib.Graph
     """
     import rdflib
 
@@ -773,7 +790,7 @@ def read_rdf(path: Union[str, Path], **kwargs):
     return graph
 
 
-def write_sql(df, name: str, path: Union[str, Path], **kwargs) -> None:
+def write_sql(df: "pandas.DataFrame", name: str, path: Union[str, Path], **kwargs: Any) -> None:
     """Write a dataframe as a SQL table.
 
     :param df: A dataframe

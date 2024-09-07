@@ -4,7 +4,15 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ContextManager,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from .constants import JSON, Opener, Provider
 from .impl import Module
@@ -1197,7 +1205,7 @@ def ensure_tar_df(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "pd.DataFrame":
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
 
     :param key: The module name

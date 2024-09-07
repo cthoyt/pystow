@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa
+# type: ignore
 
 """Command line interface for PyStow."""
 

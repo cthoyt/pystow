@@ -1127,7 +1127,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> "lxml.etree.ElementTree":
         """Download a tar file and open an inner file as an XML with :mod:`lxml`.
 
         :param subkeys:
