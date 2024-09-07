@@ -5,15 +5,7 @@
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generator,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Generator, Mapping, Optional, Sequence, Union
 
 from .constants import JSON, BytesOpener, Opener, Provider
 from .impl import Module
