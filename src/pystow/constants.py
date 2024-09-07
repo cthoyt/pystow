@@ -2,7 +2,7 @@
 
 """PyStow constants."""
 
-from io import BytesIO, StringIO
+from io import StringIO
 from textwrap import dedent
 from typing import IO, Any, Callable, Generator
 

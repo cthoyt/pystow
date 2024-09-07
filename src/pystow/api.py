@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    ContextManager,
     Generator,
     Mapping,
     Optional,
