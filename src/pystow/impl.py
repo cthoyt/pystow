@@ -1496,7 +1496,7 @@ class Module:
             yield conn
 
 
-def _clean_csv_kwargs(read_csv_kwargs: Mapping[str, Any] | None) -> Dict[str, Any]:
+def _clean_csv_kwargs(read_csv_kwargs: Union[None, Mapping[str, Any]]) -> Dict[str, Any]:
     read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs
