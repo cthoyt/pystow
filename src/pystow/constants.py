@@ -3,7 +3,7 @@
 """PyStow constants."""
 
 from textwrap import dedent
-from typing import IO, Any, Callable, Iterator
+from typing import IO, Any, Callable, Generator, Iterator
 
 __all__ = [
     "PYSTOW_NAME_ENVVAR",
@@ -68,6 +68,6 @@ Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
 """
 )
 
-Opener = Iterator[IO]
+Opener = Generator[IO, None, None]
 JSON = Any
 Provider = Callable[..., None]

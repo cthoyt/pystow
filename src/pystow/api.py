@@ -8,6 +8,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ContextManager,
+    Generator,
     Mapping,
     Optional,
     Sequence,
@@ -1630,7 +1631,7 @@ def ensure_open_sqlite_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Generator[str, None, None]:
     """Ensure and connect to a gzipped SQLite database.
 
     :param key:

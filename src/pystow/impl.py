@@ -7,11 +7,21 @@ import gzip
 import json
 import logging
 import lzma
+import sqlite3
 import tarfile
 import zipfile
 from contextlib import closing, contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from . import utils
 from .constants import JSON, Opener, Provider
@@ -35,11 +45,12 @@ from .utils import (
 try:
     import pickle5 as pickle
 except ImportError:
-    import pickle  # type:ignore
+    import pickle
 
 if TYPE_CHECKING:
     import botocore.client
     import lxml.etree
+    import numpy
     import pandas as pd
     import rdflib
 
@@ -182,7 +193,7 @@ class Module:
         name: str,
         force: bool = False,
         provider: Provider,
-        **kwargs,
+        **kwargs: Any,
     ) -> Path:
         """Ensure a file is present, and run a custom create function otherwise.
 
@@ -659,7 +670,7 @@ class Module:
         name: str,
         obj: "pd.DataFrame",
         sep: str = "\t",
-        index=False,
+        index: bool = False,
         to_csv_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> None:
         """Dump a dataframe to a TSV file with :mod:`pandas`.
@@ -729,7 +740,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         open_kwargs: Optional[Mapping[str, Any]] = None,
         json_load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> JSON:
         """Download BZ2-compressed JSON and open with :mod:`json`.
 
         :param subkeys:
@@ -1102,7 +1113,7 @@ class Module:
         obj: "lxml.etree.ElementTree",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         write_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> None:
         """Dump an XML element tree to a file with :mod:`lxml`.
 
         :param subkeys:
@@ -1200,7 +1211,7 @@ class Module:
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
         load_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> "numpy.typing.ArrayLike":
         """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
         :param subkeys:
@@ -1269,11 +1280,11 @@ class Module:
         cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
             with gzip.open(cache_path, "rb") as file:
-                return pickle.load(file)  # type: ignore
+                return pickle.load(file)
 
         rv = read_rdf(path=path, **(parse_kwargs or {}))
         with gzip.open(cache_path, "wb") as file:
-            pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)  # type: ignore
+            pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)
         return rv
 
     def load_rdf(
@@ -1303,7 +1314,7 @@ class Module:
         obj: "rdflib.Graph",
         format: str = "turtle",
         serialize_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> None:
         """Dump an RDF graph to a file with :mod:`rdflib`.
 
         :param subkeys:
@@ -1409,7 +1420,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database.
 
         :param subkeys:
@@ -1435,8 +1446,6 @@ class Module:
         >>> with module.ensure_open_sqlite(url=url) as conn:
         >>>     df = pd.read_sql(sql, conn)
         """
-        import sqlite3
-
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
@@ -1451,7 +1460,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-    ):
+    ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database that's gzipped.
 
         Unfortunately, it's a paid feature to directly read gzipped sqlite files,
@@ -1480,8 +1489,6 @@ class Module:
         >>> with module.ensure_open_sqlite_gz(url=url) as conn:
         >>>     df = pd.read_sql(sql, conn)
         """
-        import sqlite3
-
         path = self.ensure_gunzip(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
@@ -1489,7 +1496,7 @@ class Module:
             yield conn
 
 
-def _clean_csv_kwargs(read_csv_kwargs):
+def _clean_csv_kwargs(read_csv_kwargs: Mapping[str, Any] | None) -> Dict[str, Any]:
     read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs
