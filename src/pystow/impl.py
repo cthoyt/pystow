@@ -24,7 +24,7 @@ from typing import (
 )
 
 from . import utils
-from .constants import JSON, Opener, Provider
+from .constants import JSON, BytesOpener, Opener, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -459,7 +459,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> BytesOpener:
         """Ensure a tar file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -501,7 +501,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: str = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> BytesOpener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
         :param subkeys:

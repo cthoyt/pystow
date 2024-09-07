@@ -44,6 +44,7 @@ from .constants import (
 )
 
 if TYPE_CHECKING:
+    import botocore.client
     import lxml.etree
     import numpy.typing
     import pandas
@@ -119,7 +120,7 @@ class HexDigestError(ValueError):
         """
         self.offending_hexdigests = offending_hexdigests
 
-    def __str__(self):  # noqa:D105
+    def __str__(self) -> str:  # noqa:D105
         return "\n".join(
             (
                 "Hexdigest of downloaded file does not match the expected ones!",
@@ -243,7 +244,7 @@ def get_hashes(
     # calculate hash sums of file incrementally
     buffer = memoryview(bytearray(chunk_size))
     with path.open("rb", buffering=0) as file:
-        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):  # type: ignore
+        for this_chunk_size in iter(lambda: file.readinto(buffer), 0):
             for alg in algorithms.values():
                 alg.update(buffer[:this_chunk_size])
 
@@ -281,7 +282,7 @@ def raise_on_digest_mismatch(
         raise HexDigestError(offending_hexdigests)
 
 
-class TqdmReportHook(tqdm):
+class TqdmReportHook(tqdm):  # type:ignore
     """A custom progress bar that can be used with urllib.
 
     Based on https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
@@ -387,7 +388,7 @@ def download(
                 # Solution for progres bar from https://stackoverflow.com/a/63831344/5775947
                 total_size = int(response.headers.get("Content-Length", 0))
                 # Decompress if needed
-                response.raw.read = partial(response.raw.read, decode_content=True)
+                response.raw.read = partial(response.raw.read, decode_content=True)  # type:ignore
                 with tqdm.wrapattr(response.raw, "read", total=total_size, **_tqdm_kwargs) as fsrc:
                     shutil.copyfileobj(fsrc, file)
         else:
@@ -517,7 +518,7 @@ def get_df_io(
     return bio
 
 
-def get_np_io(arr, **kwargs: Any) -> BytesIO:
+def get_np_io(arr: "numpy.typing.ArrayLike", **kwargs: Any) -> BytesIO:
     """Get the numpy object as bytes.
 
     :param arr: Array-like
@@ -533,7 +534,7 @@ def get_np_io(arr, **kwargs: Any) -> BytesIO:
 
 
 def write_pickle_gz(
-    obj,
+    obj: Any,
     path: Union[str, Path],
     **kwargs: Any,
 ) -> None:
@@ -551,10 +552,10 @@ def write_pickle_gz(
 def write_lzma_csv(
     df: "pandas.DataFrame",
     path: Union[str, Path],
-    sep="\t",
+    sep: str = "\t",
     index: bool = False,
     **kwargs: Any,
-):
+) -> None:
     """Write a dataframe as an lzma-compressed file.
 
     :param df: A dataframe
@@ -575,7 +576,7 @@ def write_zipfile_csv(
     df: "pandas.DataFrame",
     path: Union[str, Path],
     inner_path: str,
-    sep="\t",
+    sep: str = "\t",
     index: bool = False,
     **kwargs: Any,
 ) -> None:
@@ -619,7 +620,7 @@ def write_zipfile_xml(
     element_tree: "lxml.etree.ElementTree",
     path: Union[str, Path],
     inner_path: str,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Write an XML element tree to an inner XML file to a zip archive.
 
@@ -657,7 +658,7 @@ def write_zipfile_np(
     arr: "numpy.typing.ArrayLike",
     path: Union[str, Path],
     inner_path: str,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Write a dataframe to an inner CSV file to a zip archive.
 
@@ -712,7 +713,7 @@ def write_tarfile_csv(
     inner_path: str,
     sep: str = "\t",
     index: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Write a dataframe to an inner CSV file from a tar archive.
 
@@ -782,9 +783,7 @@ def read_rdf(path: Union[str, Path], **kwargs: Any) -> "rdflib.Graph":
         path = Path(path)
     graph = rdflib.Graph()
     with (
-        gzip.open(path, "rb")  # type: ignore
-        if isinstance(path, Path) and path.suffix == ".gz"
-        else open(path)
+        gzip.open(path, "rb") if isinstance(path, Path) and path.suffix == ".gz" else open(path)
     ) as file:
         graph.parse(file, **kwargs)
     return graph
@@ -891,7 +890,7 @@ def download_from_s3(
     s3_bucket: str,
     s3_key: str,
     path: Union[str, Path],
-    client=None,
+    client: Union[None, "botocore.client.BaseClient"] = None,
     client_kwargs: Optional[Mapping[str, Any]] = None,
     download_file_kwargs: Optional[Mapping[str, Any]] = None,
     force: bool = True,

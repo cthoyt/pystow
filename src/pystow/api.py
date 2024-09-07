@@ -2,6 +2,7 @@
 
 """API functions for PyStow."""
 
+import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 from typing import (
@@ -15,7 +16,7 @@ from typing import (
     Union,
 )
 
-from .constants import JSON, Opener, Provider
+from .constants import JSON, BytesOpener, Opener, Provider
 from .impl import Module
 
 if TYPE_CHECKING:
@@ -124,7 +125,7 @@ def open(
     name: str,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Open a file that exists already.
 
     :param key:
@@ -152,7 +153,7 @@ def open_gz(
     name: str,
     mode: str = "rt",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Opener:
     """Open a gzipped file that exists already.
 
     :param key:
@@ -214,7 +215,7 @@ def ensure_custom(
     name: str,
     force: bool = False,
     provider: Provider,
-    **kwargs,
+    **kwargs: Any,
 ) -> Path:
     """Ensure a file is present, and run a custom create function otherwise.
 
@@ -391,7 +392,7 @@ def ensure_open_zip(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> BytesOpener:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
     :param key:
@@ -489,7 +490,7 @@ def ensure_open_tarfile(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> BytesOpener:
     """Ensure a tar file is downloaded and open a file inside it.
 
     :param key:
@@ -717,7 +718,7 @@ def dump_df(
     name: str,
     obj: "pd.DataFrame",
     sep: str = "\t",
-    index=False,
+    index: bool = False,
     to_csv_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> None:
     """Dump a dataframe to a TSV file with :mod:`pandas`.
@@ -1250,7 +1251,7 @@ def ensure_tar_xml(
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
     parse_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> "lxml.etree.ElementTree":
     """Download a tar file and open an inner file as an XML with :mod:`lxml`.
 
     :param key: The module name
@@ -1462,7 +1463,7 @@ def dump_rdf(
     obj: "rdflib.Graph",
     format: str = "turtle",
     serialize_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> None:
     """Dump an RDF graph to a file with :mod:`rdflib`.
 
     :param key:
@@ -1489,7 +1490,7 @@ def ensure_from_s3(
     s3_key: Union[str, Sequence[str]],
     name: Optional[str] = None,
     force: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> Path:
     """Ensure a file is downloaded.
 
@@ -1521,7 +1522,7 @@ def ensure_from_s3(
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_s3(
-        *subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force
+        *subkeys, s3_bucket=s3_bucket, s3_key=s3_key, name=name, force=force, **kwargs
     )
 
 
@@ -1587,7 +1588,7 @@ def ensure_open_sqlite(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-):
+) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a SQLite database.
 
     :param key:
@@ -1631,7 +1632,7 @@ def ensure_open_sqlite_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[str, None, None]:
+) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a gzipped SQLite database.
 
     :param key:

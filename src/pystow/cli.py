@@ -11,7 +11,7 @@ import click
 
 
 @click.group()
-def main():
+def main() -> None:
     """Run the PyStow CLI."""
 
 
