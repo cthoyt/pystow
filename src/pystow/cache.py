@@ -5,7 +5,6 @@
 import functools
 import json
 import logging
-import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
@@ -25,7 +24,7 @@ from typing import (
 try:
     import pickle5 as pickle
 except ImportError:
-    import pickle  # type:ignore
+    import pickle
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -57,7 +56,7 @@ class Cached(Generic[X], ABC):
 
     def __init__(
         self,
-        path: Union[str, Path, os.PathLike],
+        path: Union[str, Path],
         force: bool = False,
     ) -> None:
         """Instantiate the decorator.
@@ -165,7 +164,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
 
     def __init__(
         self,
-        path: Union[str, Path, os.PathLike],
+        path: Union[str, Path],
         force: bool = False,
         sep: Optional[str] = None,
         dtype: Optional[Any] = None,

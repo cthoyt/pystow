@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa
+# type: ignore
 
 """Command line interface for PyStow."""
 
@@ -10,7 +11,7 @@ import click
 
 
 @click.group()
-def main():
+def main() -> None:
     """Run the PyStow CLI."""
 
 

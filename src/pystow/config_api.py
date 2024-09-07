@@ -7,7 +7,7 @@ from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional, Type, TypeVar
+from typing import Any, Callable, Optional, Type, TypeVar, Union
 
 from .utils import getenv_path
 
@@ -131,7 +131,7 @@ def get_config(
     default: Optional[X] = None,
     dtype: Optional[Type[X]] = None,
     raise_on_missing: bool = False,
-):
+) -> Any:
     """Get a configuration value.
 
     :param module: Name of the module (e.g., ``pybel``) to get configuration for
@@ -159,13 +159,13 @@ def get_config(
     return _cast(rv, dtype)
 
 
-def _cast(rv, dtype):
+def _cast(rv: Any, dtype: Union[None, Callable[..., Any]]) -> Any:
     if not isinstance(rv, str):  # if it's not a string, it doesn't need munging
         return rv
     if dtype in (None, str):  # no munging necessary
         return rv
     if dtype in (int, float):
-        return dtype(rv)  # type: ignore
+        return dtype(rv)
     if dtype is bool:
         if rv.lower() in ("t", "true", "yes", "1", 1, True):
             return True
