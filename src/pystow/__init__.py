@@ -2,7 +2,7 @@
 
 """PyStow: Easily pick a place to store data for your python package."""
 
-from .api import (  # noqa
+from .api import (
     dump_df,
     dump_json,
     dump_pickle,
@@ -46,8 +46,59 @@ from .api import (  # noqa
     open,
     open_gz,
 )
-from .config_api import ConfigError, get_config, write_config  # noqa
-from .impl import Module  # noqa
-from .utils import ensure_readme  # noqa
+from .config_api import ConfigError, get_config, write_config
+from .impl import Module
+from .utils import ensure_readme
+
+__all__ = [
+    "dump_df",
+    "dump_json",
+    "dump_pickle",
+    "dump_rdf",
+    "dump_xml",
+    "ensure",
+    "ensure_csv",
+    "ensure_custom",
+    "ensure_excel",
+    "ensure_from_google",
+    "ensure_from_s3",
+    "ensure_gunzip",
+    "ensure_json",
+    "ensure_json_bz2",
+    "ensure_open",
+    "ensure_open_bz2",
+    "ensure_open_gz",
+    "ensure_open_lzma",
+    "ensure_open_sqlite",
+    "ensure_open_sqlite_gz",
+    "ensure_open_tarfile",
+    "ensure_open_zip",
+    "ensure_pickle",
+    "ensure_pickle_gz",
+    "ensure_rdf",
+    "ensure_tar_df",
+    "ensure_tar_xml",
+    "ensure_untar",
+    "ensure_xml",
+    "ensure_zip_df",
+    "ensure_zip_np",
+    "join",
+    "joinpath_sqlite",
+    "load_df",
+    "load_json",
+    "load_pickle",
+    "load_pickle_gz",
+    "load_rdf",
+    "load_xml",
+    "module",
+    "open",
+    "open_gz",
+    "ConfigError",
+    "get_config",
+    "write_config",
+    "Module",
+]
 
 ensure_readme()
+
+del ensure_readme
