@@ -12,6 +12,7 @@ import pickle
 import shutil
 import tarfile
 import tempfile
+import urllib.error
 import zipfile
 from collections import namedtuple
 from functools import partial
