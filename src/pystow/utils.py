@@ -12,6 +12,7 @@ import pickle
 import shutil
 import tarfile
 import tempfile
+import urllib.error
 import zipfile
 from collections import namedtuple
 from functools import partial
@@ -154,7 +155,7 @@ def get_hexdigests_remote(
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
     :param hexdigests_strict:
-        Set this to alse to stop automatically checking for the `algorithm(filename)=hash` format
+        Set this to `False` to stop automatically checking for the `algorithm(filename)=hash` format
     :returns:
         A mapping of algorithms to hexdigests
     """
@@ -342,6 +343,7 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     :raises ValueError: If an invalid backend is chosen
+    :raises DownloadError: If an error occurs during download
     """
     path = Path(path).resolve()
 
@@ -373,24 +375,34 @@ def download(
         if backend == "urllib":
             logger.info("downloading with urllib from %s to %s", url, path)
             with TqdmReportHook(**_tqdm_kwargs) as t:
-                urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
+                try:
+                    urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
+                except urllib.error.URLError as e:
+                    raise DownloadError(backend, url, path) from e
         elif backend == "requests":
             kwargs.setdefault("stream", True)
-            # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
-            # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
-                logger.info(
-                    "downloading (stream=%s) with requests from %s to %s",
-                    kwargs["stream"],
-                    url,
-                    path,
-                )
-                # Solution for progres bar from https://stackoverflow.com/a/63831344/5775947
-                total_size = int(response.headers.get("Content-Length", 0))
-                # Decompress if needed
-                response.raw.read = partial(response.raw.read, decode_content=True)  # type:ignore
-                with tqdm.wrapattr(response.raw, "read", total=total_size, **_tqdm_kwargs) as fsrc:
-                    shutil.copyfileobj(fsrc, file)
+            try:
+                # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
+                # pattern from https://stackoverflow.com/a/39217788/5775947
+                with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
+                    logger.info(
+                        "downloading (stream=%s) with requests from %s to %s",
+                        kwargs["stream"],
+                        url,
+                        path,
+                    )
+                    # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
+                    total_size = int(response.headers.get("Content-Length", 0))
+                    # Decompress if needed
+                    response.raw.read = partial(  # type:ignore[method-assign]
+                        response.raw.read, decode_content=True
+                    )
+                    with tqdm.wrapattr(
+                        response.raw, "read", total=total_size, **_tqdm_kwargs
+                    ) as fsrc:
+                        shutil.copyfileobj(fsrc, file)
+            except requests.exceptions.ConnectionError as e:
+                raise DownloadError(backend, url, path) from e
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
@@ -404,6 +416,24 @@ def download(
         hexdigests_remote=hexdigests_remote,
         hexdigests_strict=hexdigests_strict,
     )
+
+
+class DownloadError(OSError):
+    """An error that wraps information from a requests or urllib download failure."""
+
+    def __init__(self, backend: str, url: str, path: Path) -> None:
+        """Initialize the error.
+
+        :param backend: The backend used
+        :param url: The url that failed to download
+        :param path: The path that was supposed to be downloaded to
+        """
+        self.backend = backend
+        self.url = url
+        self.path = path
+
+    def __str__(self) -> str:
+        return f"Failed with {self.backend} to download {self.url} to {self.path}"
 
 
 def name_from_url(url: str) -> str:
@@ -559,7 +589,6 @@ def write_lzma_csv(
     """Write a dataframe as an lzma-compressed file.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting LZMA compressed dataframe file
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
@@ -583,7 +612,6 @@ def write_zipfile_csv(
     """Write a dataframe to an inner CSV file to a zip archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -718,7 +746,6 @@ def write_tarfile_csv(
     """Write a dataframe to an inner CSV file from a tar archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting tar archive
     :param inner_path: The path inside the tar archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -793,7 +820,6 @@ def write_sql(df: "pandas.DataFrame", name: str, path: Union[str, Path], **kwarg
     """Write a dataframe as a SQL table.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param name: The table the database to write to
     :param path: The path to the resulting tar archive
     :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
@@ -903,7 +929,6 @@ def download_from_s3(
     :param path: The place to write the file
     :param client:
         A botocore client. If none given, one will be created automatically
-    :type client: Optional[botocore.client.BaseClient]
     :param client_kwargs:
         Keyword arguments to be passed to the client on instantiation.
     :param download_file_kwargs:
@@ -1031,7 +1056,7 @@ def ensure_readme() -> None:
         readme_path = get_home(ensure_exists=True).joinpath("README.md")
     except PermissionError as e:
         raise PermissionError(
-            f"PyStow was not able to create its home directory in {readme_path.parent} due to a lack of "
+            "PyStow was not able to create its home directory in due to a lack of "
             "permissions. This can happen, e.g., if you're working on a server where you don't have full "
             "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
             "on choosing a different home folder location for PyStow to somewhere where you have write permissions."

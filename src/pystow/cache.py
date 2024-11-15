@@ -5,6 +5,7 @@
 import functools
 import json
 import logging
+import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
@@ -21,16 +22,11 @@ from typing import (
     cast,
 )
 
-try:
-    import pickle5 as pickle
-except ImportError:
-    import pickle
-
 if TYPE_CHECKING:
     import pandas as pd
 
 __all__ = [
-    # Classses
+    # Classes
     "Cached",
     "CachedPickle",
     "CachedJSON",
