@@ -559,7 +559,6 @@ def write_lzma_csv(
     """Write a dataframe as an lzma-compressed file.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting LZMA compressed dataframe file
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
@@ -583,7 +582,6 @@ def write_zipfile_csv(
     """Write a dataframe to an inner CSV file to a zip archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -718,7 +716,6 @@ def write_tarfile_csv(
     """Write a dataframe to an inner CSV file from a tar archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting tar archive
     :param inner_path: The path inside the tar archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -793,7 +790,6 @@ def write_sql(df: "pandas.DataFrame", name: str, path: Union[str, Path], **kwarg
     """Write a dataframe as a SQL table.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param name: The table the database to write to
     :param path: The path to the resulting tar archive
     :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
@@ -903,7 +899,6 @@ def download_from_s3(
     :param path: The place to write the file
     :param client:
         A botocore client. If none given, one will be created automatically
-    :type client: Optional[botocore.client.BaseClient]
     :param client_kwargs:
         Keyword arguments to be passed to the client on instantiation.
     :param download_file_kwargs:
