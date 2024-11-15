@@ -2,6 +2,7 @@
 
 """API functions for PyStow."""
 
+import bz2
 import sqlite3
 from contextlib import contextmanager
 from io import BytesIO, StringIO
@@ -374,6 +375,35 @@ def ensure_gunzip(
     )
 
 
+@overload
+@contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["r", "rt", "w", "wt"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[StringIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["rb", "wb"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[BytesIO, None, None]: ...
+
+
 @contextmanager
 def ensure_open(
     key: str,
@@ -384,7 +414,7 @@ def ensure_open(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Ensure a file is downloaded and open it.
 
     :param key:
@@ -578,7 +608,7 @@ def ensure_open_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Generator[BytesIO, None, None]:
     """Ensure a gzipped file is downloaded and open a file inside it.
@@ -627,7 +657,7 @@ def ensure_open_bz2(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[bz2.BZ2File, None, None]:
     """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
     :param key:
