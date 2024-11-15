@@ -373,7 +373,10 @@ def download(
         if backend == "urllib":
             logger.info("downloading with urllib from %s to %s", url, path)
             with TqdmReportHook(**_tqdm_kwargs) as t:
-                urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
+                try:
+                    urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
+                except urllib.error.URLError as e:
+                    raise OSError(f"Failed to download {url} to {path}") from e
         elif backend == "requests":
             kwargs.setdefault("stream", True)
             # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
