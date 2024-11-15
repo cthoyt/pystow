@@ -385,7 +385,7 @@ def download(
                     url,
                     path,
                 )
-                # Solution for progres bar from https://stackoverflow.com/a/63831344/5775947
+                # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
                 total_size = int(response.headers.get("Content-Length", 0))
                 # Decompress if needed
                 response.raw.read = partial(response.raw.read, decode_content=True)  # type:ignore
