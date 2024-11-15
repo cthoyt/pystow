@@ -1031,7 +1031,7 @@ def ensure_readme() -> None:
         readme_path = get_home(ensure_exists=True).joinpath("README.md")
     except PermissionError as e:
         raise PermissionError(
-            f"PyStow was not able to create its home directory in {readme_path.parent} due to a lack of "
+            "PyStow was not able to create its home directory in due to a lack of "
             "permissions. This can happen, e.g., if you're working on a server where you don't have full "
             "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
             "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
