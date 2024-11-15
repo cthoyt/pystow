@@ -2,6 +2,9 @@
 
 """API functions for PyStow."""
 
+import bz2
+import io
+import lzma
 import sqlite3
 from contextlib import contextmanager
 from io import BytesIO, StringIO
@@ -18,7 +21,7 @@ from typing import (
     overload,
 )
 
-from .constants import JSON, BytesOpener, Opener, Provider
+from .constants import JSON, BytesOpener, Provider
 from .impl import Module, VersionHint
 
 if TYPE_CHECKING:
@@ -214,14 +217,39 @@ def open(
         yield file
 
 
+# docstr-coverage:excused `overload`
+@overload
 @contextmanager
 def open_gz(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "rt",
+    mode: Literal["r", "w", "rt", "wt"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[StringIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def open_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["rb", "wb"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[BytesIO, None, None]: ...
+
+
+@contextmanager
+def open_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+    ensure_exists: bool = False,
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Open a gzipped file that exists already.
 
     :param key:
@@ -234,11 +262,14 @@ def open_gz(
     :param name: The name of the file to open
     :param mode: The read mode, passed to :func:`gzip.open`
     :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+    :param ensure_exists: Should the file be made? Set to true on write operations.
 
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    with _module.open_gz(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+    with _module.open_gz(
+        *subkeys, name=name, mode=mode, open_kwargs=open_kwargs, ensure_exists=ensure_exists
+    ) as file:
         yield file
 
 
@@ -426,6 +457,36 @@ def ensure_gunzip(
     )
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["r", "rt", "w", "wt"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[StringIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["rb", "wb"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[BytesIO, None, None]: ...
+
+
 @contextmanager
 def ensure_open(
     key: str,
@@ -434,9 +495,9 @@ def ensure_open(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "r",
+    mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Ensure a file is downloaded and open it.
 
     :param key:
@@ -524,6 +585,36 @@ def ensure_open_zip(
         yield yv
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_lzma(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["r", "w", "rt", "wt"] = "rt",
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_lzma(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["rb", "wb"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[lzma.LZMAFile, None, None]: ...
+
+
 @contextmanager
 def ensure_open_lzma(
     key: str,
@@ -532,9 +623,9 @@ def ensure_open_lzma(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "r",
+    mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
     """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
     :param key:
@@ -622,6 +713,23 @@ def ensure_open_tarfile(
         yield yv
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str],
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]],
+    mode: Literal["r", "w", "rt", "wt"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[StringIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
 @contextmanager
 def ensure_open_gz(
     key: str,
@@ -630,9 +738,22 @@ def ensure_open_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb", "wb"] = ...,
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[BytesIO, None, None]: ...
+
+
+@contextmanager
+def ensure_open_gz(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: Optional[str] = None,
+    force: bool = False,
+    download_kwargs: Optional[Mapping[str, Any]] = None,
+    mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key:
@@ -677,9 +798,9 @@ def ensure_open_bz2(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[bz2.BZ2File, None, None]:
     """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
     :param key:
@@ -984,7 +1105,7 @@ def ensure_pickle(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
@@ -1090,7 +1211,7 @@ def ensure_pickle_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
@@ -1131,7 +1252,7 @@ def load_pickle_gz(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:

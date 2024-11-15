@@ -4,6 +4,7 @@
 
 import bz2
 import gzip
+import io
 import json
 import logging
 import lzma
@@ -30,7 +31,7 @@ from typing import (
 )
 
 from . import utils
-from .constants import JSON, BytesOpener, Opener, Provider
+from .constants import JSON, BytesOpener, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -393,6 +394,34 @@ class Module:
             path.unlink()
         return gunzipped_path
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "rt", "w", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[StringIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[BytesIO, None, None]: ...
+
     @contextmanager
     def ensure_open(
         self,
@@ -401,9 +430,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "r",
+        mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Ensure a file is downloaded and open it.
 
         :param subkeys:
@@ -430,6 +459,25 @@ class Module:
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
             yield file
+
+    @staticmethod
+    def _raise_for_mode_ensure_mismatch(
+        mode: Literal["r", "rt", "w", "wt", "wb", "rb"], ensure_exists: bool
+    ) -> None:
+        """Raise an exception for a mismatch between the mode and the ensure status.
+
+        :param mode: The file opening mode
+        :param ensure_exists: The value for ensuring a file
+        :raises ValueError: In the following situations:
+
+            1. If the file should be opened in write mode, and it is not ensured to exist
+            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
+               it will create a file when there previously wasn't one
+        """
+        if "w" in mode and not ensure_exists:
+            raise ValueError
+        if "r" in mode and ensure_exists:
+            raise ValueError
 
     # docstr-coverage:excused `overload`
     @overload
@@ -473,11 +521,6 @@ class Module:
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
-        :raises ValueError: In the following situations:
-
-            1. If the file should be opened in write mode, and it is not ensured to exist
-            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
-               it will create a file when there previously wasn't one
 
         :yields: An open file object.
 
@@ -491,26 +534,46 @@ class Module:
                 print("Test text!", file=file)
 
         """
-        if "w" in mode and not ensure_exists:
-            raise ValueError
-        if "r" in mode and ensure_exists:
-            raise ValueError
-
+        self._raise_for_mode_ensure_mismatch(mode, ensure_exists)
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
             yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
     @contextmanager
     def open_gz(
         self,
         *subkeys: str,
         name: str,
-        mode: str = "rt",
+        mode: Literal["r", "w", "rt", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+        ensure_exists: bool,
+    ) -> Generator[StringIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def open_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+        ensure_exists: bool,
+    ) -> Generator[BytesIO, None, None]: ...
+
+    @contextmanager
+    def open_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         ensure_exists: bool = False,
-    ) -> Opener:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Open a gzipped file that exists already.
 
         :param subkeys:
@@ -523,11 +586,40 @@ class Module:
 
         :yields: An open file object
         """
+        self._raise_for_mode_ensure_mismatch(mode, ensure_exists)
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with gzip.open(path, **open_kwargs) as file:
             yield file
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "w", "rt", "wt"] = "rt",
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[lzma.LZMAFile, None, None]: ...
 
     @contextmanager
     def ensure_open_lzma(
@@ -537,9 +629,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rt",
+        mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -651,6 +743,37 @@ class Module:
             with zip_file.open(inner_path) as file:
                 yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "w", "rt", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal[
+            "rb",
+            "wb",
+        ] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
+
     @contextmanager
     def ensure_open_gz(
         self,
@@ -659,9 +782,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -697,9 +820,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[bz2.BZ2File, None, None]:
         """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -940,7 +1063,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -1038,7 +1161,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -1076,7 +1199,7 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -1096,6 +1219,7 @@ class Module:
             name=name,
             mode=mode,
             open_kwargs=open_kwargs,
+            ensure_exists=False,
         ) as file:
             return pickle.load(file, **(pickle_load_kwargs or {}))
 
