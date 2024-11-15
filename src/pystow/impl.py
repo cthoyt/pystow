@@ -183,11 +183,7 @@ class Module:
     def _raise_for_invalid_version(version: str) -> None:
         if "/" in version or os.sep in version:
             raise ValueError(
-                f"slashes not allowed in versions because of conflicts with file path construction: {version}"
-            )
-        if os.sep in version:
-            raise ValueError(
-                f"path separator `{os.sep}` not allowed in versions because of "
+                f"slashes and `{os.sep}` not allowed in versions because of "
                 f"conflicts with file path construction: {version}"
             )
 

@@ -225,6 +225,9 @@ class TestJoin(unittest.TestCase):
                 pystow.join(key, *parts, version=_version_getter, name=name),
             )
 
+            with self.assertRaises(ValueError):
+                pystow.join(key, version="/")
+
     def test_ensure(self):
         """Test ensuring various files."""
         write_pickle_gz(TEST_TSV_ROWS, path=PICKLE_GZ_PATH)
