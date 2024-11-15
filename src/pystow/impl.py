@@ -170,7 +170,7 @@ class Module:
             version = version()
         if version:
             self._raise_for_invalid_version(version)
-            subkeys = [version, *subkeys]
+            subkeys = (version, *subkeys)
 
         if subkeys:
             rv = rv.joinpath(*subkeys)
@@ -187,7 +187,8 @@ class Module:
             )
         if os.sep in version:
             raise ValueError(
-                f"path separator `{os.sep}` not allowed in versions because of conflicts with file path construction: {version}"
+                f"path separator `{os.sep}` not allowed in versions because of "
+                f"conflicts with file path construction: {version}"
             )
 
     def joinpath_sqlite(self, *subkeys: str, name: str) -> str:

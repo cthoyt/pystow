@@ -195,7 +195,6 @@ class TestJoin(unittest.TestCase):
 
     def test_join_with_version(self):
         """Test the join function when a version is present."""
-
         with self.mock_directory():
             key = "key"
             version = "v1"

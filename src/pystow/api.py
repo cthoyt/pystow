@@ -128,7 +128,7 @@ def join(
             # Assume you want to download the data from
             # ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz, make a path
             # with the same name
-            path = pystow.join(name="rhea.rdf.gz", version=get_rhea_version)
+            path = pystow.join("rhea", name="rhea.rdf.gz", version=get_rhea_version)
 
     :return:
         The path of the directory or subdirectory for the given module.
@@ -216,6 +216,29 @@ def ensure(
     :param name:
         Overrides the name of the file at the end of the URL, if given. Also
         useful for URLs that don't have proper filenames with extensions.
+    :param version:
+        The optional version, or no-argument callable that returns
+        an optional version. This is prepended before the subkeys.
+
+        The following example describes how to store the versioned data
+        from the Rhea database for biologically relevant chemical reactions.
+
+        .. code-block::
+
+            import pystow
+            import requests
+
+            def get_rhea_version() -> str:
+                res = requests.get("https://ftp.expasy.org/databases/rhea/rhea-release.properties")
+                _, _, version = res.text.splitlines()[0].partition("=")
+                return version
+
+            path = pystow.ensure(
+                "rhea",
+                url="ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz",
+                version=get_rhea_version,
+            )
+
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
