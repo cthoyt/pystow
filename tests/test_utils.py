@@ -15,6 +15,7 @@ from lxml import etree
 from requests_file import FileAdapter
 
 from pystow.utils import (
+    DownloadError,
     HexDigestError,
     download,
     get_hexdigests_remote,
@@ -210,7 +211,7 @@ class TestDownload(unittest.TestCase):
 
     def test_bad_file_error(self):
         """Test that urllib errors are handled properly."""
-        with self.assertRaises(OSError):
+        with self.assertRaises(DownloadError):
             download(
                 url=self.bad_url,
                 path=self.path_for_bad_url,
@@ -220,7 +221,7 @@ class TestDownload(unittest.TestCase):
 
     def test_requests_error_stream(self):
         """Test that requests errors are handled properly."""
-        with self.assertRaises(OSError):
+        with self.assertRaises(DownloadError):
             download(
                 url=self.bad_url,
                 path=self.path_for_bad_url,
@@ -231,7 +232,7 @@ class TestDownload(unittest.TestCase):
 
     def test_requests_error_sync(self):
         """Test that requests errors are handled properly."""
-        with self.assertRaises(OSError):
+        with self.assertRaises(DownloadError):
             download(
                 url=self.bad_url,
                 path=self.path_for_bad_url,

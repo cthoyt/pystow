@@ -422,13 +422,17 @@ class DownloadError(OSError):
     """An error that wraps information from a requests or urllib download failure."""
 
     def __init__(self, backend: str, url: str, path: Path) -> None:
-        """Initialize the error."""
+        """Initialize the error.
+
+        :param backend: The backend used
+        :param url: The url that failed to download
+        :param path: The path that was supposed to be downloaded to
+        """
         self.backend = backend
         self.url = url
         self.path = path
 
     def __str__(self) -> str:
-        """Summarize the download error."""
         return f"Failed with {self.backend} to download {self.url} to {self.path}"
 
 
