@@ -359,6 +359,7 @@ class Module:
         with path.open(**open_kwargs) as file:
             yield file
 
+    # docstr-coverage:excused `overload`
     @overload
     @contextmanager
     def open(
@@ -370,6 +371,7 @@ class Module:
         ensure_exists: bool,
     ) -> Generator[StringIO, None, None]: ...
 
+    # docstr-coverage:excused `overload`
     @overload
     @contextmanager
     def open(
@@ -402,7 +404,7 @@ class Module:
 
         :yields: An open file object
 
-        :raises ValueError:
+        :raises ValueError: In the following situations:
 
             1. If the file should be opened in write mode, and it is not ensured to exist
             2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
@@ -823,7 +825,7 @@ class Module:
         :returns: A JSON object (list, dict, etc.)
         """
         with self.open(
-            *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=True
+            *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=False
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
 

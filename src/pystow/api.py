@@ -120,6 +120,7 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextmanager
 def open(
@@ -131,6 +132,7 @@ def open(
 ) -> Generator[StringIO, None, None]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextmanager
 def open(
