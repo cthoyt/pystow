@@ -321,6 +321,34 @@ class Module:
             path.unlink()
         return gunzipped_path
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "rt", "w", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[StringIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[BytesIO, None, None]: ...
+
     @contextmanager
     def ensure_open(
         self,
@@ -329,9 +357,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "r",
+        mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Ensure a file is downloaded and open it.
 
         :param subkeys:
@@ -435,10 +463,10 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: str = "rt",
+        mode: Literal["rb"] = "rb",  # TODO extend to other modes, requires overloads
         open_kwargs: Optional[Mapping[str, Any]] = None,
         ensure_exists: bool = False,
-    ) -> Opener:
+    ) -> Generator[BytesIO, None, None]:
         """Open a gzipped file that exists already.
 
         :param subkeys:
@@ -587,9 +615,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",  # TODO extend to other modes, requires overloads
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[BytesIO, None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -868,7 +896,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -966,7 +994,7 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -1004,7 +1032,7 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:

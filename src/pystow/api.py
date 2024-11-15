@@ -191,9 +191,9 @@ def open_gz(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "rt",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[BytesIO, None, None]:
     """Open a gzipped file that exists already.
 
     :param key:
@@ -382,7 +382,7 @@ def ensure_open(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "r",
+    mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Opener:
     """Ensure a file is downloaded and open it.
@@ -580,7 +580,7 @@ def ensure_open_gz(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: str = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
+) -> Generator[BytesIO, None, None]:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key:
@@ -625,7 +625,7 @@ def ensure_open_bz2(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Opener:
     """Ensure a BZ2-compressed file is downloaded and open a file inside it.
@@ -932,7 +932,7 @@ def ensure_pickle(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
@@ -1038,7 +1038,7 @@ def ensure_pickle_gz(
     name: Optional[str] = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
@@ -1079,7 +1079,7 @@ def load_pickle_gz(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
