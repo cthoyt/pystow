@@ -4,6 +4,7 @@
 
 import bz2
 import gzip
+import io
 import json
 import logging
 import lzma
@@ -27,7 +28,7 @@ from typing import (
 )
 
 from . import utils
-from .constants import JSON, BytesOpener, Opener, Provider
+from .constants import JSON, BytesOpener, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -485,6 +486,32 @@ class Module:
         with gzip.open(path, **open_kwargs) as file:
             yield file
 
+    @overload
+    @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "w", "rt", "wt"] = "rt",
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
+
+    @overload
+    @contextmanager
+    def ensure_open_lzma(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[lzma.LZMAFile, None, None]: ...
+
     @contextmanager
     def ensure_open_lzma(
         self,
@@ -493,9 +520,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: str = "rt",
+        mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Opener:
+    ) -> Generator[Union[lzma.LZMAFile, io.TextIOWrapper[lzma.LZMAFile]], None, None]:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
