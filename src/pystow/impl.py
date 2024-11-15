@@ -11,6 +11,7 @@ import lzma
 import os
 import pickle
 import sqlite3
+import sys
 import tarfile
 import zipfile
 from contextlib import closing, contextmanager
@@ -49,10 +50,10 @@ from .utils import (
     read_zipfile_csv,
 )
 
-try:
-    from typing import TypeAlias
-except ImportError:
+if sys.version_info <= (3, 9):
     from typing_extensions import TypeAlias
+else:
+    from typing import TypeAlias
 
 if TYPE_CHECKING:
     import botocore.client
