@@ -375,6 +375,7 @@ def ensure_gunzip(
     )
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextmanager
 def ensure_open(
