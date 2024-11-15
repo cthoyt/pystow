@@ -4,8 +4,19 @@
 
 import sqlite3
 from contextlib import contextmanager
+from io import BytesIO, StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, Mapping, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generator,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+    overload,
+)
 
 from .constants import JSON, BytesOpener, Opener, Provider
 from .impl import Module
@@ -109,15 +120,38 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
 
 
+@overload
 @contextmanager
 def open(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "r",
+    mode: Literal["r", "rt", "w", "wt"] = "r",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Opener:
-    """Open a file that exists already.
+) -> Generator[StringIO, None, None]: ...
+
+
+@overload
+@contextmanager
+def open(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["rb", "wb"],
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Generator[BytesIO, None, None]: ...
+
+
+@contextmanager
+def open(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["r", "rb", "rt", "w", "wb", "wt"] = "r",
+    open_kwargs: Optional[Mapping[str, Any]] = None,
+    ensure_exists: bool = False,
+) -> Generator[Union[StringIO, BytesIO], None, None]:
+    """Open a file.
 
     :param key:
         The name of the module. No funny characters. The envvar
@@ -127,13 +161,16 @@ def open(
         A sequence of additional strings to join. If none are given,
         returns the directory for this module.
     :param name: The name of the file to open
-    :param mode: The read mode, passed to :func:`open`
+    :param mode: The read or write mode, passed to :func:`open`
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
 
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    with _module.open(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+    with _module.open(
+        *subkeys, name=name, mode=mode, open_kwargs=open_kwargs, ensure_exists=ensure_exists
+    ) as file:
         yield file
 
 
@@ -924,7 +961,7 @@ def load_pickle(
     key: str,
     *subkeys: str,
     name: str,
-    mode: str = "rb",
+    mode: Literal["rb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Any:
@@ -955,7 +992,7 @@ def dump_pickle(
     *subkeys: str,
     name: str,
     obj: Any,
-    mode: str = "wb",
+    mode: Literal["wb"] = "wb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
     pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> None:

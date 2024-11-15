@@ -11,16 +11,19 @@ import sqlite3
 import tarfile
 import zipfile
 from contextlib import closing, contextmanager
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
     Generator,
+    Literal,
     Mapping,
     Optional,
     Sequence,
     Union,
+    overload,
 )
 
 from . import utils
@@ -356,15 +359,37 @@ class Module:
         with path.open(**open_kwargs) as file:
             yield file
 
+    @overload
     @contextmanager
     def open(
         self,
         *subkeys: str,
         name: str,
-        mode: str = "r",
+        mode: Literal["r", "rt", "w", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        ensure_exists: bool,
+    ) -> Generator[StringIO, None, None]: ...
+
+    @overload
+    @contextmanager
+    def open(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]] = None,
+        ensure_exists: bool,
+    ) -> Generator[BytesIO, None, None]: ...
+
+    @contextmanager
+    def open(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         ensure_exists: bool = False,
-    ) -> Opener:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Open a file that exists already.
 
         :param subkeys:
@@ -373,10 +398,15 @@ class Module:
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param ensure_exists: Should the file be made? Set to true on write operations.
+        :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
 
         :yields: An open file object
         """
+        if "w" in mode and not ensure_exists:
+            raise ValueError
+        if "r" in mode and ensure_exists:
+            raise ValueError
+
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
@@ -661,7 +691,7 @@ class Module:
         """
         import pandas as pd
 
-        with self.open(*subkeys, name=name) as file:
+        with self.open(*subkeys, name=name, mode="r", ensure_exists=False) as file:
             return pd.read_csv(file, **_clean_csv_kwargs(read_csv_kwargs))
 
     def dump_df(
@@ -859,7 +889,7 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: str = "rb",
+        mode: Literal["rb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Any:
@@ -879,6 +909,7 @@ class Module:
             name=name,
             mode=mode,
             open_kwargs=open_kwargs,
+            ensure_exists=False,
         ) as file:
             return pickle.load(file, **(pickle_load_kwargs or {}))
 
@@ -887,7 +918,7 @@ class Module:
         *subkeys: str,
         name: str,
         obj: Any,
-        mode: str = "wb",
+        mode: Literal["wb"] = "wb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> None:
@@ -907,6 +938,7 @@ class Module:
             name=name,
             mode=mode,
             open_kwargs=open_kwargs,
+            ensure_exists=True,
         ) as file:
             pickle.dump(obj, file, **(pickle_dump_kwargs or {}))
 
@@ -1103,7 +1135,7 @@ class Module:
         """
         from lxml import etree
 
-        with self.open(*subkeys, name=name, ensure_exists=False) as file:
+        with self.open(*subkeys, mode="r", name=name, ensure_exists=False) as file:
             return etree.parse(file, **(parse_kwargs or {}))
 
     def dump_xml(
