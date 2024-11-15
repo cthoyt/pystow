@@ -22,7 +22,7 @@ from typing import (
 )
 
 from .constants import JSON, BytesOpener, Provider
-from .impl import Module
+from .impl import Module, VersionHint
 
 if TYPE_CHECKING:
     import lxml.etree
@@ -102,7 +102,13 @@ def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
     return Module.from_key(key, *subkeys, ensure_exists=ensure_exists)
 
 
-def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: bool = True) -> Path:
+def join(
+    key: str,
+    *subkeys: str,
+    name: Optional[str] = None,
+    ensure_exists: bool = True,
+    version: VersionHint = None,
+) -> Path:
     """Return the home data directory for the given module.
 
     :param key:
@@ -116,11 +122,33 @@ def join(key: str, *subkeys: str, name: Optional[str] = None, ensure_exists: boo
     :param ensure_exists:
         Should all directories be created automatically?
         Defaults to true.
+    :param version:
+        The optional version, or no-argument callable that returns
+        an optional version. This is prepended before the subkeys.
+
+        The following example describes how to store the versioned data
+        from the Rhea database for biologically relevant chemical reactions.
+
+        .. code-block::
+
+            import pystow
+            import requests
+
+            def get_rhea_version() -> str:
+                res = requests.get("https://ftp.expasy.org/databases/rhea/rhea-release.properties")
+                _, _, version = res.text.splitlines()[0].partition("=")
+                return version
+
+            # Assume you want to download the data from
+            # ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz, make a path
+            # with the same name
+            path = pystow.join("rhea", name="rhea.rdf.gz", version=get_rhea_version)
+
     :return:
         The path of the directory or subdirectory for the given module.
     """
     _module = Module.from_key(key, ensure_exists=ensure_exists)
-    return _module.join(*subkeys, name=name, ensure_exists=ensure_exists)
+    return _module.join(*subkeys, name=name, ensure_exists=ensure_exists, version=version)
 
 
 # docstr-coverage:excused `overload`
@@ -250,6 +278,7 @@ def ensure(
     *subkeys: str,
     url: str,
     name: Optional[str] = None,
+    version: VersionHint = None,
     force: bool = False,
     download_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Path:
@@ -267,6 +296,29 @@ def ensure(
     :param name:
         Overrides the name of the file at the end of the URL, if given. Also
         useful for URLs that don't have proper filenames with extensions.
+    :param version:
+        The optional version, or no-argument callable that returns
+        an optional version. This is prepended before the subkeys.
+
+        The following example describes how to store the versioned data
+        from the Rhea database for biologically relevant chemical reactions.
+
+        .. code-block::
+
+            import pystow
+            import requests
+
+            def get_rhea_version() -> str:
+                res = requests.get("https://ftp.expasy.org/databases/rhea/rhea-release.properties")
+                _, _, version = res.text.splitlines()[0].partition("=")
+                return version
+
+            path = pystow.ensure(
+                "rhea",
+                url="ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz",
+                version=get_rhea_version,
+            )
+
     :param force:
         Should the download be done again, even if the path already exists?
         Defaults to false.
@@ -276,7 +328,7 @@ def ensure(
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure(
-        *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        *subkeys, url=url, name=name, version=version, force=force, download_kwargs=download_kwargs
     )
 
 

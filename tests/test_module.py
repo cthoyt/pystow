@@ -60,7 +60,6 @@ JSON_BZ2_NAME = "test_1.json.bz2"
 JSON_BZ2_URL = f"{n()}/{JSON_BZ2_NAME}"
 JSON_BZ2_PATH = RESOURCES / JSON_BZ2_NAME
 
-
 MOCK_FILES: Mapping[str, Path] = {
     TSV_URL: RESOURCES / TSV_NAME,
     JSON_URL: JSON_PATH,
@@ -124,7 +123,7 @@ class TestMocks(unittest.TestCase):
             self.assertFalse(expected_path.exists())
 
 
-class TestGet(unittest.TestCase):
+class TestJoin(unittest.TestCase):
     """Tests for :mod:`pystow`."""
 
     def setUp(self) -> None:
@@ -175,15 +174,15 @@ class TestGet(unittest.TestCase):
         :param parts: The file path parts that are joined with this test case's directory
         :return: A path to the file
         """
-        return Path(os.path.join(self.directory.name, *parts))
+        return Path(self.directory.name).joinpath(*parts)
 
     def test_mock(self):
         """Test that mocking the directory works properly for this test case."""
         with self.mock_directory():
             self.assertEqual(os.getenv(PYSTOW_HOME_ENVVAR), self.directory.name)
 
-    def test_get(self):
-        """Test the :func:`get` function."""
+    def test_join(self):
+        """Test the :func:`pystow.join` function."""
         parts_examples = [
             [n()],
             [n(), n()],
@@ -193,6 +192,41 @@ class TestGet(unittest.TestCase):
             for parts in parts_examples:
                 with self.subTest(parts=parts):
                     self.assertEqual(self.join(*parts), join(*parts))
+
+    def test_join_with_version(self):
+        """Test the join function when a version is present."""
+        with self.mock_directory():
+            key = "key"
+            version = "v1"
+            self.assertEqual(
+                self.join(key, version),
+                pystow.join(key, version=version),
+            )
+
+            parts = [n()]
+            self.assertEqual(
+                self.join(key, version, *parts), pystow.join(key, *parts, version=version)
+            )
+
+            parts = [n()]
+            name = "yup.tsv"
+            self.assertEqual(
+                self.join(key, version, *parts, name),
+                pystow.join(key, *parts, version=version, name=name),
+            )
+
+            def _version_getter() -> str:
+                return "v2"
+
+            parts = [n()]
+            name = "yup.tsv"
+            self.assertEqual(
+                self.join(key, _version_getter(), *parts, name),
+                pystow.join(key, *parts, version=_version_getter, name=name),
+            )
+
+            with self.assertRaises(ValueError):
+                pystow.join(key, version="/")
 
     def test_ensure(self):
         """Test ensuring various files."""
