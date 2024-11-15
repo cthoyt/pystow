@@ -388,6 +388,25 @@ class Module:
         with path.open(**open_kwargs) as file:
             yield file
 
+    @staticmethod
+    def _raise_for_mode_ensure_mismatch(
+        mode: Literal["r", "rt", "w", "wt", "wb", "rb"], ensure_exists: bool
+    ) -> None:
+        """Raise an exception for a mismatch between the mode and the ensure status.
+
+        :param mode: The file opening mode
+        :param ensure_exists: The value for ensuring a file
+        :raises ValueError: In the following situations:
+
+            1. If the file should be opened in write mode, and it is not ensured to exist
+            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
+               it will create a file when there previously wasn't one
+        """
+        if "w" in mode and not ensure_exists:
+            raise ValueError
+        if "r" in mode and ensure_exists:
+            raise ValueError
+
     # docstr-coverage:excused `overload`
     @overload
     @contextmanager
@@ -430,11 +449,6 @@ class Module:
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
-        :raises ValueError: In the following situations:
-
-            1. If the file should be opened in write mode, and it is not ensured to exist
-            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
-               it will create a file when there previously wasn't one
 
         :yields: An open file object.
 
@@ -448,26 +462,46 @@ class Module:
                 print("Test text!", file=file)
 
         """
-        if "w" in mode and not ensure_exists:
-            raise ValueError
-        if "r" in mode and ensure_exists:
-            raise ValueError
-
+        self._raise_for_mode_ensure_mismatch(mode, ensure_exists)
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with path.open(**open_kwargs) as file:
             yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
     @contextmanager
     def open_gz(
         self,
         *subkeys: str,
         name: str,
-        mode: Literal["rb"] = "rb",  # TODO extend to other modes, requires overloads
+        mode: Literal["r", "w", "rt", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+        ensure_exists: bool,
+    ) -> Generator[StringIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def open_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Literal["rb", "wb"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+        ensure_exists: bool,
+    ) -> Generator[BytesIO, None, None]: ...
+
+    @contextmanager
+    def open_gz(
+        self,
+        *subkeys: str,
+        name: str,
+        mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
         ensure_exists: bool = False,
-    ) -> Generator[BytesIO, None, None]:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Open a gzipped file that exists already.
 
         :param subkeys:
@@ -480,6 +514,7 @@ class Module:
 
         :yields: An open file object
         """
+        self._raise_for_mode_ensure_mismatch(mode, ensure_exists)
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
@@ -498,7 +533,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]],
         mode: Literal["r", "w", "rt", "wt"] = "rt",
         open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
+    ) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -524,7 +559,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[Union[lzma.LZMAFile, io.TextIOWrapper[lzma.LZMAFile]], None, None]:
+    ) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -1112,6 +1147,7 @@ class Module:
             name=name,
             mode=mode,
             open_kwargs=open_kwargs,
+            ensure_exists=False,
         ) as file:
             return pickle.load(file, **(pickle_load_kwargs or {}))
 

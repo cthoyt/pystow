@@ -189,14 +189,39 @@ def open(
         yield file
 
 
+# docstr-coverage:excused `overload`
+@overload
 @contextmanager
 def open_gz(
     key: str,
     *subkeys: str,
     name: str,
-    mode: Literal["rb"] = "rb",
+    mode: Literal["r", "w", "rt", "wt"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[StringIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def open_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["rb", "wb"] = ...,
+    open_kwargs: Optional[Mapping[str, Any]],
+) -> Generator[BytesIO, None, None]: ...
+
+
+@contextmanager
+def open_gz(
+    key: str,
+    *subkeys: str,
+    name: str,
+    mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[BytesIO, None, None]:
+    ensure_exists: bool = False,
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Open a gzipped file that exists already.
 
     :param key:
@@ -209,11 +234,14 @@ def open_gz(
     :param name: The name of the file to open
     :param mode: The read mode, passed to :func:`gzip.open`
     :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
+    :param ensure_exists: Should the file be made? Set to true on write operations.
 
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    with _module.open_gz(*subkeys, name=name, mode=mode, open_kwargs=open_kwargs) as file:
+    with _module.open_gz(
+        *subkeys, name=name, mode=mode, open_kwargs=open_kwargs, ensure_exists=ensure_exists
+    ) as file:
         yield file
 
 
@@ -517,7 +545,7 @@ def ensure_open_lzma(
     download_kwargs: Optional[Mapping[str, Any]],
     mode: Literal["r", "w", "rt", "wt"] = "rt",
     open_kwargs: Optional[Mapping[str, Any]],
-) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
+) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -545,7 +573,7 @@ def ensure_open_lzma(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[Union[lzma.LZMAFile, io.TextIOWrapper[lzma.LZMAFile]], None, None]:
+) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
     """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
     :param key:
