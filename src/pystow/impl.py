@@ -683,7 +683,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]],
         mode: Literal["r", "w", "rt", "wt"] = ...,
         open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator[StringIO | BytesIO, None, None]: ...
+    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -700,7 +700,7 @@ class Module:
             "wb",
         ] = ...,
         open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator[StringIO | BytesIO, None, None]: ...
+    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
 
     @contextmanager
     def ensure_open_gz(
@@ -712,7 +712,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]] = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[StringIO | BytesIO, None, None]:
+    ) -> Generator[Union[StringIO, BytesIO], None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
