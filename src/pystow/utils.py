@@ -343,6 +343,7 @@ def download(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     :raises ValueError: If an invalid backend is chosen
+    :raises DownloadError: If an error occurs during download
     """
     path = Path(path).resolve()
 
@@ -377,7 +378,7 @@ def download(
                 try:
                     urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
                 except urllib.error.URLError as e:
-                    raise OSError(f"Failed to download {url} to {path}") from e
+                    raise DownloadError(backend, url, path) from e
         elif backend == "requests":
             kwargs.setdefault("stream", True)
             try:
@@ -393,15 +394,15 @@ def download(
                     # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
                     total_size = int(response.headers.get("Content-Length", 0))
                     # Decompress if needed
-                    response.raw.read = partial(
+                    response.raw.read = partial(  # type:ignore[method-assign]
                         response.raw.read, decode_content=True
-                    )  # type:ignore
+                    )
                     with tqdm.wrapattr(
                         response.raw, "read", total=total_size, **_tqdm_kwargs
                     ) as fsrc:
                         shutil.copyfileobj(fsrc, file)
             except requests.exceptions.ConnectionError as e:
-                raise OSError(f"Failed to download {url} to {path}") from e
+                raise DownloadError(backend, url, path) from e
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
@@ -415,6 +416,20 @@ def download(
         hexdigests_remote=hexdigests_remote,
         hexdigests_strict=hexdigests_strict,
     )
+
+
+class DownloadError(OSError):
+    """An error that wraps information from a requests or urllib download failure."""
+
+    def __init__(self, backend: str, url: str, path: Path) -> None:
+        """Initialize the error."""
+        self.backend = backend
+        self.url = url
+        self.path = path
+
+    def __str__(self) -> str:
+        """Summarize the download error."""
+        return f"Failed with {self.backend} to download {self.url} to {self.path}"
 
 
 def name_from_url(url: str) -> str:
