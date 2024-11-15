@@ -21,11 +21,6 @@ from typing import (
     cast,
 )
 
-try:
-    import pickle5 as pickle
-except ImportError:
-    import pickle
-
 if TYPE_CHECKING:
     import pandas as pd
 
