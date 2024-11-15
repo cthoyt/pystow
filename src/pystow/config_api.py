@@ -7,7 +7,7 @@ from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional, Type, TypeVar
+from typing import Any, Callable, Optional, Type, TypeVar, Union
 
 from .utils import getenv_path
 
@@ -36,13 +36,35 @@ class ConfigError(ValueError):
         self.key = key
 
     def __str__(self) -> str:
+        path = get_home().joinpath(self.module).with_suffix(".ini")
         return dedent(
             f"""\
-        Could not look up {self.module}/{self.key} and no default given
+        Could not look up {self.module}/{self.key} and no default given.
 
-        1. Set the {self.module.upper()}_{self.key.upper()}
-        2. Create a file in {get_home()}/{self.module}.ini, create a section inside it
-           called [{self.module}] and set a value for {self.key} = ...
+        This can be solved with one of the following:
+
+        1. Set the {self.module.upper()}_{self.key.upper()} environment variable
+
+           - Windows, via GUI: https://www.computerhope.com/issues/ch000549.htm
+           - Windows, via CLI: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/set_1
+           - Mac OS: https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x
+           - Linux: https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/
+
+        2. Use the PyStow CLI from the command line to
+           set the configuration like so:
+
+           $ pystow set {self.module} {self.key} <value>
+
+           This creates an INI file in {path}
+           with the configuration in the right place.
+
+        3. Create/edit an INI file in {path} and manually
+           fill it in by 1) creating a section inside it called [{self.module}]
+           and 2) setting a value for {self.key} = <value> that looks like:
+
+           # {path}
+           [{self.module}]
+           {self.key} = <value>
 
         See https://github.com/cthoyt/pystow#%EF%B8%8F%EF%B8%8F-configuration for more information.
         """
@@ -69,7 +91,7 @@ def get_home(ensure_exists: bool = True) -> Path:
         2. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
-    default = Path.home() / get_name()
+    default = Path.home().joinpath(get_name()).expanduser()
     return getenv_path(CONFIG_HOME_ENVVAR, default, ensure_exists=ensure_exists)
 
 
@@ -109,7 +131,7 @@ def get_config(
     default: Optional[X] = None,
     dtype: Optional[Type[X]] = None,
     raise_on_missing: bool = False,
-):
+) -> Any:
     """Get a configuration value.
 
     :param module: Name of the module (e.g., ``pybel``) to get configuration for
@@ -137,13 +159,13 @@ def get_config(
     return _cast(rv, dtype)
 
 
-def _cast(rv, dtype):
+def _cast(rv: Any, dtype: Union[None, Callable[..., Any]]) -> Any:
     if not isinstance(rv, str):  # if it's not a string, it doesn't need munging
         return rv
     if dtype in (None, str):  # no munging necessary
         return rv
     if dtype in (int, float):
-        return dtype(rv)  # type: ignore
+        return dtype(rv)
     if dtype is bool:
         if rv.lower() in ("t", "true", "yes", "1", 1, True):
             return True
