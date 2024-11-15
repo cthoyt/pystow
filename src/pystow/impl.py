@@ -486,6 +486,7 @@ class Module:
         with gzip.open(path, **open_kwargs) as file:
             yield file
 
+    # docstr-coverage:excused `overload`
     @overload
     @contextmanager
     def ensure_open_lzma(
@@ -499,6 +500,7 @@ class Module:
         open_kwargs: Optional[Mapping[str, Any]],
     ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
 
+    # docstr-coverage:excused `overload`
     @overload
     @contextmanager
     def ensure_open_lzma(
@@ -634,6 +636,37 @@ class Module:
             with zip_file.open(inner_path) as file:
                 yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal["r", "w", "rt", "wt"] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[StringIO | BytesIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_gz(
+        self,
+        *subkeys: str,
+        url: str,
+        name: Optional[str],
+        force: bool,
+        download_kwargs: Optional[Mapping[str, Any]],
+        mode: Literal[
+            "rb",
+            "wb",
+        ] = ...,
+        open_kwargs: Optional[Mapping[str, Any]],
+    ) -> Generator[StringIO | BytesIO, None, None]: ...
+
     @contextmanager
     def ensure_open_gz(
         self,
@@ -642,9 +675,9 @@ class Module:
         name: Optional[str] = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: Literal["rb"] = "rb",  # TODO extend to other modes, requires overloads
+        mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
         open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[BytesIO, None, None]:
+    ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
