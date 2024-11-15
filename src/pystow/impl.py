@@ -401,6 +401,12 @@ class Module:
         :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
 
         :yields: An open file object
+
+        :raises ValueError:
+
+            1. If the file should be opened in write mode, and it is not ensured to exist
+            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
+               it will create a file when there previously wasn't one
         """
         if "w" in mode and not ensure_exists:
             raise ValueError
