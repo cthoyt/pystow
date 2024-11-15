@@ -22,7 +22,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    TypeAlias,
     Union,
 )
 
@@ -46,9 +45,9 @@ from .utils import (
 )
 
 try:
-    import pickle5 as pickle
+    from typing import TypeAlias
 except ImportError:
-    import pickle
+    from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     import botocore.client
