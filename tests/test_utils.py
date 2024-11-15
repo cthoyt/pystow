@@ -194,6 +194,53 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(np.array_equal(arr, reloaded_arr))
 
 
+class TestDownload(unittest.TestCase):
+    """Tests for downloading."""
+
+    def setUp(self) -> None:
+        """Set up a test."""
+        self.directory_obj = tempfile.TemporaryDirectory()
+        self.directory = Path(self.directory_obj.name)
+        self.bad_url = "https://nope.nope/nope.tsv"
+        self.path_for_bad_url = self.directory.joinpath("nope.tsv")
+
+    def tearDown(self) -> None:
+        """Tear down a test."""
+        self.directory_obj.cleanup()
+
+    def test_bad_file_error(self):
+        """Test that urllib errors are handled properly."""
+        with self.assertRaises(OSError):
+            download(
+                url=self.bad_url,
+                path=self.path_for_bad_url,
+                backend="urllib",
+            )
+        self.assertFalse(self.path_for_bad_url.is_file())
+
+    def test_requests_error_stream(self):
+        """Test that requests errors are handled properly."""
+        with self.assertRaises(OSError):
+            download(
+                url=self.bad_url,
+                path=self.path_for_bad_url,
+                backend="requests",
+                stream=True,
+            )
+        self.assertFalse(self.path_for_bad_url.is_file())
+
+    def test_requests_error_sync(self):
+        """Test that requests errors are handled properly."""
+        with self.assertRaises(OSError):
+            download(
+                url=self.bad_url,
+                path=self.path_for_bad_url,
+                backend="requests",
+                stream=False,
+            )
+        self.assertFalse(self.path_for_bad_url.is_file())
+
+
 class TestHashing(unittest.TestCase):
     """Tests for hexdigest checking."""
 

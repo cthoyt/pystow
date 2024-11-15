@@ -380,21 +380,28 @@ def download(
                     raise OSError(f"Failed to download {url} to {path}") from e
         elif backend == "requests":
             kwargs.setdefault("stream", True)
-            # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
-            # pattern from https://stackoverflow.com/a/39217788/5775947
-            with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
-                logger.info(
-                    "downloading (stream=%s) with requests from %s to %s",
-                    kwargs["stream"],
-                    url,
-                    path,
-                )
-                # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
-                total_size = int(response.headers.get("Content-Length", 0))
-                # Decompress if needed
-                response.raw.read = partial(response.raw.read, decode_content=True)  # type:ignore
-                with tqdm.wrapattr(response.raw, "read", total=total_size, **_tqdm_kwargs) as fsrc:
-                    shutil.copyfileobj(fsrc, file)
+            try:
+                # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
+                # pattern from https://stackoverflow.com/a/39217788/5775947
+                with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
+                    logger.info(
+                        "downloading (stream=%s) with requests from %s to %s",
+                        kwargs["stream"],
+                        url,
+                        path,
+                    )
+                    # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
+                    total_size = int(response.headers.get("Content-Length", 0))
+                    # Decompress if needed
+                    response.raw.read = partial(
+                        response.raw.read, decode_content=True
+                    )  # type:ignore
+                    with tqdm.wrapattr(
+                        response.raw, "read", total=total_size, **_tqdm_kwargs
+                    ) as fsrc:
+                        shutil.copyfileobj(fsrc, file)
+            except requests.exceptions.ConnectionError as e:
+                raise OSError(f"Failed to download {url} to {path}") from e
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
