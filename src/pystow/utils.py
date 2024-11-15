@@ -155,7 +155,7 @@ def get_hexdigests_remote(
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
     :param hexdigests_strict:
-        Set this to alse to stop automatically checking for the `algorithm(filename)=hash` format
+        Set this to `False` to stop automatically checking for the `algorithm(filename)=hash` format
     :returns:
         A mapping of algorithms to hexdigests
     """
@@ -389,7 +389,7 @@ def download(
                     url,
                     path,
                 )
-                # Solution for progres bar from https://stackoverflow.com/a/63831344/5775947
+                # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
                 total_size = int(response.headers.get("Content-Length", 0))
                 # Decompress if needed
                 response.raw.read = partial(response.raw.read, decode_content=True)  # type:ignore
@@ -563,7 +563,6 @@ def write_lzma_csv(
     """Write a dataframe as an lzma-compressed file.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting LZMA compressed dataframe file
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param index:  Should the index be output? Overrides the Pandas default to be false.
@@ -587,7 +586,6 @@ def write_zipfile_csv(
     """Write a dataframe to an inner CSV file to a zip archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -722,7 +720,6 @@ def write_tarfile_csv(
     """Write a dataframe to an inner CSV file from a tar archive.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param path: The path to the resulting tar archive
     :param inner_path: The path inside the tar archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
@@ -797,7 +794,6 @@ def write_sql(df: "pandas.DataFrame", name: str, path: Union[str, Path], **kwarg
     """Write a dataframe as a SQL table.
 
     :param df: A dataframe
-    :type df: pandas.DataFrame
     :param name: The table the database to write to
     :param path: The path to the resulting tar archive
     :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
@@ -907,7 +903,6 @@ def download_from_s3(
     :param path: The place to write the file
     :param client:
         A botocore client. If none given, one will be created automatically
-    :type client: Optional[botocore.client.BaseClient]
     :param client_kwargs:
         Keyword arguments to be passed to the client on instantiation.
     :param download_file_kwargs:
@@ -1035,7 +1030,7 @@ def ensure_readme() -> None:
         readme_path = get_home(ensure_exists=True).joinpath("README.md")
     except PermissionError as e:
         raise PermissionError(
-            f"PyStow was not able to create its home directory in {readme_path.parent} due to a lack of "
+            "PyStow was not able to create its home directory in due to a lack of "
             "permissions. This can happen, e.g., if you're working on a server where you don't have full "
             "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
             "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
