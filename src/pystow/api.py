@@ -701,7 +701,7 @@ def ensure_open_gz(
     download_kwargs: Optional[Mapping[str, Any]] = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
     open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[StringIO | BytesIO, None, None]:
+) -> Generator[Union[StringIO, BytesIO], None, None]:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key:
