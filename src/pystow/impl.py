@@ -755,7 +755,7 @@ class Module:
         download_kwargs: Optional[Mapping[str, Any]],
         mode: Literal["r", "w", "rt", "wt"] = ...,
         open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
+    ) -> Generator[StringIO, None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -772,7 +772,7 @@ class Module:
             "wb",
         ] = ...,
         open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator[Union[StringIO, BytesIO], None, None]: ...
+    ) -> Generator[BytesIO, None, None]: ...
 
     @contextmanager
     def ensure_open_gz(
