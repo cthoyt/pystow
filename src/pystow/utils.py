@@ -154,7 +154,7 @@ def get_hexdigests_remote(
     :param hexdigests_remote:
         The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
     :param hexdigests_strict:
-        Set this to alse to stop automatically checking for the `algorithm(filename)=hash` format
+        Set this to `False` to stop automatically checking for the `algorithm(filename)=hash` format
     :returns:
         A mapping of algorithms to hexdigests
     """
