@@ -13,7 +13,7 @@ import shutil
 import tarfile
 import tempfile
 import zipfile
-from collections import namedtuple
+from collections import Counter, namedtuple
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
@@ -100,6 +100,7 @@ __all__ = [
     "get_name",
     "get_base",
     "path_to_sqlite",
+    "write_counter",
 ]
 
 logger = logging.getLogger(__name__)
@@ -1060,3 +1061,20 @@ def gunzip(source: Union[str, Path], target: Union[str, Path]) -> None:
     """
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
         shutil.copyfileobj(in_file, out_file)
+
+
+def write_counter(
+    counter: Counter[str], path: Union[str, Path], sep: str | None = None, header=("key", "count")
+) -> None:
+    path = Path(path).expanduser().resolve()
+    if sep is None:
+        sep = "\t"
+    with path.open("w") as file:
+        print(*header, sep=sep, file=file)
+        kk = counter.most_common()
+        if isinstance(kk[0], tuple):
+            for key, value in kk:
+                print(*key, value, sep=sep, file=file)
+        else:
+            for key, value in kk:
+                print(key, value, sep=sep, file=file)
