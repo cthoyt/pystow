@@ -5,6 +5,7 @@
 import functools
 import json
 import logging
+import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
