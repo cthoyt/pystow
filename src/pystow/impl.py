@@ -392,7 +392,7 @@ class Module:
         open_kwargs: Optional[Mapping[str, Any]] = None,
         ensure_exists: bool = False,
     ) -> Generator[Union[StringIO, BytesIO], None, None]:
-        """Open a file that exists already.
+        """Open a file.
 
         :param subkeys:
             A sequence of additional strings to join. If none are given,
@@ -401,14 +401,23 @@ class Module:
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
-
-        :yields: An open file object
-
         :raises ValueError: In the following situations:
 
             1. If the file should be opened in write mode, and it is not ensured to exist
             2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
                it will create a file when there previously wasn't one
+
+        :yields: An open file object.
+
+        This function should be called inside a context manager like in the following
+
+        .. code-block:: python
+
+            import pystow
+
+            with pystow.module("test").open(name="test.tsv", mode="w") as file:
+                print("Test text!", file=file)
+
         """
         if "w" in mode and not ensure_exists:
             raise ValueError

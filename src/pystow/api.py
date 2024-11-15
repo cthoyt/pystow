@@ -168,6 +168,16 @@ def open(
     :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
 
     :yields: An open file object
+
+    This function should be called inside a context manager like in the following
+
+    .. code-block:: python
+
+        import pystow
+
+        with pystow.open("test", name="test.tsv", mode="w") as file:
+            print("Test text!", file=file)
+
     """
     _module = Module.from_key(key, ensure_exists=True)
     with _module.open(
