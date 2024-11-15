@@ -8,6 +8,7 @@ import json
 import logging
 import lzma
 import os
+import pickle
 import sqlite3
 import tarfile
 import zipfile
