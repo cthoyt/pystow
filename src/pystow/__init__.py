@@ -47,7 +47,7 @@ from .api import (
     open_gz,
 )
 from .config_api import ConfigError, get_config, write_config
-from .impl import Module
+from .impl import Module, VersionHint
 from .utils import ensure_readme
 
 __all__ = [
@@ -97,6 +97,7 @@ __all__ = [
     "get_config",
     "write_config",
     "Module",
+    "VersionHint",
 ]
 
 ensure_readme()

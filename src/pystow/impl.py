@@ -8,6 +8,8 @@ import io
 import json
 import logging
 import lzma
+import os
+import pickle
 import sqlite3
 import tarfile
 import zipfile
@@ -17,6 +19,7 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     Generator,
     Literal,
@@ -26,6 +29,8 @@ from typing import (
     Union,
     overload,
 )
+
+from typing_extensions import TypeAlias
 
 from . import utils
 from .constants import JSON, BytesOpener, Provider
@@ -46,11 +51,6 @@ from .utils import (
     read_zipfile_csv,
 )
 
-try:
-    import pickle5 as pickle
-except ImportError:
-    import pickle
-
 if TYPE_CHECKING:
     import botocore.client
     import lxml.etree
@@ -58,9 +58,16 @@ if TYPE_CHECKING:
     import pandas as pd
     import rdflib
 
-__all__ = ["Module"]
+__all__ = [
+    "Module",
+    "VersionHint",
+]
 
 logger = logging.getLogger(__name__)
+
+#: A type hint for something that can be passed to the
+#: `version` argument of Module.join, Module.ensure, etc.
+VersionHint: TypeAlias = Union[None, str, Callable[[], Optional[str]]]
 
 
 class Module:
@@ -121,6 +128,7 @@ class Module:
         *subkeys: str,
         name: Optional[str] = None,
         ensure_exists: bool = True,
+        version: VersionHint = None,
     ) -> Path:
         """Get a subdirectory of the current module.
 
@@ -132,16 +140,56 @@ class Module:
             Defaults to true.
         :param name:
             The name of the file (optional) inside the folder
+        :param version:
+            The optional version, or no-argument callable that returns
+            an optional version. This is prepended before the subkeys.
+
+            The following example describes how to store the versioned data
+            from the Rhea database for biologically relevant chemical reactions.
+
+            .. code-block::
+
+                import pystow
+                import requests
+
+                def get_rhea_version() -> str:
+                    res = requests.get("https://ftp.expasy.org/databases/rhea/rhea-release.properties")
+                    _, _, version = res.text.splitlines()[0].partition("=")
+                    return version
+
+                # Assume you want to download the data from
+                # ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz, make a path
+                # with the same name
+                module = pystow.module("rhea")
+                path = module.join(name="rhea.rdf.gz", version=get_rhea_version)
+
         :return:
             The path of the directory or subdirectory for the given module.
         """
         rv = self.base
+
+        # if the version is given as a no-argument callable,
+        # then it should be called and a version is returned
+        if callable(version):
+            version = version()
+        if version:
+            self._raise_for_invalid_version(version)
+            subkeys = (version, *subkeys)
+
         if subkeys:
             rv = rv.joinpath(*subkeys)
             mkdir(rv, ensure_exists=ensure_exists)
         if name:
             rv = rv.joinpath(name)
         return rv
+
+    @staticmethod
+    def _raise_for_invalid_version(version: str) -> None:
+        if "/" in version or os.sep in version:
+            raise ValueError(
+                f"slashes and `{os.sep}` not allowed in versions because of "
+                f"conflicts with file path construction: {version}"
+            )
 
     def joinpath_sqlite(self, *subkeys: str, name: str) -> str:
         """Get an SQLite database connection string.
@@ -160,6 +208,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: Optional[str] = None,
+        version: VersionHint = None,
         force: bool = False,
         download_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> Path:
@@ -173,6 +222,29 @@ class Module:
         :param name:
             Overrides the name of the file at the end of the URL, if given. Also
             useful for URLs that don't have proper filenames with extensions.
+        :param version:
+            The optional version, or no-argument callable that returns
+            an optional version. This is prepended before the subkeys.
+
+            The following example describes how to store the versioned data
+            from the Rhea database for biologically relevant chemical reactions.
+
+            .. code-block::
+
+                import pystow
+                import requests
+
+                def get_rhea_version() -> str:
+                    res = requests.get("https://ftp.expasy.org/databases/rhea/rhea-release.properties")
+                    _, _, version = res.text.splitlines()[0].partition("=")
+                    return version
+
+                module = pystow.module("rhea")
+                path = module.ensure(
+                    url="ftp://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz",
+                    version=get_rhea_version,
+                )
+
         :param force:
             Should the download be done again, even if the path already exists?
             Defaults to false.
@@ -182,7 +254,7 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        path = self.join(*subkeys, name=name, ensure_exists=True)
+        path = self.join(*subkeys, name=name, version=version, ensure_exists=True)
         utils.download(
             url=url,
             path=path,
