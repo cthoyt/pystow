@@ -59,6 +59,7 @@ __all__ = [
     # Data Structures and type annotations
     "HexDigestMismatch",
     "DownloadBackend",
+    "Hash",
     # Exceptions
     "HexDigestError",
     "UnexpectedDirectory",
