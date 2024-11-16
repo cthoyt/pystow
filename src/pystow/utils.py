@@ -737,7 +737,7 @@ def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "nump
 
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
-            return cast(numpy.typing.ArrayLike, np.load(file, **kwargs))
+            return cast(np.typing.ArrayLike, np.load(file, **kwargs))
 
 
 def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "rdflib.Graph":
