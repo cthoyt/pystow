@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Tests for utilities."""
+
+from __future__ import annotations
 
 import hashlib
 import os
@@ -250,7 +250,7 @@ class TestHashing(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.path = Path(self.directory.name).joinpath("test.tsv")
 
-        md5 = hashlib.md5()  # noqa:S303,S324
+        md5 = hashlib.md5()  # noqa: S324
         with TEST_TXT.open("rb") as file:
             md5.update(file.read())
         self.expected_md5 = md5.hexdigest()

@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """PyStow constants."""
 
+from __future__ import annotations
+
+from collections.abc import Generator
 from io import StringIO
 from textwrap import dedent
-from typing import IO, Any, Callable, Generator
+from typing import IO, Any, Callable
 
 __all__ = [
     "PYSTOW_NAME_ENVVAR",

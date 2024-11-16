@@ -4,6 +4,8 @@
 
 """Command line interface for PyStow."""
 
+from __future__ import annotations
+
 import os
 from typing import Optional, Sequence
 

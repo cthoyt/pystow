@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Test for API completeness."""
+
+from __future__ import annotations
 
 import inspect
 import unittest

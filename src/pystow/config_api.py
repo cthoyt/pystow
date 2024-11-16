@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """Configuration handling."""
+
+from __future__ import annotations
 
 import os
 from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, Optional, Type, TypeVar, Union
+from typing import Any, Callable, TypeVar
 
 from .utils import getenv_path
 
@@ -127,9 +127,9 @@ def get_config(
     module: str,
     key: str,
     *,
-    passthrough: Optional[X] = None,
-    default: Optional[X] = None,
-    dtype: Optional[Type[X]] = None,
+    passthrough: X | None = None,
+    default: X | None = None,
+    dtype: type[X] | None = None,
     raise_on_missing: bool = False,
 ) -> Any:
     """Get a configuration value.
@@ -159,7 +159,7 @@ def get_config(
     return _cast(rv, dtype)
 
 
-def _cast(rv: Any, dtype: Union[None, Callable[..., Any]]) -> Any:
+def _cast(rv: Any, dtype: None | Callable[..., Any]) -> Any:
     if not isinstance(rv, str):  # if it's not a string, it doesn't need munging
         return rv
     if dtype in (None, str):  # no munging necessary

@@ -1,22 +1,19 @@
-# -*- coding: utf-8 -*-
-
 """Utilities for caching files."""
+
+from __future__ import annotations
 
 import functools
 import json
 import logging
 import pickle
 from abc import ABC, abstractmethod
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    List,
-    MutableMapping,
-    Optional,
     TypeVar,
     Union,
     cast,
@@ -39,8 +36,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 JSONType = Union[
-    Dict[str, Any],
-    List[Any],
+    dict[str, Any],
+    list[Any],
 ]
 
 X = TypeVar("X")
@@ -52,7 +49,7 @@ class Cached(Generic[X], ABC):
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         force: bool = False,
     ) -> None:
         """Instantiate the decorator.
@@ -134,10 +131,10 @@ class CachedPickle(Cached[Any]):
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-class CachedCollection(Cached[List[str]]):
+class CachedCollection(Cached[list[str]]):
     """Make a function lazily cache its return value as file."""
 
-    def load(self) -> List[str]:
+    def load(self) -> list[str]:
         """Load data from the cache as a list of strings.
 
         :returns: A list of strings loaded from the cache
@@ -145,14 +142,14 @@ class CachedCollection(Cached[List[str]]):
         with open(self.path) as file:
             return [line.strip() for line in file]
 
-    def dump(self, rv: List[str]) -> None:
+    def dump(self, rv: list[str]) -> None:
         """Dump data to the cache as a list of strings.
 
         :param rv: The list of strings to dump
         """
         with open(self.path, "w") as file:
             for line in rv:
-                print(line, file=file)  # noqa:T001,T201
+                print(line, file=file)
 
 
 class CachedDataFrame(Cached["pd.DataFrame"]):
@@ -160,11 +157,11 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         force: bool = False,
-        sep: Optional[str] = None,
-        dtype: Optional[Any] = None,
-        read_csv_kwargs: Optional[MutableMapping[str, Any]] = None,
+        sep: str | None = None,
+        dtype: Any | None = None,
+        read_csv_kwargs: MutableMapping[str, Any] | None = None,
     ) -> None:
         """Instantiate the decorator.
 
@@ -189,7 +186,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
             self.read_csv_kwargs["dtype"] = dtype
         self.read_csv_kwargs.setdefault("keep_default_na", False)
 
-    def load(self) -> "pd.DataFrame":
+    def load(self) -> pd.DataFrame:
         """Load data from the cache as a dataframe.
 
         :returns: A dataframe loaded from the cache.
@@ -202,7 +199,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
             **self.read_csv_kwargs,
         )
 
-    def dump(self, rv: "pd.DataFrame") -> None:
+    def dump(self, rv: pd.DataFrame) -> None:
         """Dump data to the cache as a dataframe.
 
         :param rv: The dataframe to dump

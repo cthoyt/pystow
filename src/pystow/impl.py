@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Module implementation."""
+
+from __future__ import annotations
 
 import bz2
 import gzip
@@ -13,6 +13,7 @@ import pickle
 import sqlite3
 import tarfile
 import zipfile
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -20,12 +21,8 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
-    Generator,
     Literal,
-    Mapping,
     Optional,
-    Sequence,
     Union,
     cast,
     overload,
@@ -74,7 +71,7 @@ VersionHint: TypeAlias = Union[None, str, Callable[[], Optional[str]]]
 class Module:
     """The class wrapping the directory lookup implementation."""
 
-    def __init__(self, base: Union[str, Path], ensure_exists: bool = True) -> None:
+    def __init__(self, base: str | Path, ensure_exists: bool = True) -> None:
         """Initialize the module.
 
         :param base:
@@ -87,7 +84,7 @@ class Module:
         mkdir(self.base, ensure_exists=ensure_exists)
 
     @classmethod
-    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> "Module":
+    def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
         """Get a module for the given directory or one of its subdirectories.
 
         :param key:
@@ -109,7 +106,7 @@ class Module:
             rv = rv.module(*subkeys, ensure_exists=ensure_exists)
         return rv
 
-    def module(self, *subkeys: str, ensure_exists: bool = True) -> "Module":
+    def module(self, *subkeys: str, ensure_exists: bool = True) -> Module:
         """Get a module for a subdirectory of the current module.
 
         :param subkeys:
@@ -127,7 +124,7 @@ class Module:
     def join(
         self,
         *subkeys: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         ensure_exists: bool = True,
         version: VersionHint = None,
     ) -> Path:
@@ -208,10 +205,10 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         version: VersionHint = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
     ) -> Path:
         """Ensure a file is downloaded.
 
@@ -305,11 +302,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
-        directory: Optional[str] = None,
+        name: str | None = None,
+        directory: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        extract_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
+        extract_kwargs: Mapping[str, Any] | None = None,
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived.
 
@@ -352,10 +349,10 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
         autoclean: bool = True,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
     ) -> Path:
         """Ensure a tar.gz file is downloaded and unarchived.
 
@@ -402,11 +399,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal["r", "rt", "w", "wt"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[StringIO, None, None]: ...
 
     # docstr-coverage:excused `overload`
@@ -416,11 +413,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal["rb", "wb"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[BytesIO, None, None]: ...
 
     @contextmanager
@@ -428,12 +425,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[Union[StringIO, BytesIO], None, None]:
+        download_kwargs: Mapping[str, Any] | None = None,
+        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a file is downloaded and open it.
 
         :param subkeys:
@@ -488,7 +485,7 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["r", "rt", "w", "wt"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
         ensure_exists: bool,
     ) -> Generator[StringIO, None, None]: ...
 
@@ -500,7 +497,7 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["rb", "wb"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
         ensure_exists: bool,
     ) -> Generator[BytesIO, None, None]: ...
 
@@ -509,10 +506,10 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        open_kwargs: Mapping[str, Any] | None = None,
         ensure_exists: bool = False,
-    ) -> Generator[Union[StringIO, BytesIO], None, None]:
+    ) -> Generator[StringIO | BytesIO, None, None]:
         """Open a file.
 
         :param subkeys:
@@ -550,7 +547,7 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["r", "w", "rt", "wt"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
         ensure_exists: bool,
     ) -> Generator[StringIO, None, None]: ...
 
@@ -562,7 +559,7 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["rb", "wb"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
         ensure_exists: bool,
     ) -> Generator[BytesIO, None, None]: ...
 
@@ -572,9 +569,9 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
         ensure_exists: bool = False,
-    ) -> Generator[Union[StringIO, BytesIO], None, None]:
+    ) -> Generator[StringIO | BytesIO, None, None]:
         """Open a gzipped file that exists already.
 
         :param subkeys:
@@ -601,12 +598,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal["r", "w", "rt", "wt"] = "rt",
-        open_kwargs: Optional[Mapping[str, Any]],
-    ) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
+        open_kwargs: Mapping[str, Any] | None,
+    ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -615,11 +612,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal["rb", "wb"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[lzma.LZMAFile, None, None]: ...
 
     @contextmanager
@@ -627,12 +624,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -666,11 +663,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: str = "r",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
     ) -> BytesOpener:
         """Ensure a tar file is downloaded and open a file inside it.
 
@@ -708,11 +705,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: str = "r",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
     ) -> BytesOpener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
@@ -751,11 +748,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal["r", "w", "rt", "wt"] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[StringIO, None, None]: ...
 
     # docstr-coverage:excused `overload`
@@ -765,14 +762,14 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str],
+        name: str | None,
         force: bool,
-        download_kwargs: Optional[Mapping[str, Any]],
+        download_kwargs: Mapping[str, Any] | None,
         mode: Literal[
             "rb",
             "wb",
         ] = ...,
-        open_kwargs: Optional[Mapping[str, Any]],
+        open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[BytesIO, None, None]: ...
 
     @contextmanager
@@ -780,12 +777,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> Generator[Union[StringIO, BytesIO], None, None]:
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
         :param subkeys:
@@ -818,11 +815,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["rb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[bz2.BZ2File, None, None]:
         """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
@@ -855,11 +852,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+        download_kwargs: Mapping[str, Any] | None = None,
+        read_csv_kwargs: Mapping[str, Any] | None = None,
+    ) -> pd.DataFrame:
         """Download a CSV and open as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -888,8 +885,8 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+        read_csv_kwargs: Mapping[str, Any] | None = None,
+    ) -> pd.DataFrame:
         """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -910,10 +907,10 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        obj: "pd.DataFrame",
+        obj: pd.DataFrame,
         sep: str = "\t",
         index: bool = False,
-        to_csv_kwargs: Optional[Mapping[str, Any]] = None,
+        to_csv_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Dump a dataframe to a TSV file with :mod:`pandas`.
 
@@ -939,11 +936,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        json_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
         """Download JSON and open with :mod:`json`.
 
@@ -977,11 +974,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        json_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
         """Download BZ2-compressed JSON and open with :mod:`json`.
 
@@ -1015,8 +1012,8 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        json_load_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        json_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
         """Open a JSON file :mod:`json`.
 
@@ -1038,8 +1035,8 @@ class Module:
         *subkeys: str,
         name: str,
         obj: JSON,
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        json_dump_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        json_dump_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Dump an object to a file with :mod:`json`.
 
@@ -1060,12 +1057,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["rb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        pickle_load_kwargs: Mapping[str, Any] | None = None,
     ) -> Any:
         """Download a pickle file and open with :mod:`pickle`.
 
@@ -1102,8 +1099,8 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["rb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        pickle_load_kwargs: Mapping[str, Any] | None = None,
     ) -> Any:
         """Open a pickle file with :mod:`pickle`.
 
@@ -1131,8 +1128,8 @@ class Module:
         name: str,
         obj: Any,
         mode: Literal["wb"] = "wb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        pickle_dump_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Dump an object to a file with :mod:`pickle`.
 
@@ -1158,12 +1155,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["rb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        pickle_load_kwargs: Mapping[str, Any] | None = None,
     ) -> Any:
         """Download a gzipped pickle file and open with :mod:`pickle`.
 
@@ -1200,8 +1197,8 @@ class Module:
         *subkeys: str,
         name: str,
         mode: Literal["rb"] = "rb",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        pickle_load_kwargs: Mapping[str, Any] | None = None,
     ) -> Any:
         """Open a gzipped pickle file with :mod:`pickle`.
 
@@ -1227,11 +1224,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+        download_kwargs: Mapping[str, Any] | None = None,
+        read_excel_kwargs: Mapping[str, Any] | None = None,
+    ) -> pd.DataFrame:
         """Download an excel file and open as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -1261,11 +1258,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+        download_kwargs: Mapping[str, Any] | None = None,
+        read_csv_kwargs: Mapping[str, Any] | None = None,
+    ) -> pd.DataFrame:
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -1298,11 +1295,11 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "lxml.etree.ElementTree":
+        download_kwargs: Mapping[str, Any] | None = None,
+        parse_kwargs: Mapping[str, Any] | None = None,
+    ) -> lxml.etree.ElementTree:
         """Download an XML file and open it with :mod:`lxml`.
 
         :param subkeys:
@@ -1333,8 +1330,8 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "lxml.etree.ElementTree":
+        parse_kwargs: Mapping[str, Any] | None = None,
+    ) -> lxml.etree.ElementTree:
         """Load an XML file with :mod:`lxml`.
 
         :param subkeys:
@@ -1355,9 +1352,9 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        obj: "lxml.etree.ElementTree",
-        open_kwargs: Optional[Mapping[str, Any]] = None,
-        write_kwargs: Optional[Mapping[str, Any]] = None,
+        obj: lxml.etree.ElementTree,
+        open_kwargs: Mapping[str, Any] | None = None,
+        write_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Dump an XML element tree to a file with :mod:`lxml`.
 
@@ -1379,11 +1376,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "lxml.etree.ElementTree":
+        download_kwargs: Mapping[str, Any] | None = None,
+        parse_kwargs: Mapping[str, Any] | None = None,
+    ) -> lxml.etree.ElementTree:
         """Download a tar file and open an inner file as an XML with :mod:`lxml`.
 
         :param subkeys:
@@ -1415,11 +1412,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "pd.DataFrame":
+        download_kwargs: Mapping[str, Any] | None = None,
+        read_csv_kwargs: Mapping[str, Any] | None = None,
+    ) -> pd.DataFrame:
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
 
         :param subkeys:
@@ -1451,11 +1448,11 @@ class Module:
         *subkeys: str,
         url: str,
         inner_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
-        load_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "numpy.typing.ArrayLike":
+        download_kwargs: Mapping[str, Any] | None = None,
+        load_kwargs: Mapping[str, Any] | None = None,
+    ) -> numpy.typing.ArrayLike:
         """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
         :param subkeys:
@@ -1487,12 +1484,12 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
         precache: bool = True,
-        parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "rdflib.Graph":
+        parse_kwargs: Mapping[str, Any] | None = None,
+    ) -> rdflib.Graph:
         """Download a RDF file and open with :mod:`rdflib`.
 
         :param subkeys:
@@ -1532,9 +1529,9 @@ class Module:
     def load_rdf(
         self,
         *subkeys: str,
-        name: Optional[str] = None,
-        parse_kwargs: Optional[Mapping[str, Any]] = None,
-    ) -> "rdflib.Graph":
+        name: str | None = None,
+        parse_kwargs: Mapping[str, Any] | None = None,
+    ) -> rdflib.Graph:
         """Open an RDF file with :mod:`rdflib`.
 
         :param subkeys:
@@ -1553,9 +1550,9 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        obj: "rdflib.Graph",
+        obj: rdflib.Graph,
         format: str = "turtle",
-        serialize_kwargs: Optional[Mapping[str, Any]] = None,
+        serialize_kwargs: Mapping[str, Any] | None = None,
     ) -> None:
         """Dump an RDF graph to a file with :mod:`rdflib`.
 
@@ -1577,11 +1574,11 @@ class Module:
         self,
         *subkeys: str,
         s3_bucket: str,
-        s3_key: Union[str, Sequence[str]],
-        name: Optional[str] = None,
-        client: Optional["botocore.client.BaseClient"] = None,
-        client_kwargs: Optional[Mapping[str, Any]] = None,
-        download_file_kwargs: Optional[Mapping[str, Any]] = None,
+        s3_key: str | Sequence[str],
+        name: str | None = None,
+        client: botocore.client.BaseClient | None = None,
+        client_kwargs: Mapping[str, Any] | None = None,
+        download_file_kwargs: Mapping[str, Any] | None = None,
         force: bool = False,
     ) -> Path:
         """Ensure a file is downloaded.
@@ -1629,7 +1626,7 @@ class Module:
         name: str,
         file_id: str,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
     ) -> Path:
         """Ensure a file is downloaded from Google Drive.
 
@@ -1659,9 +1656,9 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database.
 
@@ -1699,9 +1696,9 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         force: bool = False,
-        download_kwargs: Optional[Mapping[str, Any]] = None,
+        download_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database that's gzipped.
 
@@ -1738,7 +1735,7 @@ class Module:
             yield conn
 
 
-def _clean_csv_kwargs(read_csv_kwargs: Union[None, Mapping[str, Any]]) -> Dict[str, Any]:
+def _clean_csv_kwargs(read_csv_kwargs: None | Mapping[str, Any]) -> dict[str, Any]:
     read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs

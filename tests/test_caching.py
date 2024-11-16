@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Tests for caching."""
+
+from __future__ import annotations
 
 import os
 import tempfile
