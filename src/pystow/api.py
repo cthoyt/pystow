@@ -192,7 +192,9 @@ def open(
     :param name: The name of the file to open
     :param mode: The read or write mode, passed to :func:`open`
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
-    :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
+    :param ensure_exists:
+        Should the directory the file is in be made?
+        Set to true on write operations.
 
     :yields: An open file object
 
@@ -1301,7 +1303,10 @@ def ensure_xml(
     :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_xml(
@@ -1327,10 +1332,14 @@ def load_xml(
         A sequence of additional strings to join. If none are given,
         returns the directory for this module.
     :param name: The name of the file to open
-    :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+    :param parse_kwargs:
+        Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.load_xml(
@@ -1437,7 +1446,10 @@ def ensure_tar_df(
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
     :returns: A dataframe
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_df(
@@ -1481,7 +1493,10 @@ def ensure_tar_xml(
     :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_xml(
@@ -1620,13 +1635,16 @@ def ensure_rdf(
     >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
     >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
-    If :mod:`rdflib` fails to guess the format, you can explicitly specify it using the `parse_kwargs` argument:
+    If :mod:`rdflib` fails to guess the format, you can explicitly specify
+    it using the `parse_kwargs` argument:
 
     >>> import pystow
     >>> import rdflib
     >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph" \
     ... "/v3/suite/memoryalpha-stexpanded/component/reference.xml"
-    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"})
+    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf(
+    ...     "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
+    ... )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(

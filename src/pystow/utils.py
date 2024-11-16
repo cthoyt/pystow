@@ -106,7 +106,6 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-
 #: Represents an available backend for downloading
 DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 
@@ -356,8 +355,10 @@ def download(
         Set to true to show a progress bar while downloading
     :param tqdm_kwargs:
         Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
-    :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
-        depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
+    :param kwargs:
+        The keyword arguments to pass to :func:`urllib.request.urlretrieve`
+        or to `requests.get` depending on the backend chosen. If using 'requests' backend,
+        `stream` is set to True by default.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
@@ -493,7 +494,8 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
     """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``.
 
     :param path: The path to a directory
-    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :param ensure_exists:
+        Should the directories leading to the path be created if they don't already exist?
     """
     if ensure_exists:
         path.mkdir(exist_ok=True, parents=True)
@@ -533,8 +535,10 @@ def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
     """Get an environment variable representing a path, or use the default.
 
     :param envvar: The environmental variable name to check
-    :param default: The default path to return if the environmental variable is not set
-    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :param default:
+        The default path to return if the environmental variable is not set
+    :param ensure_exists:
+        Should the directories leading to the path be created if they don't already exist?
     :return: A path either specified by the environmental variable or by the default.
     """
     rv = Path(os.getenv(envvar, default=default)).expanduser()
@@ -1040,8 +1044,7 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         <key>_HOME where key is uppercased is checked first before using
         the default home directory.
     :param ensure_exists:
-        Should all directories be created automatically?
-        Defaults to true.
+        Should all directories be created automatically? Defaults to true.
     :returns:
         The path to the given
 
@@ -1070,9 +1073,10 @@ def ensure_readme() -> None:
     except PermissionError as e:
         raise PermissionError(
             "PyStow was not able to create its home directory in due to a lack of "
-            "permissions. This can happen, e.g., if you're working on a server where you don't have full "
-            "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
-            "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
+            "permissions. This can happen, e.g., if you're working on a server where you don't "
+            "have full rights. See https://pystow.readthedocs.io/en/latest/installation.html#"
+            "configuration for instructions on choosing a different home folder location for "
+            "PyStow to somewhere where you have write permissions."
         ) from e
     if readme_path.is_file():
         return

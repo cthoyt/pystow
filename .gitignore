@@ -130,3 +130,6 @@ dmypy.json
 
 # Auto-generated docs
 docs/source/api/
+tests/resources/test_1.db
+tests/resources/test_1.json.bz2
+tests/resources/test_1.pkl.gz

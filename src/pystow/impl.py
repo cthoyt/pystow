@@ -469,8 +469,8 @@ class Module:
         :raises ValueError: In the following situations:
 
             1. If the file should be opened in write mode, and it is not ensured to exist
-            2. If the file should be opened in read mode, and it is ensured to exist. This is bad because
-               it will create a file when there previously wasn't one
+            2. If the file should be opened in read mode, and it is ensured to exist.
+               This is bad because it will create a file when there previously wasn't one
         """
         if "w" in mode and not ensure_exists:
             raise ValueError
@@ -518,7 +518,8 @@ class Module:
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
+        :param ensure_exists:
+            Should the directory the file is in be made? Set to true on write operations.
 
         :yields: An open file object.
 
@@ -1282,7 +1283,10 @@ class Module:
         :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
         :returns: A dataframe
 
-        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        .. warning::
+
+            If you have lots of files to read in the same archive,
+            it's better just to unzip first.
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1317,7 +1321,10 @@ class Module:
         :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
         :returns: An ElementTree object
 
-        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        .. warning::
+
+            If you have lots of files to read in the same archive,
+            it's better just to unzip first.
         """
         from lxml import etree
 
@@ -1341,7 +1348,10 @@ class Module:
         :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
         :returns: An ElementTree object
 
-        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        .. warning::
+
+            If you have lots of files to read in the same archive,
+            it's better just to unzip first.
         """
         from lxml import etree
 
@@ -1364,7 +1374,9 @@ class Module:
         :param name: The name of the file to open
         :param obj: The object to dump
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param write_kwargs: Keyword arguments to pass through to :func:`lxml.etree.ElementTree.write`.
+        :param write_kwargs:
+            Keyword arguments to pass through to
+            :func:`lxml.etree.ElementTree.write`.
         """
         with self.open(
             *subkeys, name=name, mode="wb", open_kwargs=open_kwargs, ensure_exists=True
@@ -1400,7 +1412,10 @@ class Module:
         :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
         :returns: An ElementTree object
 
-        .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+        .. warning::
+
+            If you have lots of files to read in the same archive,
+            it's better just to unzip first.
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1504,7 +1519,8 @@ class Module:
             Should the download be done again, even if the path already exists?
             Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
+        :param precache:
+            Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
         :param parse_kwargs:
             Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
             :func:`rdflib.Graph.parse`.
@@ -1636,9 +1652,9 @@ class Module:
         :param name:
             The name of the file
         :param file_id:
-            The file identifier of the google file. If your share link is
-            https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view, then your file id is
-            ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
+            The file identifier of the Google file. If your share link is
+            https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view,
+            then your file ID is ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
         :param force:
             Should the download be done again, even if the path already exists?
             Defaults to false.
