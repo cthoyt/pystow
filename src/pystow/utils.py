@@ -112,6 +112,10 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+
+#: Represents an available backend for downloading
+DownloadBackend: TypeAlias = Literal["urllib", "requests"]
+
 #: This type alias uses a stub-only constructor, meaning that
 #: hashlib._Hash isn't actually part of the code, but MyPy injects it
 #: so we can do type checking
@@ -127,10 +131,6 @@ class HexDigestMismatch(NamedTuple):
     actual: str
     #: the expected hexdigest, encoded as a string
     expected: str
-
-
-#: Represents an available backend for downloading
-DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 
 
 class HexDigestError(ValueError):
