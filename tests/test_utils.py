@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Tests for utilities."""
+
+from __future__ import annotations
 
 import hashlib
 import os
@@ -250,7 +250,7 @@ class TestHashing(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.path = Path(self.directory.name).joinpath("test.tsv")
 
-        md5 = hashlib.md5()  # noqa:S303,S324
+        md5 = hashlib.md5()  # noqa: S324
         with TEST_TXT.open("rb") as file:
             md5.update(file.read())
         self.expected_md5 = md5.hexdigest()
@@ -425,14 +425,16 @@ class TestHashing(unittest.TestCase):
             hexdigests["md5"],
         )
 
-        # Live test case
-        # hexdigests = get_hexdigests_remote(
-        #     {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
-        #     hexdigests_strict=False,
-        # )
-        # self.assertEqual(
-        #     {
-        #         "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
-        #     },
-        #     hexdigests,
-        # )
+    @unittest.skip
+    def test_live(self) -> None:
+        """Test live."""
+        hexdigests = get_hexdigests_remote(
+            {"md5": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/pubmed22n0001.xml.gz.md5"},
+            hexdigests_strict=False,
+        )
+        self.assertEqual(
+            {
+                "md5": "0f08d8f3947dde1f3bced5e1f450c0da",
+            },
+            hexdigests,
+        )

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Version information for PyStow."""
 
 __all__ = [

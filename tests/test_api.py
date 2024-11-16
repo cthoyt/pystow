@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Test for API completeness."""
+
+from __future__ import annotations
 
 import inspect
 import unittest
@@ -67,7 +67,8 @@ class TestExposed(unittest.TestCase):
                 )
                 self.assertTrue(
                     hasattr(pystow.api, name),
-                    msg=f"`Module.{name} should be exposed as a top-level function in `pystow.api`.",
+                    msg=f"`Module.{name} should be exposed as a top-level "
+                    f"function in `pystow.api`.",
                 )
                 self.assertTrue(
                     hasattr(pystow, name),

@@ -1,23 +1,19 @@
-# -*- coding: utf-8 -*-
-
 """API functions for PyStow."""
+
+from __future__ import annotations
 
 import bz2
 import io
 import lzma
 import sqlite3
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generator,
     Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
     overload,
 )
 
@@ -105,7 +101,7 @@ def module(key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
 def join(
     key: str,
     *subkeys: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     ensure_exists: bool = True,
     version: VersionHint = None,
 ) -> Path:
@@ -159,7 +155,7 @@ def open(
     *subkeys: str,
     name: str,
     mode: Literal["r", "rt", "w", "wt"] = "r",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[StringIO, None, None]: ...
 
 
@@ -171,7 +167,7 @@ def open(
     *subkeys: str,
     name: str,
     mode: Literal["rb", "wb"],
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[BytesIO, None, None]: ...
 
 
@@ -181,9 +177,9 @@ def open(
     *subkeys: str,
     name: str,
     mode: Literal["r", "rb", "rt", "w", "wb", "wt"] = "r",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
     ensure_exists: bool = False,
-) -> Generator[Union[StringIO, BytesIO], None, None]:
+) -> Generator[StringIO | BytesIO, None, None]:
     """Open a file.
 
     :param key:
@@ -196,7 +192,9 @@ def open(
     :param name: The name of the file to open
     :param mode: The read or write mode, passed to :func:`open`
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
-    :param ensure_exists: Should the directory the file is in be made? Set to true on write operations.
+    :param ensure_exists:
+        Should the directory the file is in be made?
+        Set to true on write operations.
 
     :yields: An open file object
 
@@ -225,7 +223,7 @@ def open_gz(
     *subkeys: str,
     name: str,
     mode: Literal["r", "w", "rt", "wt"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[StringIO, None, None]: ...
 
 
@@ -237,7 +235,7 @@ def open_gz(
     *subkeys: str,
     name: str,
     mode: Literal["rb", "wb"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[BytesIO, None, None]: ...
 
 
@@ -247,9 +245,9 @@ def open_gz(
     *subkeys: str,
     name: str,
     mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
     ensure_exists: bool = False,
-) -> Generator[Union[StringIO, BytesIO], None, None]:
+) -> Generator[StringIO | BytesIO, None, None]:
     """Open a gzipped file that exists already.
 
     :param key:
@@ -277,10 +275,10 @@ def ensure(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     version: VersionHint = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
 ) -> Path:
     """Ensure a file is downloaded.
 
@@ -370,11 +368,11 @@ def ensure_untar(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
-    directory: Optional[str] = None,
+    name: str | None = None,
+    directory: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    extract_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
+    extract_kwargs: Mapping[str, Any] | None = None,
 ) -> Path:
     """Ensure a file is downloaded and untarred.
 
@@ -418,10 +416,10 @@ def ensure_gunzip(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
     autoclean: bool = True,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
 ) -> Path:
     """Ensure a file is downloaded and gunzipped.
 
@@ -464,11 +462,11 @@ def ensure_open(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str],
+    name: str | None,
     force: bool,
-    download_kwargs: Optional[Mapping[str, Any]],
+    download_kwargs: Mapping[str, Any] | None,
     mode: Literal["r", "rt", "w", "wt"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[StringIO, None, None]: ...
 
 
@@ -479,11 +477,11 @@ def ensure_open(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str],
+    name: str | None,
     force: bool,
-    download_kwargs: Optional[Mapping[str, Any]],
+    download_kwargs: Mapping[str, Any] | None,
     mode: Literal["rb", "wb"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[BytesIO, None, None]: ...
 
 
@@ -492,12 +490,12 @@ def ensure_open(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    mode: Union[Literal["r", "rt", "w", "wt"], Literal["rb", "wb"]] = "r",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[Union[StringIO, BytesIO], None, None]:
+    download_kwargs: Mapping[str, Any] | None = None,
+    mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Generator[StringIO | BytesIO, None, None]:
     """Ensure a file is downloaded and open it.
 
     :param key:
@@ -540,11 +538,11 @@ def ensure_open_zip(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: str = "r",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> BytesOpener:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
@@ -592,12 +590,12 @@ def ensure_open_lzma(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str],
+    name: str | None,
     force: bool,
-    download_kwargs: Optional[Mapping[str, Any]],
+    download_kwargs: Mapping[str, Any] | None,
     mode: Literal["r", "w", "rt", "wt"] = "rt",
-    open_kwargs: Optional[Mapping[str, Any]],
-) -> Generator["io.TextIOWrapper[lzma.LZMAFile]", None, None]: ...
+    open_kwargs: Mapping[str, Any] | None,
+) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -607,11 +605,11 @@ def ensure_open_lzma(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str],
+    name: str | None,
     force: bool,
-    download_kwargs: Optional[Mapping[str, Any]],
+    download_kwargs: Mapping[str, Any] | None,
     mode: Literal["rb", "wb"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[lzma.LZMAFile, None, None]: ...
 
 
@@ -620,12 +618,12 @@ def ensure_open_lzma(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[Union[lzma.LZMAFile, "io.TextIOWrapper[lzma.LZMAFile]"], None, None]:
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
     """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
     :param key:
@@ -668,11 +666,11 @@ def ensure_open_tarfile(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: str = "r",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> BytesOpener:
     """Ensure a tar file is downloaded and open a file inside it.
 
@@ -720,11 +718,11 @@ def ensure_open_gz(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str],
+    name: str | None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]],
+    download_kwargs: Mapping[str, Any] | None,
     mode: Literal["r", "w", "rt", "wt"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]],
+    open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[StringIO, None, None]: ...
 
 
@@ -735,11 +733,11 @@ def ensure_open_gz(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["rb", "wb"] = ...,
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[BytesIO, None, None]: ...
 
 
@@ -748,12 +746,12 @@ def ensure_open_gz(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-) -> Generator[Union[StringIO, BytesIO], None, None]:
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Generator[StringIO | BytesIO, None, None]:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key:
@@ -795,11 +793,11 @@ def ensure_open_bz2(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["rb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[bz2.BZ2File, None, None]:
     """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
@@ -841,11 +839,11 @@ def ensure_csv(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "pd.DataFrame":
+    download_kwargs: Mapping[str, Any] | None = None,
+    read_csv_kwargs: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     """Download a CSV and open as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -877,8 +875,8 @@ def ensure_csv(
 
     >>> import pystow
     >>> import pandas as pd
-    >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-    >>> df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+    >>> url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
+    >>> df: pd.DataFrame = pystow.ensure_csv("pykeen", "datasets", "nations", url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_csv(
@@ -895,8 +893,8 @@ def load_df(
     key: str,
     *subkeys: str,
     name: str,
-    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "pd.DataFrame":
+    read_csv_kwargs: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -913,9 +911,9 @@ def load_df(
 
     >>> import pystow
     >>> import pandas as pd
-    >>> url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-    >>> pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
-    >>> df: pd.DataFrame = pystow.load_df('pykeen', 'datasets', 'nations', name='test.txt')
+    >>> url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
+    >>> pystow.ensure_csv("pykeen", "datasets", "nations", url=url)
+    >>> df: pd.DataFrame = pystow.load_df("pykeen", "datasets", "nations", name="test.txt")
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.load_df(
@@ -929,10 +927,10 @@ def dump_df(
     key: str,
     *subkeys: str,
     name: str,
-    obj: "pd.DataFrame",
+    obj: pd.DataFrame,
     sep: str = "\t",
     index: bool = False,
-    to_csv_kwargs: Optional[Mapping[str, Any]] = None,
+    to_csv_kwargs: Mapping[str, Any] | None = None,
 ) -> None:
     """Dump a dataframe to a TSV file with :mod:`pandas`.
 
@@ -963,11 +961,11 @@ def ensure_json(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    json_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
     """Download JSON and open with :mod:`json`.
 
@@ -991,8 +989,8 @@ def ensure_json(
     Example usage::
 
     >>> import pystow
-    >>> url = 'https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json'
-    >>> perturbations = pystow.ensure_json('bio', 'creeds', '1.0', url=url)
+    >>> url = "https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json"
+    >>> perturbations = pystow.ensure_json("bio", "creeds", "1.0", url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_json(
@@ -1010,11 +1008,11 @@ def ensure_json_bz2(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    json_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
     """Download BZ2-compressed JSON and open with :mod:`json`.
 
@@ -1038,8 +1036,8 @@ def ensure_json_bz2(
     Example usage::
 
     >>> import pystow
-    >>> url = 'https://github.com/hetio/hetionet/raw/master/hetnet/json/hetionet-v1.0.json.bz2'
-    >>> hetionet = pystow.ensure_json_bz2('bio', 'hetionet', '1.0', url=url)
+    >>> url = "https://github.com/hetio/hetionet/raw/master/hetnet/json/hetionet-v1.0.json.bz2"
+    >>> hetionet = pystow.ensure_json_bz2("bio", "hetionet", "1.0", url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_json_bz2(
@@ -1057,7 +1055,7 @@ def load_json(
     key: str,
     *subkeys: str,
     name: str,
-    json_load_kwargs: Optional[Mapping[str, Any]] = None,
+    json_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
     """Open a JSON file :mod:`json`.
 
@@ -1078,8 +1076,8 @@ def dump_json(
     *subkeys: str,
     name: str,
     obj: JSON,
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    json_dump_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    json_dump_kwargs: Mapping[str, Any] | None = None,
 ) -> None:
     """Dump an object to a file with :mod:`json`.
 
@@ -1102,12 +1100,12 @@ def ensure_pickle(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["rb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    pickle_load_kwargs: Mapping[str, Any] | None = None,
 ) -> Any:
     """Download a pickle file and open with :mod:`pickle`.
 
@@ -1147,8 +1145,8 @@ def load_pickle(
     *subkeys: str,
     name: str,
     mode: Literal["rb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    pickle_load_kwargs: Mapping[str, Any] | None = None,
 ) -> Any:
     """Open a pickle file with :mod:`pickle`.
 
@@ -1178,8 +1176,8 @@ def dump_pickle(
     name: str,
     obj: Any,
     mode: Literal["wb"] = "wb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    pickle_dump_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    pickle_dump_kwargs: Mapping[str, Any] | None = None,
 ) -> None:
     """Dump an object to a file with :mod:`pickle`.
 
@@ -1208,12 +1206,12 @@ def ensure_pickle_gz(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     mode: Literal["rb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    pickle_load_kwargs: Mapping[str, Any] | None = None,
 ) -> Any:
     """Download a gzipped pickle file and open with :mod:`pickle`.
 
@@ -1253,8 +1251,8 @@ def load_pickle_gz(
     *subkeys: str,
     name: str,
     mode: Literal["rb"] = "rb",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    pickle_load_kwargs: Optional[Mapping[str, Any]] = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    pickle_load_kwargs: Mapping[str, Any] | None = None,
 ) -> Any:
     """Open a gzipped pickle file with :mod:`pickle`.
 
@@ -1282,11 +1280,11 @@ def ensure_xml(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "lxml.etree.ElementTree":
+    download_kwargs: Mapping[str, Any] | None = None,
+    parse_kwargs: Mapping[str, Any] | None = None,
+) -> lxml.etree.ElementTree:
     """Download an XML file and open it with :mod:`lxml`.
 
     :param key: The module name
@@ -1305,7 +1303,10 @@ def ensure_xml(
     :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_xml(
@@ -1322,8 +1323,8 @@ def load_xml(
     key: str,
     *subkeys: str,
     name: str,
-    parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "lxml.etree.ElementTree":
+    parse_kwargs: Mapping[str, Any] | None = None,
+) -> lxml.etree.ElementTree:
     """Load an XML file with :mod:`lxml`.
 
     :param key: The module name
@@ -1331,10 +1332,14 @@ def load_xml(
         A sequence of additional strings to join. If none are given,
         returns the directory for this module.
     :param name: The name of the file to open
-    :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+    :param parse_kwargs:
+        Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.load_xml(
@@ -1348,9 +1353,9 @@ def dump_xml(
     key: str,
     *subkeys: str,
     name: str,
-    obj: "lxml.etree.ElementTree",
-    open_kwargs: Optional[Mapping[str, Any]] = None,
-    write_kwargs: Optional[Mapping[str, Any]] = None,
+    obj: lxml.etree.ElementTree,
+    open_kwargs: Mapping[str, Any] | None = None,
+    write_kwargs: Mapping[str, Any] | None = None,
 ) -> None:
     """Dump an XML element tree to a file with :mod:`lxml`.
 
@@ -1377,11 +1382,11 @@ def ensure_excel(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    read_excel_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "pd.DataFrame":
+    download_kwargs: Mapping[str, Any] | None = None,
+    read_excel_kwargs: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     """Download an excel file and open as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -1416,11 +1421,11 @@ def ensure_tar_df(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "pd.DataFrame":
+    download_kwargs: Mapping[str, Any] | None = None,
+    read_csv_kwargs: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -1441,7 +1446,10 @@ def ensure_tar_df(
     :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
     :returns: A dataframe
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_df(
@@ -1460,11 +1468,11 @@ def ensure_tar_xml(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "lxml.etree.ElementTree":
+    download_kwargs: Mapping[str, Any] | None = None,
+    parse_kwargs: Mapping[str, Any] | None = None,
+) -> lxml.etree.ElementTree:
     """Download a tar file and open an inner file as an XML with :mod:`lxml`.
 
     :param key: The module name
@@ -1485,7 +1493,10 @@ def ensure_tar_xml(
     :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
     :returns: An ElementTree object
 
-    .. warning:: If you have lots of files to read in the same archive, it's better just to unzip first.
+    .. warning::
+
+        If you have lots of files to read in the same archive,
+        it's better just to unzip first.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_tar_xml(
@@ -1504,11 +1515,11 @@ def ensure_zip_df(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    read_csv_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "pd.DataFrame":
+    download_kwargs: Mapping[str, Any] | None = None,
+    read_csv_kwargs: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
 
     :param key: The module name
@@ -1546,11 +1557,11 @@ def ensure_zip_np(
     *subkeys: str,
     url: str,
     inner_path: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
-    load_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "numpy.typing.ArrayLike":
+    download_kwargs: Mapping[str, Any] | None = None,
+    load_kwargs: Mapping[str, Any] | None = None,
+) -> numpy.typing.ArrayLike:
     """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
     :param key: The module name
@@ -1590,12 +1601,12 @@ def ensure_rdf(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
     precache: bool = True,
-    parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "rdflib.Graph":
+    parse_kwargs: Mapping[str, Any] | None = None,
+) -> rdflib.Graph:
     """Download a RDF file and open with :mod:`rdflib`.
 
     :param key: The module name
@@ -1624,13 +1635,16 @@ def ensure_rdf(
     >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
     >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 
-    If :mod:`rdflib` fails to guess the format, you can explicitly specify it using the `parse_kwargs` argument:
+    If :mod:`rdflib` fails to guess the format, you can explicitly specify
+    it using the `parse_kwargs` argument:
 
     >>> import pystow
     >>> import rdflib
     >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph" \
     ... "/v3/suite/memoryalpha-stexpanded/component/reference.xml"
-    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"})
+    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf(
+    ...     "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
+    ... )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(
@@ -1647,9 +1661,9 @@ def ensure_rdf(
 def load_rdf(
     key: str,
     *subkeys: str,
-    name: Optional[str] = None,
-    parse_kwargs: Optional[Mapping[str, Any]] = None,
-) -> "rdflib.Graph":
+    name: str | None = None,
+    parse_kwargs: Mapping[str, Any] | None = None,
+) -> rdflib.Graph:
     """Open an RDF file with :mod:`rdflib`.
 
     :param key:
@@ -1673,9 +1687,9 @@ def dump_rdf(
     key: str,
     *subkeys: str,
     name: str,
-    obj: "rdflib.Graph",
+    obj: rdflib.Graph,
     format: str = "turtle",
-    serialize_kwargs: Optional[Mapping[str, Any]] = None,
+    serialize_kwargs: Mapping[str, Any] | None = None,
 ) -> None:
     """Dump an RDF graph to a file with :mod:`rdflib`.
 
@@ -1700,8 +1714,8 @@ def ensure_from_s3(
     key: str,
     *subkeys: str,
     s3_bucket: str,
-    s3_key: Union[str, Sequence[str]],
-    name: Optional[str] = None,
+    s3_key: str | Sequence[str],
+    name: str | None = None,
     force: bool = False,
     **kwargs: Any,
 ) -> Path:
@@ -1730,8 +1744,10 @@ def ensure_from_s3(
 
     Example downloading ProtMapper 0.0.21:
 
-    >>> version = '0.0.21'
-    >>> ensure_from_s3('test', version, s3_bucket='bigmech', s3_key=f'protmapper/{version}/refseq_uniprot.csv')
+    >>> version = "0.0.21"
+    >>> ensure_from_s3(
+    ...     "test", version, s3_bucket="bigmech", s3_key=f"protmapper/{version}/refseq_uniprot.csv"
+    ... )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_s3(
@@ -1770,7 +1786,7 @@ def ensure_from_google(
     Example downloading the WK3l-15k dataset as motivated by
     https://github.com/pykeen/pykeen/pull/403:
 
-    >>> ensure_from_google('test', name='wk3l15k.zip', file_id='1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z')
+    >>> ensure_from_google("test", name="wk3l15k.zip", file_id="1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z")
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
@@ -1798,9 +1814,9 @@ def ensure_open_sqlite(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a SQLite database.
 
@@ -1842,9 +1858,9 @@ def ensure_open_sqlite_gz(
     key: str,
     *subkeys: str,
     url: str,
-    name: Optional[str] = None,
+    name: str | None = None,
     force: bool = False,
-    download_kwargs: Optional[Mapping[str, Any]] = None,
+    download_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a gzipped SQLite database.
 

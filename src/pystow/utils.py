@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Utilities."""
 
 from __future__ import annotations
@@ -16,21 +14,16 @@ import tarfile
 import tempfile
 import urllib.error
 import zipfile
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
-from subprocess import check_output  # noqa: S404
+from subprocess import check_output
 from typing import (
     TYPE_CHECKING,
     Any,
-    Collection,
-    Iterable,
-    Iterator,
     Literal,
-    Mapping,
     NamedTuple,
-    Optional,
-    Union,
     cast,
 )
 from urllib.parse import urlparse
@@ -64,6 +57,7 @@ __all__ = [
     # Exceptions
     "HexDigestError",
     "UnexpectedDirectory",
+    "UnexpectedDirectoryError",
     # Functions
     "get_offending_hexdigests",
     "get_hashes",
@@ -112,7 +106,6 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-
 #: Represents an available backend for downloading
 DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 
@@ -143,7 +136,7 @@ class HexDigestError(ValueError):
         """
         self.offending_hexdigests = offending_hexdigests
 
-    def __str__(self) -> str:  # noqa:D105
+    def __str__(self) -> str:
         return "\n".join(
             (
                 "Hexdigest of downloaded file does not match the expected ones!",
@@ -155,7 +148,7 @@ class HexDigestError(ValueError):
         )
 
 
-class UnexpectedDirectory(FileExistsError):
+class UnexpectedDirectoryError(FileExistsError):
     """Thrown if a directory path is given where file path should have been."""
 
     def __init__(self, path: Path):
@@ -165,12 +158,16 @@ class UnexpectedDirectory(FileExistsError):
         """
         self.path = path
 
-    def __str__(self) -> str:  # noqa:D105
+    def __str__(self) -> str:
         return f"got directory instead of file: {self.path}"
 
 
+#: Backwards compatible name
+UnexpectedDirectory = UnexpectedDirectoryError
+
+
 def get_hexdigests_remote(
-    hexdigests_remote: Optional[Mapping[str, str]], hexdigests_strict: bool = False
+    hexdigests_remote: Mapping[str, str] | None, hexdigests_strict: bool = False
 ) -> Mapping[str, str]:
     """Process hexdigests via URLs.
 
@@ -191,10 +188,10 @@ def get_hexdigests_remote(
 
 
 def get_offending_hexdigests(
-    path: Union[str, Path],
-    chunk_size: Optional[int] = None,
-    hexdigests: Optional[Mapping[str, str]] = None,
-    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    path: str | Path,
+    chunk_size: int | None = None,
+    hexdigests: Mapping[str, str] | None = None,
+    hexdigests_remote: Mapping[str, str] | None = None,
     hexdigests_strict: bool = False,
 ) -> Collection[HexDigestMismatch]:
     """
@@ -243,10 +240,10 @@ def get_offending_hexdigests(
 
 
 def get_hashes(
-    path: Union[str, Path],
+    path: str | Path,
     names: Iterable[str],
     *,
-    chunk_size: Optional[int] = None,
+    chunk_size: int | None = None,
 ) -> Mapping[str, Hash]:
     """Calculate several hexdigests of hash algorithms for a file concurrently.
 
@@ -277,8 +274,8 @@ def get_hashes(
 def raise_on_digest_mismatch(
     *,
     path: Path,
-    hexdigests: Optional[Mapping[str, str]] = None,
-    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests: Mapping[str, str] | None = None,
+    hexdigests_remote: Mapping[str, str] | None = None,
     hexdigests_strict: bool = False,
 ) -> None:
     """Raise a HexDigestError if the digests do not match.
@@ -315,7 +312,7 @@ class TqdmReportHook(tqdm):  # type:ignore
         self,
         blocks: int = 1,
         block_size: int = 1,
-        total_size: Optional[int] = None,
+        total_size: int | None = None,
     ) -> None:
         """Update the internal state based on a urllib report hook.
 
@@ -330,15 +327,15 @@ class TqdmReportHook(tqdm):  # type:ignore
 
 def download(
     url: str,
-    path: Union[str, Path],
+    path: str | Path,
     force: bool = True,
     clean_on_failure: bool = True,
     backend: DownloadBackend = "urllib",
-    hexdigests: Optional[Mapping[str, str]] = None,
-    hexdigests_remote: Optional[Mapping[str, str]] = None,
+    hexdigests: Mapping[str, str] | None = None,
+    hexdigests_remote: Mapping[str, str] | None = None,
     hexdigests_strict: bool = False,
     progress_bar: bool = True,
-    tqdm_kwargs: Optional[Mapping[str, Any]] = None,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
     **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
@@ -358,8 +355,10 @@ def download(
         Set to true to show a progress bar while downloading
     :param tqdm_kwargs:
         Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
-    :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve` or to `requests.get`
-        depending on the backend chosen. If using 'requests' backend, `stream` is set to True by default.
+    :param kwargs:
+        The keyword arguments to pass to :func:`urllib.request.urlretrieve`
+        or to `requests.get` depending on the backend chosen. If using 'requests' backend,
+        `stream` is set to True by default.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
@@ -370,7 +369,7 @@ def download(
     path = Path(path).resolve()
 
     if path.is_dir():
-        raise UnexpectedDirectory(path)
+        raise UnexpectedDirectoryError(path)
     if path.is_file() and not force:
         raise_on_digest_mismatch(
             path=path,
@@ -381,15 +380,15 @@ def download(
         logger.debug("did not re-download %s from %s", path, url)
         return
 
-    _tqdm_kwargs = dict(
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        miniters=1,
-        disable=not progress_bar,
-        desc=f"Downloading {path.name}",
-        leave=False,
-    )
+    _tqdm_kwargs = {
+        "unit": "B",
+        "unit_scale": True,
+        "unit_divisor": 1024,
+        "miniters": 1,
+        "disable": not progress_bar,
+        "desc": f"Downloading {path.name}",
+        "leave": False,
+    }
     if tqdm_kwargs:
         _tqdm_kwargs.update(tqdm_kwargs)
 
@@ -495,7 +494,8 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
     """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``.
 
     :param path: The path to a directory
-    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :param ensure_exists:
+        Should the directories leading to the path be created if they don't already exist?
     """
     if ensure_exists:
         path.mkdir(exist_ok=True, parents=True)
@@ -535,8 +535,10 @@ def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
     """Get an environment variable representing a path, or use the default.
 
     :param envvar: The environmental variable name to check
-    :param default: The default path to return if the environmental variable is not set
-    :param ensure_exists: Should the directories leading to the path be created if they don't already exist?
+    :param default:
+        The default path to return if the environmental variable is not set
+    :param ensure_exists:
+        Should the directories leading to the path be created if they don't already exist?
     :return: A path either specified by the environmental variable or by the default.
     """
     rv = Path(os.getenv(envvar, default=default)).expanduser()
@@ -552,9 +554,7 @@ def n() -> str:
     return str(uuid4())
 
 
-def get_df_io(
-    df: "pandas.DataFrame", sep: str = "\t", index: bool = False, **kwargs: Any
-) -> BytesIO:
+def get_df_io(df: pandas.DataFrame, sep: str = "\t", index: bool = False, **kwargs: Any) -> BytesIO:
     """Get the dataframe as bytes.
 
     :param df: A dataframe
@@ -570,7 +570,7 @@ def get_df_io(
     return bio
 
 
-def get_np_io(arr: "numpy.typing.ArrayLike", **kwargs: Any) -> BytesIO:
+def get_np_io(arr: numpy.typing.ArrayLike, **kwargs: Any) -> BytesIO:
     """Get the numpy object as bytes.
 
     :param arr: Array-like
@@ -587,7 +587,7 @@ def get_np_io(arr: "numpy.typing.ArrayLike", **kwargs: Any) -> BytesIO:
 
 def write_pickle_gz(
     obj: Any,
-    path: Union[str, Path],
+    path: str | Path,
     **kwargs: Any,
 ) -> None:
     """Write an object to a gzipped pickle.
@@ -602,8 +602,8 @@ def write_pickle_gz(
 
 
 def write_lzma_csv(
-    df: "pandas.DataFrame",
-    path: Union[str, Path],
+    df: pandas.DataFrame,
+    path: str | Path,
     sep: str = "\t",
     index: bool = False,
     **kwargs: Any,
@@ -624,8 +624,8 @@ def write_lzma_csv(
 
 
 def write_zipfile_csv(
-    df: "pandas.DataFrame",
-    path: Union[str, Path],
+    df: pandas.DataFrame,
+    path: str | Path,
     inner_path: str,
     sep: str = "\t",
     index: bool = False,
@@ -649,8 +649,8 @@ def write_zipfile_csv(
 
 
 def read_zipfile_csv(
-    path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs: Any
-) -> "pandas.DataFrame":
+    path: str | Path, inner_path: str, sep: str = "\t", **kwargs: Any
+) -> pandas.DataFrame:
     """Read an inner CSV file from a zip archive.
 
     :param path: The path to the zip archive
@@ -667,8 +667,8 @@ def read_zipfile_csv(
 
 
 def write_zipfile_xml(
-    element_tree: "lxml.etree.ElementTree",
-    path: Union[str, Path],
+    element_tree: lxml.etree.ElementTree,
+    path: str | Path,
     inner_path: str,
     **kwargs: Any,
 ) -> None:
@@ -687,9 +687,7 @@ def write_zipfile_xml(
             file.write(etree.tostring(element_tree, **kwargs))
 
 
-def read_zipfile_xml(
-    path: Union[str, Path], inner_path: str, **kwargs: Any
-) -> "lxml.etree.ElementTree":
+def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
     """Read an inner XML file from a zip archive.
 
     :param path: The path to the zip archive
@@ -705,8 +703,8 @@ def read_zipfile_xml(
 
 
 def write_zipfile_np(
-    arr: "numpy.typing.ArrayLike",
-    path: Union[str, Path],
+    arr: numpy.typing.ArrayLike,
+    path: str | Path,
     inner_path: str,
     **kwargs: Any,
 ) -> None:
@@ -725,7 +723,7 @@ def write_zipfile_np(
             file.write(bytes_io.read())
 
 
-def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "numpy.typing.ArrayLike":
+def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typing.ArrayLike:
     """Read an inner numpy array-like from a zip archive.
 
     :param path: The path to the zip archive
@@ -740,13 +738,13 @@ def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "nump
             return cast(np.typing.ArrayLike, np.load(file, **kwargs))
 
 
-def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "rdflib.Graph":
+def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib.Graph:
     """Read an inner RDF file from a zip archive.
 
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
-    :return: A dataframe
+    :return: A graph
     """
     import rdflib
 
@@ -758,8 +756,8 @@ def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> 
 
 
 def write_tarfile_csv(
-    df: "pandas.DataFrame",
-    path: Union[str, Path],
+    df: pandas.DataFrame,
+    path: str | Path,
     inner_path: str,
     sep: str = "\t",
     index: bool = False,
@@ -784,8 +782,8 @@ def write_tarfile_csv(
 
 
 def read_tarfile_csv(
-    path: Union[str, Path], inner_path: str, sep: str = "\t", **kwargs: Any
-) -> "pandas.DataFrame":
+    path: str | Path, inner_path: str, sep: str = "\t", **kwargs: Any
+) -> pandas.DataFrame:
     """Read an inner CSV file from a tar archive.
 
     :param path: The path to the tar archive
@@ -801,9 +799,7 @@ def read_tarfile_csv(
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
-def read_tarfile_xml(
-    path: Union[str, Path], inner_path: str, **kwargs: Any
-) -> "lxml.etree.ElementTree":
+def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
     """Read an inner XML file from a tar archive.
 
     :param path: The path to the tar archive
@@ -818,7 +814,7 @@ def read_tarfile_xml(
             return etree.parse(file, **kwargs)
 
 
-def read_rdf(path: Union[str, Path], **kwargs: Any) -> "rdflib.Graph":
+def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
     :param path: The path to the RDF file
@@ -837,7 +833,7 @@ def read_rdf(path: Union[str, Path], **kwargs: Any) -> "rdflib.Graph":
     return graph
 
 
-def write_sql(df: "pandas.DataFrame", name: str, path: Union[str, Path], **kwargs: Any) -> None:
+def write_sql(df: pandas.DataFrame, name: str, path: str | Path, **kwargs: Any) -> None:
     """Write a dataframe as a SQL table.
 
     :param df: A dataframe
@@ -880,10 +876,10 @@ TOKEN_KEY = "download_warning"  # noqa:S105
 
 def download_from_google(
     file_id: str,
-    path: Union[str, Path],
+    path: str | Path,
     force: bool = True,
     clean_on_failure: bool = True,
-    hexdigests: Optional[Mapping[str, str]] = None,
+    hexdigests: Mapping[str, str] | None = None,
 ) -> None:
     """Download a file from google drive.
 
@@ -903,7 +899,7 @@ def download_from_google(
     path = Path(path).resolve()
 
     if path.is_dir():
-        raise UnexpectedDirectory(path)
+        raise UnexpectedDirectoryError(path)
     if path.is_file() and not force:
         raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
         logger.debug("did not re-download %s from Google ID %s", path, file_id)
@@ -936,10 +932,10 @@ def _get_confirm_token(res: requests.Response) -> str:
 def download_from_s3(
     s3_bucket: str,
     s3_key: str,
-    path: Union[str, Path],
-    client: Union[None, "botocore.client.BaseClient"] = None,
-    client_kwargs: Optional[Mapping[str, Any]] = None,
-    download_file_kwargs: Optional[Mapping[str, Any]] = None,
+    path: str | Path,
+    client: None | botocore.client.BaseClient = None,
+    client_kwargs: Mapping[str, Any] | None = None,
+    download_file_kwargs: Mapping[str, Any] | None = None,
     force: bool = True,
     clean_on_failure: bool = True,
 ) -> None:
@@ -964,7 +960,7 @@ def download_from_s3(
     path = Path(path).resolve()
 
     if path.is_dir():
-        raise UnexpectedDirectory(path)
+        raise UnexpectedDirectoryError(path)
     if path.is_file() and not force:
         logger.debug("did not re-download %s from %s %s", path, s3_bucket, s3_key)
         return
@@ -993,7 +989,7 @@ def download_from_s3(
         raise
 
 
-def _unlink(path: Union[str, Path]) -> None:
+def _unlink(path: str | Path) -> None:
     # python 3.6 does not have pathlib.Path.unlink, smh
     try:
         os.remove(path)
@@ -1048,8 +1044,7 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         <key>_HOME where key is uppercased is checked first before using
         the default home directory.
     :param ensure_exists:
-        Should all directories be created automatically?
-        Defaults to true.
+        Should all directories be created automatically? Defaults to true.
     :returns:
         The path to the given
 
@@ -1078,17 +1073,18 @@ def ensure_readme() -> None:
     except PermissionError as e:
         raise PermissionError(
             "PyStow was not able to create its home directory in due to a lack of "
-            "permissions. This can happen, e.g., if you're working on a server where you don't have full "
-            "rights. See https://pystow.readthedocs.io/en/latest/installation.html#configuration for instructions "
-            "on choosing a different home folder location for PyStow to somewhere where you have write permissions."
+            "permissions. This can happen, e.g., if you're working on a server where you don't "
+            "have full rights. See https://pystow.readthedocs.io/en/latest/installation.html#"
+            "configuration for instructions on choosing a different home folder location for "
+            "PyStow to somewhere where you have write permissions."
         ) from e
     if readme_path.is_file():
         return
     with readme_path.open("w", encoding="utf8") as file:
-        print(README_TEXT, file=file)  # noqa:T001,T201
+        print(README_TEXT, file=file)
 
 
-def path_to_sqlite(path: Union[str, Path]) -> str:
+def path_to_sqlite(path: str | Path) -> str:
     """Convert a path to a SQLite connection string.
 
     :param path: A path to a SQLite database file
@@ -1098,7 +1094,7 @@ def path_to_sqlite(path: Union[str, Path]) -> str:
     return f"sqlite:///{path.as_posix()}"
 
 
-def gunzip(source: Union[str, Path], target: Union[str, Path]) -> None:
+def gunzip(source: str | Path, target: str | Path) -> None:
     """Unzip a file in the source to the target.
 
     :param source: The path to an input file

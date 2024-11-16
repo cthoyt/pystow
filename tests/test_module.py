@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Tests for PyStow."""
+
+from __future__ import annotations
 
 import bz2
 import contextlib
@@ -12,8 +12,8 @@ import pickle
 import shutil
 import tempfile
 import unittest
+from collections.abc import Mapping
 from pathlib import Path
-from typing import ContextManager, Mapping, Union
 from unittest import mock
 
 import pandas as pd
@@ -135,7 +135,7 @@ class TestJoin(unittest.TestCase):
         self.directory.cleanup()
 
     @contextlib.contextmanager
-    def mock_directory(self) -> ContextManager[Path]:
+    def mock_directory(self) -> contextlib.AbstractContextManager[Path]:
         """Use this test case's temporary directory as a mock environment variable.
 
         :yield: The mock directory's path
@@ -150,20 +150,20 @@ class TestJoin(unittest.TestCase):
         :return: A patch object that can be applied to the pystow download function
         """
 
-        def _mock_get_data(url: str, path: Union[str, Path], **_kwargs) -> Path:
+        def _mock_get_data(url: str, path: str | Path, **_kwargs) -> Path:
             return shutil.copy(MOCK_FILES[url], path)
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
     @staticmethod
-    def mock_download_once(local_path: Union[str, Path]):
+    def mock_download_once(local_path: str | Path):
         """Mock connection to the internet using local resource files.
 
         :param local_path: the path to the file to mock
         :return: A patch object that can be applied to the pystow download function
         """
 
-        def _mock_get_data(path: Union[str, Path], **_kwargs) -> Path:
+        def _mock_get_data(path: str | Path, **_kwargs) -> Path:
             return shutil.copy(local_path, path)
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
@@ -281,7 +281,7 @@ class TestJoin(unittest.TestCase):
             with self.mock_download_once(path):
                 with lzma.open(path, "wt") as file:
                     for row in TEST_TSV_ROWS:
-                        print(*row, sep="\t", file=file)  # noqa:T001,T201
+                        print(*row, sep="\t", file=file)
                 with pystow.ensure_open_lzma("test", url=n()) as file:
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))

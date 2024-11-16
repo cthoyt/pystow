@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """PyStow constants."""
 
+from __future__ import annotations
+
+from collections.abc import Generator
 from io import StringIO
 from textwrap import dedent
-from typing import IO, Any, Callable, Generator
+from typing import IO, Any, Callable
 
 __all__ = [
     "PYSTOW_NAME_ENVVAR",
@@ -30,11 +31,12 @@ reproducible location to store and access data.
 
 ### ⚙️️ Configuration
 
-By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
-`$HOME/.data/<app>` folder.
+By default, data is stored in the `$HOME/.data` directory. By default, the `<app>`
+app will create the `$HOME/.data/<app>` folder.
 
-If you want to use an alternate folder name to `.data` inside the home directory, you can set the `PYSTOW_NAME`
-environment variable. For example, if you set `PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
+If you want to use an alternate folder name to `.data` inside the home directory,
+you can set the `PYSTOW_NAME` environment variable. For example, if you set
+`PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
 create the `$HOME/mydata/pykeen/` directory:
 
 ```python
@@ -49,8 +51,9 @@ os.environ['PYSTOW_NAME'] = 'mydata'
 pykeen_directory = pystow.join('pykeen')
 ```
 
-If you want to specify a completely custom directory that isn't relative to your home directory, you can set
-the `PYSTOW_HOME` environment variable. For example, if you set `PYSTOW_HOME=/usr/local/`, then the following code for
+If you want to specify a completely custom directory that isn't relative to
+your home directory, you can set the `PYSTOW_HOME` environment variable. For
+example, if you set `PYSTOW_HOME=/usr/local/`, then the following code for
 the `pykeen` app will create the `/usr/local/pykeen/` directory:
 
 ```python

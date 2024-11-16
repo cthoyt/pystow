@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """Tests for caching."""
+
+from __future__ import annotations
 
 import os
 import tempfile
@@ -67,7 +67,8 @@ class TestCache(unittest.TestCase):
             _f1()
         self.assertFalse(
             path.is_file(),
-            msg="the function should throw an exception because of the flag, and no file should be created",
+            msg="the function should throw an exception "
+            "because of the flag, and no file should be created",
         )
 
         raise_flag = False

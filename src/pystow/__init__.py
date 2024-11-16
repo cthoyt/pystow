@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """PyStow: Easily pick a place to store data for your python package."""
 
 from .api import (
