@@ -16,7 +16,6 @@ import tarfile
 import tempfile
 import urllib.error
 import zipfile
-from collections import namedtuple
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
