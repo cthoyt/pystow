@@ -58,7 +58,10 @@ if TYPE_CHECKING:
     import pandas as pd
     import rdflib
 
-__all__ = ["Module"]
+__all__ = [
+    "Module",
+    "VersionHint",
+]
 
 logger = logging.getLogger(__name__)
 
