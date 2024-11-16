@@ -31,6 +31,7 @@ from typing import (
     NamedTuple,
     Optional,
     Union,
+    cast,
 )
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
@@ -736,7 +737,7 @@ def read_zip_np(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "nump
 
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
-            return np.load(file, **kwargs)
+            return cast(np.typing.ArrayLike, np.load(file, **kwargs))
 
 
 def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> "rdflib.Graph":
@@ -752,7 +753,7 @@ def read_zipfile_rdf(path: Union[str, Path], inner_path: str, **kwargs: Any) -> 
     graph = rdflib.Graph()
     with zipfile.ZipFile(file=path) as zip_file:
         with zip_file.open(inner_path) as file:
-            graph.load(file, **kwargs)
+            graph.parse(file, **kwargs)
     return graph
 
 
@@ -809,7 +810,6 @@ def read_tarfile_xml(
     :param inner_path: The path inside the tar archive to the xml file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
     :return: An XML element tree
-    :rtype: lxml.etree.ElementTree
     """
     from lxml import etree
 
@@ -833,7 +833,7 @@ def read_rdf(path: Union[str, Path], **kwargs: Any) -> "rdflib.Graph":
     with (
         gzip.open(path, "rb") if isinstance(path, Path) and path.suffix == ".gz" else open(path)
     ) as file:
-        graph.parse(file, **kwargs)
+        graph.parse(file, **kwargs)  # type:ignore
     return graph
 
 

@@ -27,6 +27,7 @@ from typing import (
     Optional,
     Sequence,
     Union,
+    cast,
     overload,
 )
 
@@ -875,7 +876,6 @@ class Module:
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
         :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
         :return: A pandas DataFrame
-        :rtype: pandas.DataFrame
         """
         import pandas as pd
 
@@ -1438,7 +1438,6 @@ class Module:
         :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
         :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
         :return: A pandas DataFrame
-        :rtype: pandas.DataFrame
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1478,7 +1477,6 @@ class Module:
             Additional keyword arguments that are passed through to :func:`read_zip_np`
             and transitively to :func:`numpy.load`.
         :returns: An array-like object
-        :rtype: numpy.typing.ArrayLike
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1514,7 +1512,6 @@ class Module:
             Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
             :func:`rdflib.Graph.parse`.
         :return: An RDF graph
-        :rtype: rdflib.Graph
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1525,7 +1522,7 @@ class Module:
         cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
             with gzip.open(cache_path, "rb") as file:
-                return pickle.load(file)
+                return cast(rdflib.Graph, pickle.load(file))
 
         rv = read_rdf(path=path, **(parse_kwargs or {}))
         with gzip.open(cache_path, "wb") as file:
