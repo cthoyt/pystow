@@ -2,6 +2,8 @@
 
 """Utilities."""
 
+from __future__ import annotations
+
 import contextlib
 import gzip
 import hashlib
@@ -14,7 +16,6 @@ import tarfile
 import tempfile
 import urllib.error
 import zipfile
-from collections import namedtuple
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
@@ -25,7 +26,9 @@ from typing import (
     Collection,
     Iterable,
     Iterator,
+    Literal,
     Mapping,
+    NamedTuple,
     Optional,
     Union,
 )
@@ -35,6 +38,7 @@ from uuid import uuid4
 
 import requests
 from tqdm.auto import tqdm
+from typing_extensions import TypeAlias
 
 from .constants import (
     PYSTOW_HOME_ENVVAR,
@@ -52,8 +56,10 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
-    # Data Structures
+    # Data Structures and type annotations
     "HexDigestMismatch",
+    "DownloadBackend",
+    "Hash",
     # Exceptions
     "HexDigestError",
     "UnexpectedDirectory",
@@ -105,10 +111,25 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-# Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
-Hash = Any
 
-HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
+#: Represents an available backend for downloading
+DownloadBackend: TypeAlias = Literal["urllib", "requests"]
+
+#: This type alias uses a stub-only constructor, meaning that
+#: hashlib._Hash isn't actually part of the code, but MyPy injects it
+#: so we can do type checking
+Hash: TypeAlias = "hashlib._Hash"
+
+
+class HexDigestMismatch(NamedTuple):
+    """Contains information about a hexdigest mismatch."""
+
+    #: the name of the algorithm
+    name: str
+    #: the observed/actual hexdigest, encoded as a string
+    actual: str
+    #: the expected hexdigest, encoded as a string
+    expected: str
 
 
 class HexDigestError(ValueError):
@@ -311,7 +332,7 @@ def download(
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
-    backend: str = "urllib",
+    backend: DownloadBackend = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
     hexdigests_strict: bool = False,
@@ -421,7 +442,7 @@ def download(
 class DownloadError(OSError):
     """An error that wraps information from a requests or urllib download failure."""
 
-    def __init__(self, backend: str, url: str, path: Path) -> None:
+    def __init__(self, backend: DownloadBackend, url: str, path: Path) -> None:
         """Initialize the error.
 
         :param backend: The backend used
