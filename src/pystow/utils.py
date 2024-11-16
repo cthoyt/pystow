@@ -15,6 +15,7 @@ import shutil
 import tarfile
 import tempfile
 import urllib.error
+from typing import NamedTuple
 import zipfile
 from collections import namedtuple
 from functools import partial
@@ -116,7 +117,15 @@ logger = logging.getLogger(__name__)
 #: so we can do type checking
 Hash: TypeAlias = "hashlib._Hash"
 
-HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
+class HexDigestMismatch(NamedTuple):
+    """Contains information about a hexdigest mismatch."""
+
+    #: the name of the algorithm
+    name: str
+    #: the observed/actual hexdigest, encoded as a string
+    actual: str
+    #: the expected hexdigest, encoded as a string
+    expected: str
 
 #: Represents an available backend for downloading
 DownloadBackend: TypeAlias = Literal["urllib", "requests"]
