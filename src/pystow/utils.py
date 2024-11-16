@@ -119,7 +119,7 @@ Hash: TypeAlias = "hashlib._Hash"
 HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
 
 #: Represents an available backend for downloading
-DownloadBackend = Literal["urllib", "requests"]
+DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 
 
 class HexDigestError(ValueError):
