@@ -27,6 +27,7 @@ from typing import (
     Collection,
     Iterable,
     Iterator,
+    Literal,
     Mapping,
     Optional,
     Union,
@@ -37,6 +38,7 @@ from uuid import uuid4
 
 import requests
 from tqdm.auto import tqdm
+from typing_extensions import TypeAlias
 
 from .constants import (
     PYSTOW_HOME_ENVVAR,
@@ -54,8 +56,9 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
-    # Data Structures
+    # Data Structures and type annotations
     "HexDigestMismatch",
+    "DownloadBackend",
     # Exceptions
     "HexDigestError",
     "UnexpectedDirectory",
@@ -113,6 +116,9 @@ logger = logging.getLogger(__name__)
 Hash: TypeAlias = "hashlib._Hash"
 
 HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
+
+#: Represents an available backend for downloading
+DownloadBackend = Literal["urllib", "requests"]
 
 
 class HexDigestError(ValueError):
@@ -315,7 +321,7 @@ def download(
     path: Union[str, Path],
     force: bool = True,
     clean_on_failure: bool = True,
-    backend: str = "urllib",
+    backend: DownloadBackend = "urllib",
     hexdigests: Optional[Mapping[str, str]] = None,
     hexdigests_remote: Optional[Mapping[str, str]] = None,
     hexdigests_strict: bool = False,
@@ -425,7 +431,7 @@ def download(
 class DownloadError(OSError):
     """An error that wraps information from a requests or urllib download failure."""
 
-    def __init__(self, backend: str, url: str, path: Path) -> None:
+    def __init__(self, backend: DownloadBackend, url: str, path: Path) -> None:
         """Initialize the error.
 
         :param backend: The backend used
