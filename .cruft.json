@@ -1,0 +1,26 @@
+{
+  "template": "https://github.com/cthoyt/cookiecutter-snekpack",
+  "commit": "12edfcfa5f519467b5d834f0d4e706fb7cf4f065",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "package_name": "pystow",
+      "package_name_stylized": "PyStow",
+      "short_description": "Easily pick a place to store data for your Python code",
+      "author_name": "Charles Tapley Hoyt",
+      "author_email": "cthoyt@gmail.com",
+      "github_organization_name": "cthoyt",
+      "github_repository_name": "pystow",
+      "command_line_interface": true,
+      "gitlab": false,
+      "runner": "tox",
+      "__runner": "tox -e",
+      "__runner_uv": "--with tox-uv tox -e",
+      "__runner_pip": "tox tox-uv",
+      "__runner_tests": "py",
+      "__gh_slug": "cthoyt/pystow",
+      "_template": "https://github.com/cthoyt/cookiecutter-snekpack"
+    }
+  },
+  "directory": null
+}

@@ -1,13 +1,11 @@
 graft src
 graft tests
+prune scripts
+prune notebooks
+prune tests/.pytest_cache
+prune docs
 
-recursive-include docs Makefile
-recursive-include docs/source *.py
-recursive-include docs/source *.rst
-recursive-include docs/source *.png
+global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.gpickle .idea/**
 
-global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.gpickle
-
-exclude .appveyor.yml .bumpversion.cfg .coveragerc .flake8 .travis.yml .readthedocs.yml tox.ini .pre-commit-config.yaml
-exclude .appveyor_on_request.yml
-include LICENSE *.md *.rst
+include README.md LICENSE
+exclude tox.ini .readthedocs.yml .cruft.json CITATION.cff docker-compose.yml Dockerfile noxfile.py
