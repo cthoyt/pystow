@@ -2,6 +2,8 @@
 
 """Utilities."""
 
+from __future__ import annotations
+
 import contextlib
 import gzip
 import hashlib
@@ -105,8 +107,10 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-# Since we're python 3.6 compatible, we can't do from __future__ import annotations and use hashlib._Hash
-Hash = Any
+#: This type alias uses a stub-only constructor, meaning that
+#: hashlib._Hash isn't actually part of the code, but MyPy injects it
+#: so we can do type checking
+Hash: TypeAlias = "hashlib._Hash"
 
 HexDigestMismatch = namedtuple("HexDigestMismatch", "name actual expected")
 
