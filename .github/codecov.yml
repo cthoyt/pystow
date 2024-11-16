@@ -1,0 +1,4 @@
+# see https://docs.codecov.com/v4.6/docs/codecov-yaml
+ignore:
+  - "src/pystow/__main__.py"
+  - "src/pystow/cli.py"
