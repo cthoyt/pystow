@@ -399,7 +399,7 @@ def download(
                 try:
                     urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
                 except urllib.error.URLError as e:
-                    raise DownloadError(backend, url, path) from e
+                    raise DownloadError(backend, url, path, e) from e
         elif backend == "requests":
             kwargs.setdefault("stream", True)
             try:
@@ -423,7 +423,7 @@ def download(
                     ) as fsrc:
                         shutil.copyfileobj(fsrc, file)
             except requests.exceptions.ConnectionError as e:
-                raise DownloadError(backend, url, path) from e
+                raise DownloadError(backend, url, path, e) from e
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
@@ -442,16 +442,25 @@ def download(
 class DownloadError(OSError):
     """An error that wraps information from a requests or urllib download failure."""
 
-    def __init__(self, backend: DownloadBackend, url: str, path: Path) -> None:
+    def __init__(
+        self,
+        backend: DownloadBackend,
+        url: str,
+        path: Path,
+        exc: urllib.error.URLError | requests.exceptions.ConnectionError,
+    ) -> None:
         """Initialize the error.
 
         :param backend: The backend used
         :param url: The url that failed to download
         :param path: The path that was supposed to be downloaded to
+        :param exc: The exception raised
         """
         self.backend = backend
         self.url = url
         self.path = path
+        self.exc = exc
+        # TODO parse out HTTP error code, if possible
 
     def __str__(self) -> str:
         return f"Failed with {self.backend} to download {self.url} to {self.path}"
