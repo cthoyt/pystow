@@ -25,10 +25,10 @@ if TYPE_CHECKING:
 __all__ = [
     # Classes
     "Cached",
-    "CachedPickle",
-    "CachedJSON",
     "CachedCollection",
     "CachedDataFrame",
+    "CachedJSON",
+    "CachedPickle",
     # Types
     "Getter",
 ]

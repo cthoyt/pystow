@@ -50,58 +50,47 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
-    # Data Structures and type annotations
-    "HexDigestMismatch",
     "DownloadBackend",
     "Hash",
-    # Exceptions
     "HexDigestError",
+    "HexDigestMismatch",
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
-    # Functions
-    "get_offending_hexdigests",
-    "get_hashes",
-    "raise_on_digest_mismatch",
-    "get_hexdigests_remote",
     "download",
-    "name_from_url",
-    "name_from_s3_key",
+    "download_from_google",
+    "download_from_s3",
+    "get_base",
+    "get_commit",
+    "get_df_io",
+    "get_hashes",
+    "get_hexdigests_remote",
+    "get_home",
+    "get_name",
+    "get_np_io",
+    "get_offending_hexdigests",
+    "getenv_path",
+    "gunzip",
     "mkdir",
     "mock_envvar",
     "mock_home",
-    "getenv_path",
     "n",
-    # Bytes generators
-    "get_df_io",
-    "get_np_io",
-    # LZMA utilities
-    "write_lzma_csv",
-    "gunzip",
-    # Zipfile utilities
-    "write_zipfile_csv",
-    "read_zipfile_csv",
-    "write_zipfile_xml",
-    "read_zipfile_xml",
-    "write_zipfile_np",
-    "read_zip_np",
-    "read_zipfile_rdf",
-    # Tarfile utilities
-    "write_tarfile_csv",
+    "name_from_s3_key",
+    "name_from_url",
+    "path_to_sqlite",
+    "raise_on_digest_mismatch",
+    "read_rdf",
     "read_tarfile_csv",
     "read_tarfile_xml",
-    # GZ utilities
+    "read_zip_np",
+    "read_zipfile_csv",
+    "read_zipfile_rdf",
+    "read_zipfile_xml",
+    "write_lzma_csv",
     "write_pickle_gz",
-    # Standard readers
-    "read_rdf",
-    # Downloaders
-    "download_from_google",
-    "download_from_s3",
-    # Misc
-    "get_commit",
-    "get_home",
-    "get_name",
-    "get_base",
-    "path_to_sqlite",
+    "write_tarfile_csv",
+    "write_zipfile_csv",
+    "write_zipfile_np",
+    "write_zipfile_xml",
 ]
 
 logger = logging.getLogger(__name__)

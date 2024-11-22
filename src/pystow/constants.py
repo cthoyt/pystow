@@ -8,13 +8,13 @@ from textwrap import dedent
 from typing import IO, Any, Callable
 
 __all__ = [
-    "PYSTOW_NAME_ENVVAR",
+    "JSON",
     "PYSTOW_HOME_ENVVAR",
-    "PYSTOW_USE_APPDIRS",
     "PYSTOW_NAME_DEFAULT",
+    "PYSTOW_NAME_ENVVAR",
+    "PYSTOW_USE_APPDIRS",
     "README_TEXT",
     "Opener",
-    "JSON",
     "Provider",
 ]
 

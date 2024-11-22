@@ -49,6 +49,9 @@ from .impl import Module, VersionHint
 from .utils import ensure_readme
 
 __all__ = [
+    "ConfigError",
+    "Module",
+    "VersionHint",
     "dump_df",
     "dump_json",
     "dump_pickle",
@@ -80,6 +83,7 @@ __all__ = [
     "ensure_xml",
     "ensure_zip_df",
     "ensure_zip_np",
+    "get_config",
     "join",
     "joinpath_sqlite",
     "load_df",
@@ -91,11 +95,7 @@ __all__ = [
     "module",
     "open",
     "open_gz",
-    "ConfigError",
-    "get_config",
     "write_config",
-    "Module",
-    "VersionHint",
 ]
 
 ensure_readme()
