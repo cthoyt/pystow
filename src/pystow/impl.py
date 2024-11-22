@@ -1534,6 +1534,8 @@ class Module:
 
         cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
+            import rdflib
+
             with gzip.open(cache_path, "rb") as file:
                 return cast(rdflib.Graph, pickle.load(file))
 
