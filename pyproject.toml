@@ -26,12 +26,15 @@ classifiers = [
     "Framework :: Pytest",
     "Framework :: tox",
     "Framework :: Sphinx",
+    "Natural Language :: English",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3 :: Only",
+    "Typing :: Typed",
 ]
 keywords = [
     "snekpack", # please keep this keyword to credit the cookiecutter-snekpack template
@@ -87,6 +90,12 @@ Documentation = "https://pystow.readthedocs.io"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
+# This fix is here as a final tombstone before getting rid of setuptools and
+# replacing with uv's build backend. It appears that the setuptools team hasn't
+# prioritized fixing the fully breaking bug in metadata emission described in
+# https://github.com/pypa/setuptools/issues/4759. Luckily, the license
+# is inferred from the trove classifier for MIT license.
+license-files = []
 
 [tool.setuptools.packages.find]
 # this implicitly sets `packages = ":find"`
@@ -96,10 +105,8 @@ where = ["src"]  # list of folders that contain the packages (["."] by default)
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
-
 [project.scripts]
 pystow = "pystow.cli:main"
-
 
 [tool.cruft]
 skip = [
