@@ -82,11 +82,13 @@ aws = [
 ]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
+# and also https://packaging.python.org/en/latest/specifications/well-known-project-urls/
 [project.urls]
 "Bug Tracker" = "https://github.com/cthoyt/pystow/issues"
 Homepage = "https://github.com/cthoyt/pystow"
 Repository = "https://github.com/cthoyt/pystow.git"
 Documentation = "https://pystow.readthedocs.io"
+Funding = "https://github.com/sponsors/cthoyt"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
