@@ -1,0 +1,10 @@
+diff a/tox.ini b/tox.ini	(rejected hunks)
+@@ -163,7 +163,7 @@ allowlist_externals =
+ 
+ [testenv:coverage-report]
+ # TODO this is broken
+-deps = coverage
++deps = coverage[toml]
+ skip_install = true
+ commands =
+     coverage combine

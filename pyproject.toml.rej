@@ -1,0 +1,18 @@
+diff a/pyproject.toml b/pyproject.toml	(rejected hunks)
+@@ -59,7 +59,7 @@ dependencies = [
+ [project.optional-dependencies]
+ tests = [
+     "pytest",
+-    "coverage",
++    "coverage[toml]",
+ ]
+ docs = [
+     "sphinx>=8",
+@@ -95,6 +97,7 @@ where = ["src"]  # list of folders that contain the packages (["."] by default)
+ # See https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+ [tool.setuptools.package-data]
+ "*" = ["*.*"]
++
+ [project.scripts]
+ pystow = "pystow.cli:main"
+ 
