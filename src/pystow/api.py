@@ -1625,16 +1625,15 @@ def ensure_rdf(
 
     >>> import pystow
     >>> import rdflib
-    >>> url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
-    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
+    >>> url = "https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz"
+    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("rhea", url=url)
 
     If :mod:`rdflib` fails to guess the format, you can explicitly specify
     it using the `parse_kwargs` argument:
 
     >>> import pystow
     >>> import rdflib
-    >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph" \
-    ... "/v3/suite/memoryalpha-stexpanded/component/reference.xml"
+    >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph/v3/suite/memoryalpha-stexpanded/component/reference.xml"
     >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf(
     ...     "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
     ... )
@@ -1737,10 +1736,14 @@ def ensure_from_s3(
 
     Example downloading ProtMapper 0.0.21:
 
-    >>> version = "0.0.21"
-    >>> ensure_from_s3(
-    ...     "test", version, s3_bucket="bigmech", s3_key=f"protmapper/{version}/refseq_uniprot.csv"
-    ... )
+    .. code-block:: python
+
+        import pystow
+
+        version = "0.0.21"
+        pystow.ensure_from_s3(
+            "test", version, s3_bucket="bigmech", s3_key=f"protmapper/{version}/refseq_uniprot.csv"
+        )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_s3(
@@ -1832,12 +1835,16 @@ def ensure_open_sqlite(
     :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
 
     Example usage:
-    >>> import pystow
-    >>> import pandas as pd
-    >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
-    >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
-    >>> with pystow.ensure_open_sqlite("test", url=url) as conn:
-    >>>     df = pd.read_sql(sql, conn)
+
+    .. code-block::
+
+        import pystow
+        import pandas as pd
+
+        url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+        sql = "SELECT * FROM entailed_edge LIMIT 10"
+        with pystow.ensure_open_sqlite("test", url=url) as conn:
+            df = pd.read_sql(sql, conn)
     """
     _module = Module.from_key(key, ensure_exists=True)
     with _module.ensure_open_sqlite(
