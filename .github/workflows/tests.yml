@@ -6,7 +6,7 @@ name: Tests
 
 # by default, give the GITHUB_TOKEN no permissions
 # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/controlling-permissions-for-github_token
-permissions: {}
+permissions: { }
 
 on:
   push:
@@ -25,8 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.12", "3.9" ]
-        tox-command: ["manifest", "lint", "pyroma", "mypy"]
+        python-version: [ "3.13", "3.9" ]
+        tox-command: [  "lint", "pyroma", "mypy" ]
     steps:
       - uses: actions/checkout@v4
       - name: "Install uv"
@@ -48,7 +48,7 @@ jobs:
         # We only test documentation on the latest version
         # sphinx 8.0 / sphinx-rtd-theme 3.0 discontinued Python 3.9 support
         # a year early, which prompted re-thinking about this.
-        python-version: [ "3.12" ]
+        python-version: [ "3.13" ]
     steps:
       - uses: actions/checkout@v4
       - name: "Install uv"
@@ -65,6 +65,13 @@ jobs:
         run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docstr-coverage
       - name: Check documentation build with Sphinx
         run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docs-test
+
+      # Check all markdown files are properly formatted
+      # inspired by https://github.com/astral-sh/uv/blob/98523e2014e9a5c69706623344026d76296e178f/.github/workflows/ci.yml#L67C1-L70C61
+      - name: Check markdown formatting
+        run: |
+          npx --yes prettier --prose-wrap always --check "**/*.md"
+
   tests:
     name: Tests
     permissions:
@@ -73,7 +80,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ "3.12", "3.9" ]
+        python-version: [ "3.13", "3.9" ]
     steps:
       - uses: actions/checkout@v4
       - name: "Install uv"
@@ -84,6 +91,9 @@ jobs:
       - name: Test with pytest and generate coverage file
         run:
           uvx -p ${{ matrix.python-version }} --with tox-uv tox -e py
+      - name: Run doctests
+        run:
+          uvx -p ${{ matrix.python-version }} --with tox-uv tox -e doctests
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v4
         if: success()
