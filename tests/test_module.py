@@ -283,7 +283,8 @@ class TestJoin(unittest.TestCase):
                 with lzma.open(path, "wt") as file_1:
                     for row in TEST_TSV_ROWS:
                         print(*row, sep="\t", file=file_1)
-                with pystow.ensure_open_lzma("test", url=n()) as file_2:
+                # FIXME this ignore needs to be removed and addressed
+                with pystow.ensure_open_lzma("test", url=n()) as file_2:  # type: ignore
                     df = pd.read_csv(file_2, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
