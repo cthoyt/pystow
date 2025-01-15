@@ -327,7 +327,7 @@ class TestJoin(unittest.TestCase):
                 self.assertIs(
                     expected_directory.exists(),
                     ensure_exists,
-                    msg=f'{expected_directory} should{"" if ensure_exists else " not"} exist.',
+                    msg=f"{expected_directory} should{'' if ensure_exists else ' not'} exist.",
                 )
 
     def test_ensure_custom(self):

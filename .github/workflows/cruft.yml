@@ -2,7 +2,7 @@
 
 name: Update repository with Cruft
 
-permissions: {}
+permissions: { }
 
 on:
   workflow_dispatch:

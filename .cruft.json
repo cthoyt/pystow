@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/cthoyt/cookiecutter-snekpack",
-  "commit": "f217081a86752e77b638d76e92a1f536a4906733",
+  "commit": "d044b69b3bd403a172ad6a06b3ed5cfc1ba87ad1",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -20,7 +20,8 @@
       "__runner_pip": "tox tox-uv",
       "__runner_tests": "py",
       "__gh_slug": "cthoyt/pystow",
-      "_template": "https://github.com/cthoyt/cookiecutter-snekpack"
+      "_template": "https://github.com/cthoyt/cookiecutter-snekpack",
+      "_commit": "d044b69b3bd403a172ad6a06b3ed5cfc1ba87ad1"
     }
   },
   "directory": null
