@@ -1792,7 +1792,13 @@ def ensure_from_google(
     Example downloading the WK3l-15k dataset as motivated by
     https://github.com/pykeen/pykeen/pull/403:
 
-    >>> ensure_from_google("test", name="wk3l15k.zip", file_id="1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z")
+    .. code-block:: python
+
+        import pystow
+
+        path = pystow.ensure_from_google(
+            "test", name="wk3l15k.zip", file_id="1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z"
+        )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_from_google(*subkeys, name=name, file_id=file_id, force=force)
