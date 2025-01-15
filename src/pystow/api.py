@@ -1623,20 +1623,30 @@ def ensure_rdf(
 
     Example usage::
 
-    >>> import pystow
-    >>> import rdflib
-    >>> url = "https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz"
-    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf("rhea", url=url)
+    .. code-block:: python
 
-    If :mod:`rdflib` fails to guess the format, you can explicitly specify
-    it using the `parse_kwargs` argument:
+        import pystow
+        import rdflib
 
-    >>> import pystow
-    >>> import rdflib
-    >>> url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph/v3/suite/memoryalpha-stexpanded/component/reference.xml"
-    >>> rdf_graph: rdflib.Graph = pystow.ensure_rdf(
-    ...     "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
-    ... )
+        url = "https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz"
+        rdf_graph: rdflib.Graph = pystow.ensure_rdf("rhea", url=url, parse_kwargs={"format": "xml"})
+
+    .. note::
+
+        Sometimes, :mod:`rdflib` is able to guess the format, and you can omit the "format"
+        from the `parse_kwargs` argument.
+
+    Here's another example::
+
+    .. code-block:: python
+
+        import pystow
+        import rdflib
+
+        url = "http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph/v3/suite/memoryalpha-stexpanded/component/reference.xml"
+        rdf_graph: rdflib.Graph = pystow.ensure_rdf(
+            "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
+        )
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(
