@@ -6,7 +6,6 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Never
 
 from pystow.cache import CachedPickle
 
@@ -33,7 +32,7 @@ class TestCache(unittest.TestCase):
         self.assertFalse(path.is_file())
 
         @CachedPickle(path=path)
-        def _f1() -> Never:
+        def _f1() -> None:
             raise NotImplementedError
 
         self.assertFalse(path.is_file(), msg="function has not been called")
