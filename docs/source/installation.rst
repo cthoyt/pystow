@@ -7,7 +7,7 @@ The most recent release can be installed from
 
     $ uv pip install pystow
 
-or pip:
+or with pip:
 
 .. code-block:: console
 
@@ -21,7 +21,7 @@ The most recent code and data can be installed directly from GitHub with uv:
 
     $ uv --preview pip install git+https://github.com/cthoyt/pystow.git
 
-or pip:
+or with pip:
 
 .. code-block:: console
 
@@ -34,7 +34,7 @@ or pip:
 
 Installing for development
 --------------------------
-To install in development mode with uv, use the following
+To install in development mode with uv:
 
 .. code-block:: console
 

@@ -208,7 +208,7 @@ The most recent code and data can be installed directly from GitHub with uv:
 $ uv --preview pip install git+https://github.com/cthoyt/pystow.git
 ```
 
-or with pip
+or with pip:
 
 ```console
 $ UV_PREVIEW=1 python3 -m pip install git+https://github.com/cthoyt/pystow.git
