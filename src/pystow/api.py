@@ -1621,7 +1621,7 @@ def ensure_rdf(
         :func:`rdflib.Graph.parse`.
     :return: An RDF graph
 
-    Example usage::
+    Example usage
 
     .. code-block:: python
 
@@ -1636,7 +1636,7 @@ def ensure_rdf(
         Sometimes, :mod:`rdflib` is able to guess the format, and you can omit the "format"
         from the `parse_kwargs` argument.
 
-    Here's another example::
+    Here's another example
 
     .. code-block:: python
 
@@ -1647,6 +1647,7 @@ def ensure_rdf(
         rdf_graph: rdflib.Graph = pystow.ensure_rdf(
             "memoryalpha-stexpanded", url=url, parse_kwargs={"format": "xml"}
         )
+
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_rdf(
