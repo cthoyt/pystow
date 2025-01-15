@@ -1,7 +1,8 @@
-# See https://setuptools.readthedocs.io/en/latest/build_meta.html
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv>=0.5.13,<0.6.0"]
+# The uv backend entered preview mode in https://github.com/astral-sh/uv/pull/8886/files
+# with the 0.5.0 release. See also https://github.com/astral-sh/uv/issues/3957 for tracking.
+build-backend = "uv"
 
 [project]
 name = "pystow"
@@ -43,10 +44,11 @@ keywords = [
     "file management"
 ]
 
-# License Information. This can be any valid SPDX identifiers that can be resolved
-# with URLs like https://spdx.org/licenses/MIT
-# See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
-license = { file = "LICENSE" }
+# License Information.
+# See PEP-639 at https://peps.python.org/pep-0639/#add-license-files-key
+license-files = [
+    "LICENSE",
+]
 
 requires-python = ">=3.9"
 dependencies = [
@@ -59,7 +61,7 @@ dependencies = [
 [project.optional-dependencies]
 tests = [
     "pytest",
-    "coverage",
+    "coverage[toml]",
     "requests_file",
 ]
 docs = [
@@ -82,28 +84,13 @@ aws = [
 ]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
+# and also https://packaging.python.org/en/latest/specifications/well-known-project-urls/
 [project.urls]
 "Bug Tracker" = "https://github.com/cthoyt/pystow/issues"
 Homepage = "https://github.com/cthoyt/pystow"
 Repository = "https://github.com/cthoyt/pystow.git"
 Documentation = "https://pystow.readthedocs.io"
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-# This fix is here as a final tombstone before getting rid of setuptools and
-# replacing with uv's build backend. It appears that the setuptools team hasn't
-# prioritized fixing the fully breaking bug in metadata emission described in
-# https://github.com/pypa/setuptools/issues/4759. Luckily, the license
-# is inferred from the trove classifier for MIT license.
-license-files = []
-
-[tool.setuptools.packages.find]
-# this implicitly sets `packages = ":find"`
-where = ["src"]  # list of folders that contain the packages (["."] by default)
-
-# See https://setuptools.pypa.io/en/latest/userguide/datafiles.html
-[tool.setuptools.package-data]
-"*" = ["*.*"]
+Funding = "https://github.com/sponsors/cthoyt"
 
 [project.scripts]
 pystow = "pystow.cli:main"
