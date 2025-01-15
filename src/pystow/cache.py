@@ -50,15 +50,19 @@ class Cached(Generic[X], ABC):
     def __init__(
         self,
         path: str | Path,
+        *,
         force: bool = False,
+        cache: bool = True,
     ) -> None:
         """Instantiate the decorator.
 
         :param path: The path to the cache for the file
+        :param cache: Should caching be done? Defaults to true, turn off for debugging purposes
         :param force: Should a pre-existing file be disregared/overwritten?
         """
         self.path = Path(path)
         self.force = force
+        self.cache =cache
 
     def __call__(self, func: Getter[X]) -> Getter[X]:
         """Apply this instance as a decorator.
@@ -69,6 +73,9 @@ class Cached(Generic[X], ABC):
 
         @functools.wraps(func)
         def _wrapped() -> X:
+            if not self.cache:
+                return func()
+
             if self.path.is_file() and not self.force:
                 return self.load()
             logger.debug("no cache found at %s", self.path)
@@ -158,6 +165,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
     def __init__(
         self,
         path: str | Path,
+        cache: bool = True,
         force: bool = False,
         sep: str | None = None,
         dtype: Any | None = None,
@@ -172,7 +180,7 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
         :param read_csv_kwargs: Additional kwargs to pass to :func:`pd.read_csv`.
         :raises ValueError: if sep is given as a kwarg and also in ``read_csv_kwargs``.
         """
-        super().__init__(path=path, force=force)
+        super().__init__(path=path, cache=cache, force=force)
         self.read_csv_kwargs = read_csv_kwargs or {}
         if "sep" not in self.read_csv_kwargs:
             self.sep = sep or "\t"
