@@ -1,28 +1,52 @@
 Installation
 ============
 The most recent release can be installed from
-`PyPI <https://pypi.org/project/pystow>`_ with:
+`PyPI <https://pypi.org/project/pystow>`_ with uv:
+
+.. code-block:: shell
+
+    uv pip install pystow
+
+or pip:
 
 .. code-block:: shell
 
     python3 -m pip install pystow
 
-The most recent code and data can be installed directly from GitHub with:
+Installing from git
+-------------------
+The most recent code and data can be installed directly from GitHub with uv:
 
-.. code-block:: shell
+.. code-block:: console
 
-    python3 -m pip install git+https://github.com/cthoyt/pystow.git
+    $ uv --preview pip install git+https://github.com/cthoyt/pystow.git
 
-To install in development mode, use the following:
+or pip:
+
+.. code-block:: console
+
+    $ UV_PREVIEW=1 python3 -m pip install git+https://github.com/cthoyt/pystow.git
+
+.. note::
+
+    The ``UV_PREVIEW`` environment variable is required to be
+    set until the uv build backend becomes a stable feature.
+
+Installing for development
+--------------------------
+To install in development mode with uv, use the following
 
 .. code-block:: shell
 
     git clone git+https://github.com/cthoyt/pystow.git
     cd pystow
-    UV_PREVIEW=1 python3 -m pip install -e .
+    uv --preview pip install -e .
 
-Note that the ``UV_PREVIEW`` environment variable is required to be
-set until the uv build backend becomes a stable feature.
+or with pip:
+
+.. code-block:: shell
+
+    UV_PREVIEW=1 python3 -m pip install -e .
 
 Configuration
 =============
