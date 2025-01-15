@@ -92,3 +92,24 @@ class TestCache(unittest.TestCase):
 
         self.assertEqual(EXPECTED_2, _f2())  # overwrites the file
         self.assertEqual(EXPECTED_2, _f1())
+
+    def test_no_cache(self) -> None:
+        """Test that no caching happens."""
+        path = self.directory.joinpath("test.pkl")
+        sentinel_value = 5
+
+        self.assertFalse(path.is_file())
+
+        @CachedPickle(path=path, cache=False)
+        def _f1() -> int:
+            return sentinel_value
+
+        self.assertFalse(path.is_file(), msg="function has not been called")
+
+        # check the following twice, just for good measure!
+        for _ in range(2):
+            self.assertEqual(sentinel_value, _f1())
+            self.assertFalse(
+                path.is_file(),
+                msg="file should not have been created since caching was turned off",
+            )
