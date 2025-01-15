@@ -61,8 +61,9 @@ pykeen_experiments_directory = pykeen_module.join('experiments')
 pykeen_deep_directory = pykeen_module.join('experiments', 'a', 'b', 'c')
 ```
 
-Get a file path for your application by adding the `name` keyword argument. This is made explicit so PyStow knows which
-parent directories to automatically create. This works with `pystow` or any module you create with `pystow.module`.
+Get a file path for your application by adding the `name` keyword argument. This
+is made explicit so PyStow knows which parent directories to automatically
+create. This works with `pystow` or any module you create with `pystow.module`.
 
 ```python
 import pystow
@@ -80,7 +81,8 @@ url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/dataset
 path = pystow.ensure('pykeen', 'datasets', 'nations', url=url)
 ```
 
-Ensure a tabular data file from the internet and load it for usage (requires `pip install pandas`):
+Ensure a tabular data file from the internet and load it for usage (requires
+`pip install pandas`):
 
 ```python
 import pystow
@@ -90,7 +92,8 @@ url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/dataset
 df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
 ```
 
-Ensure a comma-separated tabular data file from the internet and load it for usage (requires `pip install pandas`):
+Ensure a comma-separated tabular data file from the internet and load it for
+usage (requires `pip install pandas`):
 
 ```python
 import pystow
@@ -100,7 +103,8 @@ url = 'https://raw.githubusercontent.com/cthoyt/pystow/main/tests/resources/test
 df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url, read_csv_kwargs=dict(sep=","))
 ```
 
-Ensure a RDF file from the internet and load it for usage (requires `pip install rdflib`)
+Ensure a RDF file from the internet and load it for usage (requires
+`pip install rdflib`)
 
 ```python
 import pystow
@@ -110,10 +114,11 @@ url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
 rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
 ```
 
-Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`, `pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
+Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`,
+`pystow.ensure_zip_df()`, and `pystow.ensure_tar_df()`.
 
-If your data comes with a lot of different files in an archive,
-you can ensure the archive is downloaded and get specific files from it:
+If your data comes with a lot of different files in an archive, you can ensure
+the archive is downloaded and get specific files from it:
 
 ```python
 import numpy as np
@@ -126,15 +131,17 @@ with pystow.ensure_open_zip("kiez", url=url, inner_path=inner_path) as file:
     emb = np.load(file)
 ```
 
-Also see `pystow.module.ensure_open_lzma()`, `pystow.module.ensure_open_tarfile()` and `pystow.module.ensure_open_gz()`.
+Also see `pystow.module.ensure_open_lzma()`,
+`pystow.module.ensure_open_tarfile()` and `pystow.module.ensure_open_gz()`.
 
 ## ⚙️️ Configuration
 
-By default, data is stored in the `$HOME/.data` directory. By default, the `<app>` app will create the
-`$HOME/.data/<app>` folder.
+By default, data is stored in the `$HOME/.data` directory. By default, the
+`<app>` app will create the `$HOME/.data/<app>` folder.
 
-If you want to use an alternate folder name to `.data` inside the home directory, you can set the `PYSTOW_NAME`
-environment variable. For example, if you set `PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
+If you want to use an alternate folder name to `.data` inside the home
+directory, you can set the `PYSTOW_NAME` environment variable. For example, if
+you set `PYSTOW_NAME=mydata`, then the following code for the `pykeen` app will
 create the `$HOME/mydata/pykeen/` directory:
 
 ```python
@@ -149,9 +156,10 @@ os.environ['PYSTOW_NAME'] = 'mydata'
 pykeen_directory = pystow.join('pykeen')
 ```
 
-If you want to specify a completely custom directory that isn't relative to your home directory, you can set
-the `PYSTOW_HOME` environment variable. For example, if you set `PYSTOW_HOME=/usr/local/`, then the following code for
-the `pykeen` app will create the `/usr/local/pykeen/` directory:
+If you want to specify a completely custom directory that isn't relative to your
+home directory, you can set the `PYSTOW_HOME` environment variable. For example,
+if you set `PYSTOW_HOME=/usr/local/`, then the following code for the `pykeen`
+app will create the `/usr/local/pykeen/` directory:
 
 ```python
 import os
@@ -174,9 +182,9 @@ hidden, some users might want to use the
 [XDG specifications](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)
 for storing their app data.
 
-If you set the environment variable  `PYSTOW_USE_APPDIRS` to `true` or `True`, then the
-[`appdirs`](https://pypi.org/project/appdirs/) package will be used to choose
-the base directory based on the `user data dir` option. This can still be
+If you set the environment variable `PYSTOW_USE_APPDIRS` to `true` or `True`,
+then the [`appdirs`](https://pypi.org/project/appdirs/) package will be used to
+choose the base directory based on the `user data dir` option. This can still be
 overridden by `PYSTOW_HOME`.
 
 ## 🚀 Installation
@@ -258,8 +266,8 @@ More info on Cruft's update command is available
 ### 🥼 Testing
 
 After cloning the repository and installing `tox` with
-`python3 -m pip install tox tox-uv`, the unit tests in the
-`tests/` folder can be run reproducibly with:
+`python3 -m pip install tox tox-uv`, the unit tests in the `tests/` folder can
+be run reproducibly with:
 
 ```console
 tox -e py
@@ -322,8 +330,8 @@ to each release of your package.
 
 After these steps, you're ready to go! After you make "release" on GitHub (steps
 for this are below), you can navigate to
-https://zenodo.org/account/settings/github/repository/cthoyt/pystow
-to see the DOI for the release and link to the Zenodo record for it.
+https://zenodo.org/account/settings/github/repository/cthoyt/pystow to see the
+DOI for the release and link to the Zenodo record for it.
 
 #### Registering with the Python Package Index (PyPI)
 
@@ -355,10 +363,8 @@ Note that this deprecates previous workflows using `.pypirc`.
 
 #### Uploading to PyPI
 
-After installing the package in development mode and installing
-`tox` with
-`python3 -m pip install tox tox-uv`, run the following from
-the console:
+After installing the package in development mode and installing `tox` with
+`python3 -m pip install tox tox-uv`, run the following from the console:
 
 ```console
 tox -e finish
@@ -368,8 +374,8 @@ This script does the following:
 
 1. Uses [bump-my-version](https://github.com/callowayproject/bump-my-version) to
    switch the version number in the `pyproject.toml`, `CITATION.cff`,
-   `src/pystow/version.py`, and
-   [`docs/source/conf.py`](docs/source/conf.py) to not have the `-dev` suffix
+   `src/pystow/version.py`, and [`docs/source/conf.py`](docs/source/conf.py) to
+   not have the `-dev` suffix
 2. Packages the code in both a tar archive and a wheel using
    [`uv build`](https://docs.astral.sh/uv/guides/publish/#building-your-package)
 3. Uploads to PyPI using
@@ -381,9 +387,8 @@ This script does the following:
 
 #### Releasing on GitHub
 
-1. Navigate to
-   https://github.com/cthoyt/pystow/releases/new
-   to draft a new release
+1. Navigate to https://github.com/cthoyt/pystow/releases/new to draft a new
+   release
 2. Click the "Choose a Tag" dropdown and select the tag corresponding to the
    release you just made
 3. Click the "Generate Release Notes" button to get a quick outline of recent
