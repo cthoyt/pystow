@@ -62,7 +62,7 @@ class Cached(Generic[X], ABC):
         """
         self.path = Path(path)
         self.force = force
-        self.cache =cache
+        self.cache = cache
 
     def __call__(self, func: Getter[X]) -> Getter[X]:
         """Apply this instance as a decorator.
