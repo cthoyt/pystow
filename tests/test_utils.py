@@ -49,19 +49,19 @@ skip_on_windows = unittest.skipIf(
 class _Session(requests.sessions.Session):
     """A mock session."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Instantiate the patched session with an additional file adapter."""
         super().__init__()
         self.mount("file://", FileAdapter())
 
 
-requests.sessions.Session = _Session
+requests.sessions.Session = _Session  # type: ignore
 
 
 class TestUtils(unittest.TestCase):
     """Test utility functions."""
 
-    def test_name_from_url(self):
+    def test_name_from_url(self) -> None:
         """Test :func:`name_from_url`."""
         data = [
             ("test.tsv", "https://example.com/test.tsv"),
@@ -73,7 +73,7 @@ class TestUtils(unittest.TestCase):
                 self.assertEqual(name, name_from_url(url))
 
     @skip_on_windows
-    def test_file_values(self):
+    def test_file_values(self) -> None:
         """Test encodings."""
         for url, value in [
             (TEST_TXT, "this is a test file\n"),
@@ -84,11 +84,11 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=url.name):
                 self.assertEqual(value, requests.get(url.as_uri(), timeout=15).text)
 
-    def test_mkdir(self):
+    def test_mkdir(self) -> None:
         """Test for ensuring a directory."""
         with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
-            subdirectory = directory / "sd1"
+            directory_ = Path(directory)
+            subdirectory = directory_ / "sd1"
             self.assertFalse(subdirectory.exists())
 
             mkdir(subdirectory, ensure_exists=False)
@@ -97,7 +97,7 @@ class TestUtils(unittest.TestCase):
             mkdir(subdirectory, ensure_exists=True)
             self.assertTrue(subdirectory.exists())
 
-    def test_mock_envvar(self):
+    def test_mock_envvar(self) -> None:
         """Test that environment variables can be mocked properly."""
         name, value = n(), n()
 
@@ -107,14 +107,14 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(value, os.getenv(name))
         self.assertNotIn(name, os.environ)
 
-    def test_getenv_path(self):
+    def test_getenv_path(self) -> None:
         """Test that :func:`getenv_path` works properly."""
         envvar = n()
 
         with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
-            value = directory / n()
-            default = directory / n()
+            directory_ = Path(directory)
+            value = directory_ / n()
+            default = directory_ / n()
 
             self.assertEqual(default, getenv_path(envvar, default))
             with mock_envvar(envvar, value.as_posix()):
@@ -122,7 +122,7 @@ class TestUtils(unittest.TestCase):
             # Check that it goes back
             self.assertEqual(default, getenv_path(envvar, default))
 
-    def test_compressed_io(self):
+    def test_compressed_io(self) -> None:
         """Test that the read/write to compressed folder functions work."""
         rows = [[1, 2], [3, 4], [5, 6]]
         columns = ["A", "B"]
@@ -135,8 +135,7 @@ class TestUtils(unittest.TestCase):
         ]
         for name, writer, reader in data:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
-                directory = Path(directory)
-                path = directory / name
+                path = Path(directory) / name
                 self.assertFalse(path.exists())
                 writer(df, path=path, inner_path=inner_path)
                 self.assertTrue(path.exists())
@@ -144,7 +143,7 @@ class TestUtils(unittest.TestCase):
                 self.assertEqual(list(df.columns), list(new_df.columns))
                 self.assertEqual(df.values.tolist(), new_df.values.tolist())
 
-    def test_xml_io(self):
+    def test_xml_io(self) -> None:
         """Test that read/write for XML element tree works."""
         root = etree.Element("Doc")
         level1 = etree.SubElement(root, "S")
@@ -172,8 +171,7 @@ class TestUtils(unittest.TestCase):
         ]
         for name, writer, reader in data:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
-                directory = Path(directory)
-                path = directory / name
+                path = Path(directory) / name
                 self.assertFalse(path.exists())
                 writer(tree, path=path, inner_path=inner_path)
                 self.assertTrue(path.exists())
@@ -183,13 +181,12 @@ class TestUtils(unittest.TestCase):
                     etree.tostring(new_tree, pretty_print=True),
                 )
 
-    def test_numpy_io(self):
+    def test_numpy_io(self) -> None:
         """Test IO with numpy."""
         arr = np.array([[0, 1], [2, 3]])
         inner_path = "okay.npz"
         with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
-            path = directory / "test.zip"
+            path = Path(directory) / "test.zip"
             write_zipfile_np(arr, inner_path=inner_path, path=path)
             reloaded_arr = read_zip_np(path=path, inner_path=inner_path)
             self.assertTrue(np.array_equal(arr, reloaded_arr))
@@ -209,7 +206,7 @@ class TestDownload(unittest.TestCase):
         """Tear down a test."""
         self.directory_obj.cleanup()
 
-    def test_bad_file_error(self):
+    def test_bad_file_error(self) -> None:
         """Test that urllib errors are handled properly."""
         with self.assertRaises(DownloadError):
             download(
@@ -219,7 +216,7 @@ class TestDownload(unittest.TestCase):
             )
         self.assertFalse(self.path_for_bad_url.is_file())
 
-    def test_requests_error_stream(self):
+    def test_requests_error_stream(self) -> None:
         """Test that requests errors are handled properly."""
         with self.assertRaises(DownloadError):
             download(
@@ -230,7 +227,7 @@ class TestDownload(unittest.TestCase):
             )
         self.assertFalse(self.path_for_bad_url.is_file())
 
-    def test_requests_error_sync(self):
+    def test_requests_error_sync(self) -> None:
         """Test that requests errors are handled properly."""
         with self.assertRaises(DownloadError):
             download(
@@ -261,7 +258,7 @@ class TestHashing(unittest.TestCase):
         """Tear down a test."""
         self.directory.cleanup()
 
-    def test_hash_success(self):
+    def test_hash_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
         download(
@@ -273,7 +270,7 @@ class TestHashing(unittest.TestCase):
         )
 
     @skip_on_windows
-    def test_hash_remote_success(self):
+    def test_hash_remote_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
         download(
@@ -287,7 +284,7 @@ class TestHashing(unittest.TestCase):
         self.assertTrue(self.path.exists())
 
     @skip_on_windows
-    def test_hash_remote_verbose_success(self):
+    def test_hash_remote_verbose_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
         download(
@@ -300,7 +297,7 @@ class TestHashing(unittest.TestCase):
         )
         self.assertTrue(self.path.exists())
 
-    def test_hash_remote_verbose_failure(self):
+    def test_hash_remote_verbose_failure(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
         with self.assertRaises(HexDigestError):
@@ -313,7 +310,7 @@ class TestHashing(unittest.TestCase):
                 hexdigests_strict=True,
             )
 
-    def test_hash_error(self):
+    def test_hash_error(self) -> None:
         """Test hash error on download."""
         self.assertFalse(self.path.exists())
         with self.assertRaises(HexDigestError):
@@ -325,7 +322,7 @@ class TestHashing(unittest.TestCase):
                 },
             )
 
-    def test_hash_remote_error(self):
+    def test_hash_remote_error(self) -> None:
         """Test hash error on download."""
         self.assertFalse(self.path.exists())
         with self.assertRaises(HexDigestError):
@@ -338,7 +335,7 @@ class TestHashing(unittest.TestCase):
                 hexdigests_strict=True,
             )
 
-    def test_override_hash_error(self):
+    def test_override_hash_error(self) -> None:
         """Test hash error on download."""
         self.path.write_text("test file content")
 
@@ -353,7 +350,7 @@ class TestHashing(unittest.TestCase):
                 force=False,
             )
 
-    def test_override_hash_remote_error(self):
+    def test_override_hash_remote_error(self) -> None:
         """Test hash error on download."""
         self.path.write_text("test file content")
 
@@ -369,7 +366,7 @@ class TestHashing(unittest.TestCase):
                 force=False,
             )
 
-    def test_force(self):
+    def test_force(self) -> None:
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
         self.path.write_text("test file content")
@@ -385,7 +382,7 @@ class TestHashing(unittest.TestCase):
         )
 
     @skip_on_windows
-    def test_remote_force(self):
+    def test_remote_force(self) -> None:
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
         self.path.write_text("test file content")
@@ -401,7 +398,7 @@ class TestHashing(unittest.TestCase):
             force=True,
         )
 
-    def test_hexdigest_urls(self):
+    def test_hexdigest_urls(self) -> None:
         """Test getting hex digests from URLs."""
         for url, strict in [
             (TEST_TXT_MD5, True),
@@ -425,7 +422,7 @@ class TestHashing(unittest.TestCase):
             hexdigests["md5"],
         )
 
-    @unittest.skip
+    @unittest.skip(reason="this test hits a live endpoint")
     def test_live(self) -> None:
         """Test live."""
         hexdigests = get_hexdigests_remote(

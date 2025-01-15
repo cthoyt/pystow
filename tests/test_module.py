@@ -12,8 +12,9 @@ import pickle
 import shutil
 import tempfile
 import unittest
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 import pandas as pd
@@ -95,7 +96,7 @@ if not JSON_BZ2_PATH.is_file():
 class TestMocks(unittest.TestCase):
     """Tests for :mod:`pystow` mocks and context managers."""
 
-    def test_mock_home(self):
+    def test_mock_home(self) -> None:
         """Test that home can be properly mocked."""
         name = n()
 
@@ -108,7 +109,7 @@ class TestMocks(unittest.TestCase):
                 self.assertEqual(expected_path, get_home(ensure_exists=False))
                 self.assertFalse(expected_path.exists())
 
-    def test_mock_name(self):
+    def test_mock_name(self) -> None:
         """Test that the name can be properly mocked."""
         name = n()
 
@@ -135,7 +136,7 @@ class TestJoin(unittest.TestCase):
         self.directory.cleanup()
 
     @contextlib.contextmanager
-    def mock_directory(self) -> contextlib.AbstractContextManager[Path]:
+    def mock_directory(self) -> Generator[Path, None, None]:
         """Use this test case's temporary directory as a mock environment variable.
 
         :yield: The mock directory's path
@@ -144,27 +145,27 @@ class TestJoin(unittest.TestCase):
             yield Path(self.directory.name)
 
     @staticmethod
-    def mock_download():
+    def mock_download() -> mock._patch_default_new:
         """Mock connection to the internet using local resource files.
 
         :return: A patch object that can be applied to the pystow download function
         """
 
-        def _mock_get_data(url: str, path: str | Path, **_kwargs) -> Path:
-            return shutil.copy(MOCK_FILES[url], path)
+        def _mock_get_data(url: str, path: str | Path, **_kwargs: Any) -> Path:
+            return Path(shutil.copy(MOCK_FILES[url], path))
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
     @staticmethod
-    def mock_download_once(local_path: str | Path):
+    def mock_download_once(local_path: str | Path) -> mock._patch_default_new:
         """Mock connection to the internet using local resource files.
 
         :param local_path: the path to the file to mock
         :return: A patch object that can be applied to the pystow download function
         """
 
-        def _mock_get_data(path: str | Path, **_kwargs) -> Path:
-            return shutil.copy(local_path, path)
+        def _mock_get_data(path: str | Path, **_kwargs: Any) -> Path:
+            return Path(shutil.copy(local_path, path))
 
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
@@ -176,12 +177,12 @@ class TestJoin(unittest.TestCase):
         """
         return Path(self.directory.name).joinpath(*parts)
 
-    def test_mock(self):
+    def test_mock(self) -> None:
         """Test that mocking the directory works properly for this test case."""
         with self.mock_directory():
             self.assertEqual(os.getenv(PYSTOW_HOME_ENVVAR), self.directory.name)
 
-    def test_join(self):
+    def test_join(self) -> None:
         """Test the :func:`pystow.join` function."""
         parts_examples = [
             [n()],
@@ -193,7 +194,7 @@ class TestJoin(unittest.TestCase):
                 with self.subTest(parts=parts):
                     self.assertEqual(self.join(*parts), join(*parts))
 
-    def test_join_with_version(self):
+    def test_join_with_version(self) -> None:
         """Test the join function when a version is present."""
         with self.mock_directory():
             key = "key"
@@ -228,7 +229,7 @@ class TestJoin(unittest.TestCase):
             with self.assertRaises(ValueError):
                 pystow.join(key, version="/")
 
-    def test_ensure(self):
+    def test_ensure(self) -> None:
         """Test ensuring various files."""
         write_pickle_gz(TEST_TSV_ROWS, path=PICKLE_GZ_PATH)
 
@@ -265,7 +266,7 @@ class TestJoin(unittest.TestCase):
                 p = pystow.ensure_json_bz2("test", url=JSON_BZ2_URL)
                 self.assertEqual(TEST_JSON, p)
 
-    def test_open_fail(self):
+    def test_open_fail(self) -> None:
         """Test opening a missing file."""
         with self.assertRaises(FileNotFoundError):
             with pystow.open("nope", name="nope"):
@@ -274,19 +275,20 @@ class TestJoin(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             pystow.load_json("nope", name="nope")
 
-    def test_ensure_open_lzma(self):
+    def test_ensure_open_lzma(self) -> None:
         """Test opening lzma-encoded files."""
         with tempfile.TemporaryDirectory() as directory, self.mock_directory():
             path = Path(directory) / n()
             with self.mock_download_once(path):
-                with lzma.open(path, "wt") as file:
+                with lzma.open(path, "wt") as file_1:
                     for row in TEST_TSV_ROWS:
-                        print(*row, sep="\t", file=file)
-                with pystow.ensure_open_lzma("test", url=n()) as file:
-                    df = pd.read_csv(file, sep="\t")
+                        print(*row, sep="\t", file=file_1)
+                # FIXME this ignore needs to be removed and addressed
+                with pystow.ensure_open_lzma("test", url=n()) as file_2:  # type: ignore
+                    df = pd.read_csv(file_2, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
-    def test_ensure_open_zip(self):
+    def test_ensure_open_zip(self) -> None:
         """Test opening tar-encoded files."""
         with tempfile.TemporaryDirectory() as directory, self.mock_directory():
             path = Path(directory) / n()
@@ -297,7 +299,7 @@ class TestJoin(unittest.TestCase):
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
-    def test_ensure_open_tarfile(self):
+    def test_ensure_open_tarfile(self) -> None:
         """Test opening tarfile-encoded files."""
         with tempfile.TemporaryDirectory() as directory, self.mock_directory():
             path = Path(directory) / n()
@@ -308,7 +310,7 @@ class TestJoin(unittest.TestCase):
                     df = pd.read_csv(file, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
-    def test_ensure_module(self):
+    def test_ensure_module(self) -> None:
         """Test that the ``ensure_exist`` argument in :meth:`Module.from_key` works properly."""
         parts_examples = [
             [n()],
@@ -330,11 +332,11 @@ class TestJoin(unittest.TestCase):
                     msg=f"{expected_directory} should{'' if ensure_exists else ' not'} exist.",
                 )
 
-    def test_ensure_custom(self):
+    def test_ensure_custom(self) -> None:
         """Test ensure with custom provider."""
         with self.mock_directory():
             # create a minimal provider
-            def touch_file(path: Path, **_kwargs):
+            def touch_file(path: Path, **_kwargs: Any) -> None:
                 """
                 Create a file.
 
@@ -349,7 +351,7 @@ class TestJoin(unittest.TestCase):
             provider = mock.Mock(wraps=touch_file)
 
             # the keyword-based parameters for the provider
-            kwargs = {"a": 4, "c": {0: 1, 5: 7}}
+            kwargs: dict[str, Any] = {"a": 4, "c": {0: 1, 5: 7}}
 
             # call first time
             name = n()
@@ -360,7 +362,7 @@ class TestJoin(unittest.TestCase):
             # ensure that the provider was only called once with the given parameters
             provider.assert_called_once_with(path, **kwargs)
 
-    def test_ensure_open_sqlite(self):
+    def test_ensure_open_sqlite(self) -> None:
         """Test caching SQLite."""
         with self.mock_directory(), self.mock_download():
             with pystow.ensure_open_sqlite("test", url=SQLITE_URL) as conn:

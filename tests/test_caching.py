@@ -25,14 +25,14 @@ class TestCache(unittest.TestCase):
         """Tear down the test case's temporary directory."""
         self.tmpdir.cleanup()
 
-    def test_cache_exception(self):
+    def test_cache_exception(self) -> None:
         """Test that exceptions aren't swallowed."""
         path = self.directory.joinpath("test.pkl")
 
         self.assertFalse(path.is_file())
 
         @CachedPickle(path=path)
-        def _f1():
+        def _f1() -> None:
             raise NotImplementedError
 
         self.assertFalse(path.is_file(), msg="function has not been called")
@@ -45,7 +45,7 @@ class TestCache(unittest.TestCase):
             msg="file should not have been created if an exception was thrown by the function",
         )
 
-    def test_cache_pickle(self):
+    def test_cache_pickle(self) -> None:
         """Test caching a pickle."""
         path = self.directory.joinpath("test.pkl")
         self.assertFalse(
@@ -56,7 +56,7 @@ class TestCache(unittest.TestCase):
         raise_flag = True
 
         @CachedPickle(path=path)
-        def _f1():
+        def _f1() -> int:
             if raise_flag:
                 raise ValueError
             return EXPECTED
@@ -87,7 +87,7 @@ class TestCache(unittest.TestCase):
             _f1()
 
         @CachedPickle(path=path, force=True)
-        def _f2():
+        def _f2() -> int:
             return EXPECTED_2
 
         self.assertEqual(EXPECTED_2, _f2())  # overwrites the file
