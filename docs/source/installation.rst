@@ -3,15 +3,15 @@ Installation
 The most recent release can be installed from
 `PyPI <https://pypi.org/project/pystow>`_ with uv:
 
-.. code-block:: shell
+.. code-block:: console
 
-    uv pip install pystow
+    $ uv pip install pystow
 
 or pip:
 
-.. code-block:: shell
+.. code-block:: console
 
-    python3 -m pip install pystow
+    $ python3 -m pip install pystow
 
 Installing from git
 -------------------
@@ -36,17 +36,17 @@ Installing for development
 --------------------------
 To install in development mode with uv, use the following
 
-.. code-block:: shell
+.. code-block:: console
 
-    git clone git+https://github.com/cthoyt/pystow.git
-    cd pystow
-    uv --preview pip install -e .
+    $ git clone git+https://github.com/cthoyt/pystow.git
+    $ cd pystow
+    $ uv --preview pip install -e .
 
 or with pip:
 
-.. code-block:: shell
+.. code-block:: console
 
-    UV_PREVIEW=1 python3 -m pip install -e .
+    $ UV_PREVIEW=1 python3 -m pip install -e .
 
 Configuration
 =============

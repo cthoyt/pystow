@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/cthoyt/cookiecutter-snekpack",
-  "commit": "d1ff44f979b4529a47b13f8045036dd7c2d74ec6",
+  "commit": "dd4b8804c2238bf10e5f8f6c2269a699a21fef0f",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -18,10 +18,12 @@
       "__runner": "tox -e",
       "__runner_uv": "--with tox-uv tox -e",
       "__runner_pip": "tox tox-uv",
+      "__runner_install_uv": "uv tool install tox --with tox-uv",
+      "__runner_install_pip": "python3 -m pip install tox tox-uv",
       "__runner_tests": "py",
       "__gh_slug": "cthoyt/pystow",
       "_template": "https://github.com/cthoyt/cookiecutter-snekpack",
-      "_commit": "d1ff44f979b4529a47b13f8045036dd7c2d74ec6"
+      "_commit": "dd4b8804c2238bf10e5f8f6c2269a699a21fef0f"
     }
   },
   "directory": null
