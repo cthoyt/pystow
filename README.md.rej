@@ -1,0 +1,80 @@
+diff a/README.md b/README.md	(rejected hunks)
+@@ -33,7 +33,7 @@
+     -->
+ </p>
+ 
+-Easily pick a place to store data for your Python code
++Easily pick a place to store data for your Python code.
+ 
+ ## 💪 Getting Started
+ 
+@@ -43,8 +43,8 @@ Easily pick a place to store data for your Python code
+ 
+ ### Command Line Interface
+ 
+-The pystow command line tool is automatically installed.
+-It can be used from the console with the `--help` flag to show all subcommands:
++The `pystow` command line tool is automatically installed. It can be used from
++the console with the `--help` flag to show all subcommands:
+ 
+ ```console
+ $ pystow --help
+@@ -176,9 +176,8 @@ More info on Cruft's update command is available
+ ### 🥼 Testing
+ 
+ After cloning the repository and installing `tox` with
+-`uv tool install tox --with tox-uv` or
+-`python3 -m pip install tox tox-uv`, the unit tests in the `tests/` folder
+-can be run reproducibly with:
++`uv tool install tox --with tox-uv` or `python3 -m pip install tox tox-uv`, the
++unit tests in the `tests/` folder can be run reproducibly with:
+ 
+ ```console
+ $ tox -e py
+@@ -241,8 +240,8 @@ to each release of your package.
+ 
+ After these steps, you're ready to go! After you make "release" on GitHub (steps
+ for this are below), you can navigate to
+-https://zenodo.org/account/settings/github/repository/cthoyt/pystow
+-to see the DOI for the release and link to the Zenodo record for it.
++https://zenodo.org/account/settings/github/repository/cthoyt/pystow to see the
++DOI for the release and link to the Zenodo record for it.
+ 
+ #### Registering with the Python Package Index (PyPI)
+ 
+@@ -274,9 +273,9 @@ Note that this deprecates previous workflows using `.pypirc`.
+ 
+ #### Uploading to PyPI
+ 
+-After installing the package in development mode and installing
+-`tox` with `uv tool install tox --with tox-uv` or
+-`python3 -m pip install tox tox-uv`, run the following from the console:
++After installing the package in development mode and installing `tox` with
++`uv tool install tox --with tox-uv` or `python3 -m pip install tox tox-uv`, run
++the following from the console:
+ 
+ ```console
+ $ tox -e finish
+@@ -286,8 +285,8 @@ This script does the following:
+ 
+ 1. Uses [bump-my-version](https://github.com/callowayproject/bump-my-version) to
+    switch the version number in the `pyproject.toml`, `CITATION.cff`,
+-   `src/pystow/version.py`, and
+-   [`docs/source/conf.py`](docs/source/conf.py) to not have the `-dev` suffix
++   `src/pystow/version.py`, and [`docs/source/conf.py`](docs/source/conf.py) to
++   not have the `-dev` suffix
+ 2. Packages the code in both a tar archive and a wheel using
+    [`uv build`](https://docs.astral.sh/uv/guides/publish/#building-your-package)
+ 3. Uploads to PyPI using
+@@ -299,9 +298,8 @@ This script does the following:
+ 
+ #### Releasing on GitHub
+ 
+-1. Navigate to
+-   https://github.com/cthoyt/pystow/releases/new
+-   to draft a new release
++1. Navigate to https://github.com/cthoyt/pystow/releases/new to draft a new
++   release
+ 2. Click the "Choose a Tag" dropdown and select the tag corresponding to the
+    release you just made
+ 3. Click the "Generate Release Notes" button to get a quick outline of recent
