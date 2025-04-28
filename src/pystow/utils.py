@@ -31,6 +31,7 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 import requests
+from platformdirs import user_data_dir
 from tqdm.auto import tqdm
 from typing_extensions import TypeAlias
 
@@ -39,6 +40,7 @@ from .constants import (
     PYSTOW_NAME_DEFAULT,
     PYSTOW_NAME_ENVVAR,
     PYSTOW_USE_APPDIRS,
+    PYSTOW_USE_PLATFORMDIRS,
     README_TEXT,
 )
 
@@ -1005,12 +1007,16 @@ def get_name() -> str:
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
 
-def use_appdirs() -> bool:
+def use_platformdirs() -> bool:
     """Check if X Desktop Group (XDG) compatibility is requested.
 
-    :returns: If the :data:`PYSTOW_USE_APPDIRS` is set to ``true`` in the environment.
+    :returns: If the environment variable :data:`PYSTOW_USE_PLATFORMDIRS` (or
+        :data:`PYSTOW_USE_APPDIRS` for backwards compatibility) is set to ``true``.
+
     """
-    return os.getenv(PYSTOW_USE_APPDIRS) in {"true", "True"}
+    return any(
+        os.getenv(key) in {"true", "True"} for key in {PYSTOW_USE_PLATFORMDIRS, PYSTOW_USE_APPDIRS}
+    )
 
 
 def get_home(ensure_exists: bool = True) -> Path:
@@ -1025,9 +1031,7 @@ def get_home(ensure_exists: bool = True) -> Path:
         3. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
-    if use_appdirs():
-        from appdirs import user_data_dir
-
+    if use_platformdirs():
         default = Path(user_data_dir())
     else:
         default = Path.home() / get_name()
@@ -1051,9 +1055,7 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
     if "." in key:
         raise ValueError(f"The module should not have a dot in it: {key}")
     envvar = f"{key.upper()}_HOME"
-    if use_appdirs():
-        from appdirs import user_data_dir
-
+    if use_platformdirs():
         default = Path(user_data_dir(appname=key))
     else:
         default = get_home(ensure_exists=False) / key

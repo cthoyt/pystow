@@ -53,6 +53,7 @@ license-files = [
 requires-python = ">=3.9"
 dependencies = [
     "click",
+    "platformdirs",
     "requests",
     "tqdm",
     "typing-extensions",
