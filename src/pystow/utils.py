@@ -31,7 +31,7 @@ from urllib.request import urlretrieve
 from uuid import uuid4
 
 import requests
-from platformdirs import user_data_dir
+from platformdirs import user_data_path
 from tqdm.auto import tqdm
 from typing_extensions import TypeAlias
 
@@ -1033,7 +1033,7 @@ def get_home(ensure_exists: bool = True) -> Path:
            returned by :func:`get_name`.
     """
     if use_platformdirs():
-        default = Path(user_data_dir())
+        default = user_data_path()
     else:
         default = Path.home() / get_name()
     return getenv_path(PYSTOW_HOME_ENVVAR, default, ensure_exists=ensure_exists)
@@ -1057,7 +1057,7 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         raise ValueError(f"The module should not have a dot in it: {key}")
     envvar = f"{key.upper()}_HOME"
     if use_platformdirs():
-        default = Path(user_data_dir(appname=key))
+        default = user_data_path(appname=key)
     else:
         default = get_home(ensure_exists=False) / key
     return getenv_path(envvar, default, ensure_exists=ensure_exists)
