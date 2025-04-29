@@ -1026,8 +1026,9 @@ def get_home(ensure_exists: bool = True) -> Path:
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`PYSTOW_HOME_ENVVAR` environment variable or
-        2. The user data directory defined by :mod:`appdirs` if the :data:`PYSTOW_USE_APPDIRS`
-           environment variable is set to ``true`` or
+        2. The user data directory defined by :mod:`platformdirs` if the environment variable
+           :data:`PYSTOW_USE_PLATFORMDIRS` (or :data:`PYSTOW_USE_APPDIRS` for backwards
+           compatibility) is set to ``true`` or
         3. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
