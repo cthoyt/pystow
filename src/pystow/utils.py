@@ -12,6 +12,7 @@ import pickle
 import shutil
 import tarfile
 import tempfile
+import time
 import urllib.error
 import zipfile
 from collections.abc import Collection, Iterable, Iterator, Mapping
@@ -314,7 +315,7 @@ class TqdmReportHook(tqdm):  # type:ignore
         self.update(blocks * block_size - self.n)  # will also set self.n = b * bsize
 
 
-def download(
+def download(  # noqa:C901
     url: str,
     path: str | Path,
     force: bool = True,
@@ -325,6 +326,7 @@ def download(
     hexdigests_strict: bool = False,
     progress_bar: bool = True,
     tqdm_kwargs: Mapping[str, Any] | None = None,
+    sleep: int | float | None = None,
     **kwargs: Any,
 ) -> None:
     """Download a file from a given URL.
@@ -344,6 +346,10 @@ def download(
         Set to true to show a progress bar while downloading
     :param tqdm_kwargs:
         Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
+    :param sleep:
+        If given, sleeps this many seconds via :func:`time.sleep` after a successful download.
+        E.g., useful as a crude mechanism to avoid rate limits. Packages like :mod:`ratelimit`
+        can be used as an alternative
     :param kwargs:
         The keyword arguments to pass to :func:`urllib.request.urlretrieve`
         or to `requests.get` depending on the backend chosen. If using 'requests' backend,
@@ -426,6 +432,8 @@ def download(
         hexdigests_remote=hexdigests_remote,
         hexdigests_strict=hexdigests_strict,
     )
+    if sleep is not None:
+        time.sleep(sleep)
 
 
 class DownloadError(OSError):
