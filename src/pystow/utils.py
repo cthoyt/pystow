@@ -401,7 +401,10 @@ def download(
             try:
                 # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
                 # pattern from https://stackoverflow.com/a/39217788/5775947
-                with requests.get(url, **kwargs) as response, path.open("wb") as file:  # noqa:S113
+                with (
+                    requests.get(url, **kwargs) as response,  # noqa:S113
+                    safe_open(path, operation="write", representation="binary") as file,
+                ):
                     logger.info(
                         "downloading (stream=%s) with requests from %s to %s",
                         kwargs["stream"],
@@ -602,7 +605,7 @@ def write_pickle_gz(
     :param kwargs:
         Additional kwargs to pass to :func:`pickle.dump`
     """
-    with gzip.open(path, mode="wb") as file:
+    with safe_open(path, representation="binary", operation="write") as file:
         pickle.dump(obj, file, **kwargs)
 
 
@@ -828,13 +831,9 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     """
     import rdflib
 
-    if isinstance(path, str):
-        path = Path(path)
     graph = rdflib.Graph()
-    with (
-        gzip.open(path, "rb") if isinstance(path, Path) and path.suffix == ".gz" else open(path)
-    ) as file:
-        graph.parse(file, **kwargs)  # type:ignore
+    with safe_open(path, operation="read", representation="binary") as file:
+        graph.parse(file, **kwargs)
     return graph
 
 
@@ -915,7 +914,7 @@ def download_from_google(
             res = sess.get(DOWNLOAD_URL, params={"id": file_id}, stream=True)
             token = _get_confirm_token(res)
             res = sess.get(DOWNLOAD_URL, params={"id": file_id, "confirm": token}, stream=True)
-            with path.open("wb") as file:
+            with safe_open(path, representation="binary", operation="write") as file:
                 for chunk in tqdm(res.iter_content(CHUNK_SIZE), desc="writing", unit="chunk"):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
