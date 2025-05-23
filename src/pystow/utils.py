@@ -46,12 +46,12 @@ from .constants import (
 )
 
 if TYPE_CHECKING:
+    import _csv
     import botocore.client
     import lxml.etree
     import numpy.typing
     import pandas
     import rdflib
-    import _csv
 
 __all__ = [
     "DownloadBackend",
