@@ -47,6 +47,7 @@ from .constants import (
 
 if TYPE_CHECKING:
     import _csv
+
     import botocore.client
     import lxml.etree
     import numpy.typing
@@ -1124,6 +1125,7 @@ MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]
 }
 
 
+# docstr-coverage:excused `overload`
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
@@ -1131,6 +1133,7 @@ def safe_open(
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
+# docstr-coverage:excused `overload`
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
@@ -1145,10 +1148,13 @@ def safe_open(
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
         raise ValueError(
-            f"invalid operation given: {operation}. Should be one of {OPERATION_VALUES}"
+            f"Invalid operation given: {operation}. Should be one of {OPERATION_VALUES}."
         )
     if representation not in REPRESENTATION_VALUES:
-        raise ValueError(f"invalid representation given: {representation}. Should be one of {REPRESENTATION_VALUES}")
+        raise ValueError(
+            f"Invalid representation given: {representation}. "
+            f"Should be one of {REPRESENTATION_VALUES}."
+        )
 
     mode = MODE_MAP[operation, representation]
     path = Path(path).expanduser().resolve()
