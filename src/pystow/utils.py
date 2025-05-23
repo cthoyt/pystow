@@ -1129,7 +1129,7 @@ MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, operation: Operation = ..., representation: Literal["text"] = "text"
+    path: str | Path, *, operation: Operation = ..., representation: Literal["text"] = "text"
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1137,13 +1137,13 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, operation: Operation = ..., representation: Literal["binary"] = "binary"
+    path: str | Path, *, operation: Operation = ..., representation: Literal["binary"] = "binary"
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, operation: Operation = "read", representation: Representation = "text"
+    path: str | Path, *, operation: Operation = "read", representation: Representation = "text"
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1168,11 +1168,17 @@ def safe_open(
 
 @contextlib.contextmanager
 def safe_open_writer(
-    f: str | Path | TextIO, *, delimiter: str = "\t"
+    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[_csv._writer, None, None]:
-    """Open a CSV writer, wrapping :func:`csv.writer`."""
+    """Open a CSV writer, wrapping :func:`csv.writer`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.writer`
+    :yields: A CSV writer object, constructed from :func:`csv.writer`
+    """
     if isinstance(f, (str, Path)):
         with safe_open(f, operation="write", representation="text") as file:
-            yield csv.writer(file, delimiter=delimiter)
+            yield csv.writer(file, delimiter=delimiter, **kwargs)
     else:
-        yield csv.writer(f, delimiter=delimiter)
+        yield csv.writer(f, delimiter=delimiter, **kwargs)
