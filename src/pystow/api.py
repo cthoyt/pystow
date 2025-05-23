@@ -1853,12 +1853,12 @@ def ensure_open_sqlite(
 
     Example usage:
 
-    .. code-block::
+    .. code-block:: python
 
         import pystow
         import pandas as pd
 
-        url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+        url = "https://s3.amazonaws.com/bbop-sqlite/obi.db"
         sql = "SELECT * FROM entailed_edge LIMIT 10"
         with pystow.ensure_open_sqlite("test", url=url) as conn:
             df = pd.read_sql(sql, conn)
