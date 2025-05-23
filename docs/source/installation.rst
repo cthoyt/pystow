@@ -96,10 +96,9 @@ hidden, some users might want to use the
 `XDG specifications <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_
 for storing their app data.
 
-If you set the environment variable ``PYSTOW_USE_APPDIRS`` to ``true`` or ``True``, then the
-`appdirs <https://pypi.org/project/appdirs>`_ package will be used to choose
+If you set the environment variable ``PYSTOW_USE_PLATFORMDIRS`` (or ``PYSTOW_USE_APPDIRS`` for
+backwards compatibility) to ``true`` or ``True``, then the
+`platformdirs <https://pypi.org/project/platformdirs>`_ package will be used to choose
 the base directory based on the ``user data dir`` option.
-
-.. warning:: If you use this setting, make sure you first do ``pip install appdirs``
 
 .. note:: This can still be  overridden by ``PYSTOW_HOME``.
