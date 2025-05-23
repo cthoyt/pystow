@@ -1171,7 +1171,7 @@ def safe_open_writer(
     f: str | Path | TextIO, *, delimiter: str = "\t"
 ) -> Generator[_csv._writer, None, None]:
     """Open a CSV writer, wrapping :func:`csv.writer`."""
-    if isinstance(f, str | Path):
+    if isinstance(f, (str, Path)):
         with safe_open(f, operation="write", representation="text") as file:
             yield csv.writer(file, delimiter=delimiter)
     else:
