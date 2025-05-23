@@ -1697,7 +1697,7 @@ class Module:
         Example usage:
         >>> import pystow
         >>> import pandas as pd
-        >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db"
+        >>> url = "https://s3.amazonaws.com/bbop-sqlite/obi.db"
         >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
         >>> module = pystow.module("test")
         >>> with module.ensure_open_sqlite(url=url) as conn:

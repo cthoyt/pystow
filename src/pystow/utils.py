@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import csv
 import gzip
 import hashlib
 import logging
@@ -12,9 +13,10 @@ import pickle
 import shutil
 import tarfile
 import tempfile
+import typing
 import urllib.error
 import zipfile
-from collections.abc import Collection, Iterable, Iterator, Mapping
+from collections.abc import Collection, Generator, Iterable, Iterator, Mapping
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
@@ -24,6 +26,7 @@ from typing import (
     Any,
     Literal,
     NamedTuple,
+    TextIO,
     cast,
 )
 from urllib.parse import urlparse
@@ -43,6 +46,8 @@ from .constants import (
 )
 
 if TYPE_CHECKING:
+    import _csv
+
     import botocore.client
     import lxml.etree
     import numpy.typing
@@ -85,6 +90,8 @@ __all__ = [
     "read_zipfile_csv",
     "read_zipfile_rdf",
     "read_zipfile_xml",
+    "safe_open",
+    "safe_open_writer",
     "write_lzma_csv",
     "write_pickle_gz",
     "write_tarfile_csv",
@@ -1100,3 +1107,78 @@ def gunzip(source: str | Path, target: str | Path) -> None:
     """
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
         shutil.copyfileobj(in_file, out_file)
+
+
+#: A human-readable flag for how to open a file.
+Operation: TypeAlias = Literal["read", "write"]
+OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
+
+#: A human-readable flag for how to open a file.
+Representation: TypeAlias = Literal["text", "binary"]
+REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
+
+MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]] = {
+    ("read", "text"): "rt",
+    ("read", "binary"): "rb",
+    ("write", "text"): "wt",
+    ("write", "binary"): "wb",
+}
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: str | Path, *, operation: Operation = ..., representation: Literal["text"] = "text"
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: str | Path, *, operation: Operation = ..., representation: Literal["binary"] = "binary"
+) -> Generator[typing.BinaryIO, None, None]: ...
+
+
+@contextlib.contextmanager
+def safe_open(
+    path: str | Path, *, operation: Operation = "read", representation: Representation = "text"
+) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
+    """Safely open a file for reading or writing text."""
+    if operation not in OPERATION_VALUES:
+        raise ValueError(
+            f"Invalid operation given: {operation}. Should be one of {OPERATION_VALUES}."
+        )
+    if representation not in REPRESENTATION_VALUES:
+        raise ValueError(
+            f"Invalid representation given: {representation}. "
+            f"Should be one of {REPRESENTATION_VALUES}."
+        )
+
+    mode = MODE_MAP[operation, representation]
+    path = Path(path).expanduser().resolve()
+    if path.suffix.endswith(".gz"):
+        with gzip.open(path, mode=mode) as file:
+            yield file  # type:ignore
+    else:
+        with open(path, mode=mode) as file:
+            yield file  # type:ignore
+
+
+@contextlib.contextmanager
+def safe_open_writer(
+    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
+) -> Generator[_csv._writer, None, None]:
+    """Open a CSV writer, wrapping :func:`csv.writer`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.writer`
+    :yields: A CSV writer object, constructed from :func:`csv.writer`
+    """
+    if isinstance(f, (str, Path)):
+        with safe_open(f, operation="write", representation="text") as file:
+            yield csv.writer(file, delimiter=delimiter, **kwargs)
+    else:
+        yield csv.writer(f, delimiter=delimiter, **kwargs)
