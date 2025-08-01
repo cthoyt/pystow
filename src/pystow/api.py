@@ -8,6 +8,7 @@ import lzma
 import sqlite3
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
+from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
 from typing import (
@@ -41,6 +42,7 @@ __all__ = [
     "ensure_gunzip",
     "ensure_json",
     "ensure_json_bz2",
+    "ensure_nltk",
     "ensure_open",
     "ensure_open_bz2",
     "ensure_open_gz",
@@ -1796,3 +1798,29 @@ def ensure_open_sqlite_gz(
         *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
     ) as yv:
         yield yv
+
+
+@lru_cache
+def ensure_nltk(resource: str = "stopwords") -> tuple[Path, bool]:
+    """Ensure NLTK data is downloaded in a standard way.
+
+    :param resource: Name of the resource to download, e.g., ``stopwords``
+    :returns:
+        A pair of the NLTK cache directory and a boolean that says if download was successful
+
+    This function also appends the standard PyStow location for NLTK data to the
+    :data:`nltk.data.path` list so any downstream users of NLTK will know how to
+    find it automatically.
+    """
+    import nltk.data
+
+    directory = join("nltk")
+
+    result = nltk.download(resource, download_dir=directory, quiet=True)
+    if directory not in nltk.data.path:
+        nltk.data.path.append(directory)
+
+    # this is cached so you don't have to keep checking
+    # if the package was downloaded
+
+    return directory, result
