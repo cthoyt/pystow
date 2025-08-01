@@ -91,6 +91,9 @@ __all__ = [
     "read_zipfile_rdf",
     "read_zipfile_xml",
     "safe_open",
+    "safe_open_dict_reader",
+    "safe_open_dict_writer",
+    "safe_open_reader",
     "safe_open_writer",
     "write_lzma_csv",
     "write_pickle_gz",
@@ -1182,3 +1185,62 @@ def safe_open_writer(
             yield csv.writer(file, delimiter=delimiter, **kwargs)
     else:
         yield csv.writer(f, delimiter=delimiter, **kwargs)
+
+
+@contextlib.contextmanager
+def safe_open_dict_writer(
+    f: str | Path | TextIO,
+    fieldnames: typing.Sequence[str],
+    *,
+    delimiter: str = "\t",
+    **kwargs: Any,
+) -> Generator[csv.DictWriter[str], None, None]:
+    """Open a CSV dictionary writer, wrapping :func:`csv.DictWriter`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param fieldnames: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.DictWriter`
+    :yields: A CSV dictionary writer object, constructed from :func:`csv.DictWriter`
+    """
+    if isinstance(f, (str, Path)):
+        with safe_open(f, operation="write", representation="text") as file:
+            yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
+    else:
+        yield csv.DictWriter(f, fieldnames, delimiter=delimiter, **kwargs)
+
+
+@contextlib.contextmanager
+def safe_open_reader(
+    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
+) -> Generator[_csv._reader, None, None]:
+    """Open a CSV reader, wrapping :func:`csv.reader`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.reader`
+    :yields: A CSV reader object, constructed from :func:`csv.reader`
+    """
+    if isinstance(f, (str, Path)):
+        with safe_open(f, operation="read", representation="text") as file:
+            yield csv.reader(file, delimiter=delimiter, **kwargs)
+    else:
+        yield csv.reader(f, delimiter=delimiter, **kwargs)
+
+
+@contextlib.contextmanager
+def safe_open_dict_reader(
+    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
+) -> Generator[csv.DictReader[str], None, None]:
+    """Open a CSV dictionary reader, wrapping :func:`csv.DictReader`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.DictReader`
+    :yields: A CSV reader object, constructed from :func:`csv.DictReader`
+    """
+    if isinstance(f, (str, Path)):
+        with safe_open(f, operation="read", representation="text") as file:
+            yield csv.DictReader(file, delimiter=delimiter, **kwargs)
+    else:
+        yield csv.DictReader(f, delimiter=delimiter, **kwargs)
