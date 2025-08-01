@@ -148,7 +148,7 @@ class TestJoin(unittest.TestCase):
     def mock_download() -> mock._patch_default_new:
         """Mock connection to the internet using local resource files.
 
-        :return: A patch object that can be applied to the pystow download function
+        :returns: A patch object that can be applied to the pystow download function
         """
 
         def _mock_get_data(url: str, path: str | Path, **_kwargs: Any) -> Path:
@@ -161,7 +161,8 @@ class TestJoin(unittest.TestCase):
         """Mock connection to the internet using local resource files.
 
         :param local_path: the path to the file to mock
-        :return: A patch object that can be applied to the pystow download function
+
+        :returns: A patch object that can be applied to the pystow download function
         """
 
         def _mock_get_data(path: str | Path, **_kwargs: Any) -> Path:
@@ -172,8 +173,10 @@ class TestJoin(unittest.TestCase):
     def join(self, *parts: str) -> Path:
         """Help join the parts to this test case's temporary directory.
 
-        :param parts: The file path parts that are joined with this test case's directory
-        :return: A path to the file
+        :param parts: The file path parts that are joined with this test case's
+            directory
+
+        :returns: A path to the file
         """
         return Path(self.directory.name).joinpath(*parts)
 
@@ -337,13 +340,10 @@ class TestJoin(unittest.TestCase):
         with self.mock_directory():
             # create a minimal provider
             def touch_file(path: Path, **_kwargs: Any) -> None:
-                """
-                Create a file.
+                """Create a file.
 
-                :param path:
-                    the file path
-                :param _kwargs:
-                    ignored keywords
+                :param path: the file path
+                :param _kwargs: ignored keywords
                 """
                 path.touch()
 

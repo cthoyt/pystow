@@ -57,7 +57,8 @@ class Cached(Generic[X], ABC):
         """Instantiate the decorator.
 
         :param path: The path to the cache for the file
-        :param cache: Should caching be done? Defaults to true, turn off for debugging purposes
+        :param cache: Should caching be done? Defaults to true, turn off for debugging
+            purposes
         :param force: Should a pre-existing file be disregared/overwritten?
         """
         self.path = Path(path)
@@ -68,7 +69,8 @@ class Cached(Generic[X], ABC):
         """Apply this instance as a decorator.
 
         :param func: The function to wrap
-        :return: A wrapped function
+
+        :returns: A wrapped function
         """
 
         @functools.wraps(func)
@@ -175,9 +177,11 @@ class CachedDataFrame(Cached["pd.DataFrame"]):
 
         :param path: The path to the cache for the file
         :param force: Should a pre-existing file be disregared/overwritten?
-        :param sep: The separator. Defaults to TSV, since this is the only reasonable default.
+        :param sep: The separator. Defaults to TSV, since this is the only reasonable
+            default.
         :param dtype: A shortcut for setting the dtype
         :param read_csv_kwargs: Additional kwargs to pass to :func:`pd.read_csv`.
+
         :raises ValueError: if sep is given as a kwarg and also in ``read_csv_kwargs``.
         """
         super().__init__(path=path, cache=cache, force=force)

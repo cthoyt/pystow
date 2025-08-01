@@ -74,10 +74,8 @@ class Module:
     def __init__(self, base: str | Path, ensure_exists: bool = True) -> None:
         """Initialize the module.
 
-        :param base:
-            The base directory for the module
-        :param ensure_exists:
-            Should the base directory be created automatically?
+        :param base: The base directory for the module
+        :param ensure_exists: Should the base directory be created automatically?
             Defaults to true.
         """
         self.base = Path(base)
@@ -87,18 +85,15 @@ class Module:
     def from_key(cls, key: str, *subkeys: str, ensure_exists: bool = True) -> Module:
         """Get a module for the given directory or one of its subdirectories.
 
-        :param key:
-            The name of the module. No funny characters. The envvar
-            <key>_HOME where key is uppercased is checked first before using
-            the default home directory.
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param key: The name of the module. No funny characters. The envvar <key>_HOME
+            where key is uppercased is checked first before using the default home
+            directory.
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param ensure_exists:
-            Should all directories be created automatically?
-            Defaults to true.
-        :return:
-            A module
+        :param ensure_exists: Should all directories be created automatically? Defaults
+            to true.
+
+        :returns: A module
         """
         base = get_base(key, ensure_exists=False)
         rv = cls(base=base, ensure_exists=ensure_exists)
@@ -109,14 +104,12 @@ class Module:
     def module(self, *subkeys: str, ensure_exists: bool = True) -> Module:
         """Get a module for a subdirectory of the current module.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param ensure_exists:
-            Should all directories be created automatically?
-            Defaults to true.
-        :return:
-            A module representing the subdirectory based on the given ``subkeys``.
+        :param ensure_exists: Should all directories be created automatically? Defaults
+            to true.
+
+        :returns: A module representing the subdirectory based on the given ``subkeys``.
         """
         base = self.join(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
@@ -130,20 +123,16 @@ class Module:
     ) -> Path:
         """Get a subdirectory of the current module.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param ensure_exists:
-            Should all directories be created automatically?
-            Defaults to true.
-        :param name:
-            The name of the file (optional) inside the folder
-        :param version:
-            The optional version, or no-argument callable that returns
-            an optional version. This is prepended before the subkeys.
+        :param ensure_exists: Should all directories be created automatically? Defaults
+            to true.
+        :param name: The name of the file (optional) inside the folder
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
 
-            The following example describes how to store the versioned data
-            from the Rhea database for biologically relevant chemical reactions.
+            The following example describes how to store the versioned data from the
+            Rhea database for biologically relevant chemical reactions.
 
             .. code-block::
 
@@ -161,8 +150,8 @@ class Module:
                 module = pystow.module("rhea")
                 path = module.join(name="rhea.rdf.gz", version=get_rhea_version)
 
-        :return:
-            The path of the directory or subdirectory for the given module.
+
+        :returns: The path of the directory or subdirectory for the given module.
         """
         rv = self.base
 
@@ -192,11 +181,11 @@ class Module:
     def joinpath_sqlite(self, *subkeys: str, name: str) -> str:
         """Get an SQLite database connection string.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the database file.
-        :return: A SQLite path string.
+
+        :returns: A SQLite path string.
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
         return path_to_sqlite(path)
@@ -212,20 +201,16 @@ class Module:
     ) -> Path:
         """Ensure a file is downloaded.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param version:
-            The optional version, or no-argument callable that returns
-            an optional version. This is prepended before the subkeys.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
 
-            The following example describes how to store the versioned data
-            from the Rhea database for biologically relevant chemical reactions.
+            The following example describes how to store the versioned data from the
+            Rhea database for biologically relevant chemical reactions.
 
             .. code-block::
 
@@ -243,12 +228,12 @@ class Module:
                     version=get_rhea_version,
                 )
 
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :return:
-            The path of the file that has been downloaded (or already exists)
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+
+        :returns: The path of the file that has been downloaded (or already exists)
         """
         if name is None:
             name = name_from_url(url)
@@ -271,24 +256,18 @@ class Module:
     ) -> Path:
         """Ensure a file is present, and run a custom create function otherwise.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param name:
-            The file name.
-        :param force:
-            Should the file be re-created, even if the path already exists?
-        :param provider:
-            The file provider. Will be run with the path as the first positional argument,
-            if the file needs to be generated.
-        :param kwargs:
-            Additional keyword-based parameters passed to the provider.
+        :param name: The file name.
+        :param force: Should the file be re-created, even if the path already exists?
+        :param provider: The file provider. Will be run with the path as the first
+            positional argument, if the file needs to be generated.
+        :param kwargs: Additional keyword-based parameters passed to the provider.
 
-        :raises ValueError:
-            If the provider was called but the file was not created by it.
+        :returns: The path of the file that has been created (or already exists)
 
-        :return:
-            The path of the file that has been created (or already exists)
+        :raises ValueError: If the provider was called but the file was not created by
+            it.
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
         if path.is_file() and not force:
@@ -310,25 +289,23 @@ class Module:
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param directory:
-            Overrides the name of the directory into which the tar archive is extracted.
-            If none given, will use the stem of the file name that gets downloaded.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param extract_kwargs: Keyword arguments to pass to :meth:`tarfile.TarFile.extract_all`.
-        :return:
-            The path of the directory where the file that has been downloaded
-            gets extracted to
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param directory: Overrides the name of the directory into which the tar archive
+            is extracted. If none given, will use the stem of the file name that gets
+            downloaded.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param extract_kwargs: Keyword arguments to pass to
+            :meth:`tarfile.TarFile.extract_all`.
+
+        :returns: The path of the directory where the file that has been downloaded gets
+            extracted to
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -356,22 +333,19 @@ class Module:
     ) -> Path:
         """Ensure a tar.gz file is downloaded and unarchived.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
         :param autoclean: Should the zipped file be deleted?
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :return:
-            The path of the directory where the file that has been downloaded
-            gets extracted to
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+
+        :returns: The path of the directory where the file that has been downloaded gets
+            extracted to
         """
         if name is None:
             name = name_from_url(url)
@@ -433,18 +407,15 @@ class Module:
     ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a file is downloaded and open it.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
 
@@ -466,11 +437,14 @@ class Module:
 
         :param mode: The file opening mode
         :param ensure_exists: The value for ensuring a file
+
         :raises ValueError: In the following situations:
 
-            1. If the file should be opened in write mode, and it is not ensured to exist
+            1. If the file should be opened in write mode, and it is not ensured to
+               exist
             2. If the file should be opened in read mode, and it is ensured to exist.
-               This is bad because it will create a file when there previously wasn't one
+               This is bad because it will create a file when there previously wasn't
+               one
         """
         if "w" in mode and not ensure_exists:
             raise ValueError
@@ -512,14 +486,13 @@ class Module:
     ) -> Generator[StringIO | BytesIO, None, None]:
         """Open a file.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param ensure_exists:
-            Should the directory the file is in be made? Set to true on write operations.
+        :param ensure_exists: Should the directory the file is in be made? Set to true
+            on write operations.
 
         :yields: An open file object.
 
@@ -531,7 +504,6 @@ class Module:
 
             with pystow.module("test").open(name="test.tsv", mode="w") as file:
                 print("Test text!", file=file)
-
         """
         self._raise_for_mode_ensure_mismatch(mode, ensure_exists)
         path = self.join(*subkeys, name=name, ensure_exists=ensure_exists)
@@ -575,8 +547,7 @@ class Module:
     ) -> Generator[StringIO | BytesIO, None, None]:
         """Open a gzipped file that exists already.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`gzip.open`
@@ -633,18 +604,15 @@ class Module:
     ) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
         """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`lzma.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`lzma.open`
 
@@ -672,20 +640,16 @@ class Module:
     ) -> BytesOpener:
         """Ensure a tar file is downloaded and open a file inside it.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`tarfile.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`tarfile.open`
 
@@ -714,20 +678,16 @@ class Module:
     ) -> BytesOpener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`zipfile.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
 
@@ -786,18 +746,15 @@ class Module:
     ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a gzipped file is downloaded and open a file inside it.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`gzip.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
 
@@ -824,18 +781,15 @@ class Module:
     ) -> Generator[bz2.BZ2File, None, None]:
         """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`bz2.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
 
@@ -860,20 +814,19 @@ class Module:
     ) -> pd.DataFrame:
         """Download a CSV and open as a dataframe with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
-        :return: A pandas DataFrame
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param read_csv_kwargs: Keyword arguments to pass through to
+            :func:`pandas.read_csv`.
+
+        :returns: A pandas DataFrame
         """
         import pandas as pd
 
@@ -890,14 +843,14 @@ class Module:
     ) -> pd.DataFrame:
         """Open a pre-existing CSV as a dataframe with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
-        :return: A pandas DataFrame
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param read_csv_kwargs: Keyword arguments to pass through to
+            :func:`pandas.read_csv`.
+
+        :returns: A pandas DataFrame
         """
         import pandas as pd
 
@@ -915,16 +868,15 @@ class Module:
     ) -> None:
         """Dump a dataframe to a TSV file with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
         :param obj: The dataframe to dump
         :param sep: The separator to use, defaults to a tab
         :param index: Should the index be dumped? Defaults to false.
-        :param to_csv_kwargs: Keyword arguments to pass through to :meth:`pandas.DataFrame.to_csv`.
+        :param to_csv_kwargs: Keyword arguments to pass through to
+            :meth:`pandas.DataFrame.to_csv`.
         """
         to_csv_kwargs = {} if to_csv_kwargs is None else dict(to_csv_kwargs)
         to_csv_kwargs.setdefault("sep", sep)
@@ -945,20 +897,18 @@ class Module:
     ) -> JSON:
         """Download JSON and open with :mod:`json`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+
         :returns: A JSON object (list, dict, etc.)
         """
         with self.ensure_open(
@@ -983,20 +933,18 @@ class Module:
     ) -> JSON:
         """Download BZ2-compressed JSON and open with :mod:`json`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+
         :returns: A JSON object (list, dict, etc.)
         """
         with self.ensure_open_bz2(
@@ -1018,12 +966,12 @@ class Module:
     ) -> JSON:
         """Open a JSON file :mod:`json`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
         :param json_load_kwargs: Keyword arguments to pass through to :func:`json.load`.
+
         :returns: A JSON object (list, dict, etc.)
         """
         with self.open(
@@ -1041,8 +989,7 @@ class Module:
     ) -> None:
         """Dump an object to a file with :mod:`json`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param obj: The object to dump
@@ -1067,21 +1014,20 @@ class Module:
     ) -> Any:
         """Download a pickle file and open with :mod:`pickle`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :param pickle_load_kwargs: Keyword arguments to pass through to
+            :func:`pickle.load`.
+
         :returns: Any object
         """
         with self.ensure_open(
@@ -1105,13 +1051,14 @@ class Module:
     ) -> Any:
         """Open a pickle file with :mod:`pickle`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :param pickle_load_kwargs: Keyword arguments to pass through to
+            :func:`pickle.load`.
+
         :returns: Any object
         """
         with self.open(
@@ -1134,14 +1081,14 @@ class Module:
     ) -> None:
         """Dump an object to a file with :mod:`pickle`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param obj: The object to dump
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param pickle_dump_kwargs: Keyword arguments to pass through to :func:`pickle.dump`.
+        :param pickle_dump_kwargs: Keyword arguments to pass through to
+            :func:`pickle.dump`.
         """
         with self.open(
             *subkeys,
@@ -1165,21 +1112,20 @@ class Module:
     ) -> Any:
         """Download a gzipped pickle file and open with :mod:`pickle`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`gzip.open`
         :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
-        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :param pickle_load_kwargs: Keyword arguments to pass through to
+            :func:`pickle.load`.
+
         :returns: Any object
         """
         with self.ensure_open_gz(
@@ -1203,13 +1149,14 @@ class Module:
     ) -> Any:
         """Open a gzipped pickle file with :mod:`pickle`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`gzip.open`
-        :param pickle_load_kwargs: Keyword arguments to pass through to :func:`pickle.load`.
+        :param pickle_load_kwargs: Keyword arguments to pass through to
+            :func:`pickle.load`.
+
         :returns: Any object
         """
         with self.open_gz(
@@ -1232,20 +1179,19 @@ class Module:
     ) -> pd.DataFrame:
         """Download an excel file and open as a dataframe with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param read_excel_kwargs: Keyword arguments to pass through to :func:`pandas.read_excel`.
-        :return: A pandas DataFrame
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param read_excel_kwargs: Keyword arguments to pass through to
+            :func:`pandas.read_excel`.
+
+        :returns: A pandas DataFrame
         """
         import pandas as pd
 
@@ -1266,27 +1212,25 @@ class Module:
     ) -> pd.DataFrame:
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param read_csv_kwargs: Keyword arguments to pass through to
+            :func:`pandas.read_csv`.
+
         :returns: A dataframe
 
         .. warning::
 
-            If you have lots of files to read in the same archive,
-            it's better just to unzip first.
+            If you have lots of files to read in the same archive, it's better just to
+            unzip first.
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1306,25 +1250,24 @@ class Module:
     ) -> lxml.etree.ElementTree:
         """Download an XML file and open it with :mod:`lxml`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param parse_kwargs: Keyword arguments to pass through to
+            :func:`lxml.etree.parse`.
+
         :returns: An ElementTree object
 
         .. warning::
 
-            If you have lots of files to read in the same archive,
-            it's better just to unzip first.
+            If you have lots of files to read in the same archive, it's better just to
+            unzip first.
         """
         from lxml import etree
 
@@ -1341,17 +1284,18 @@ class Module:
     ) -> lxml.etree.ElementTree:
         """Load an XML file with :mod:`lxml`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
-        :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+        :param parse_kwargs: Keyword arguments to pass through to
+            :func:`lxml.etree.parse`.
+
         :returns: An ElementTree object
 
         .. warning::
 
-            If you have lots of files to read in the same archive,
-            it's better just to unzip first.
+            If you have lots of files to read in the same archive, it's better just to
+            unzip first.
         """
         from lxml import etree
 
@@ -1368,14 +1312,12 @@ class Module:
     ) -> None:
         """Dump an XML element tree to a file with :mod:`lxml`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param obj: The object to dump
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param write_kwargs:
-            Keyword arguments to pass through to
+        :param write_kwargs: Keyword arguments to pass through to
             :func:`lxml.etree.ElementTree.write`.
         """
         with self.open(
@@ -1395,27 +1337,25 @@ class Module:
     ) -> lxml.etree.ElementTree:
         """Download a tar file and open an inner file as an XML with :mod:`lxml`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param parse_kwargs: Keyword arguments to pass through to :func:`lxml.etree.parse`.
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param parse_kwargs: Keyword arguments to pass through to
+            :func:`lxml.etree.parse`.
+
         :returns: An ElementTree object
 
         .. warning::
 
-            If you have lots of files to read in the same archive,
-            it's better just to unzip first.
+            If you have lots of files to read in the same archive, it's better just to
+            unzip first.
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1434,22 +1374,20 @@ class Module:
     ) -> pd.DataFrame:
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param read_csv_kwargs: Keyword arguments to pass through to :func:`pandas.read_csv`.
-        :return: A pandas DataFrame
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param read_csv_kwargs: Keyword arguments to pass through to
+            :func:`pandas.read_csv`.
+
+        :returns: A pandas DataFrame
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1470,24 +1408,19 @@ class Module:
     ) -> numpy.typing.ArrayLike:
         """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param inner_path:
-            The relative path to the file inside the archive
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs:
-            Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param load_kwargs:
-            Additional keyword arguments that are passed through to :func:`read_zip_np`
-            and transitively to :func:`numpy.load`.
+        :param url: The URL to download.
+        :param inner_path: The relative path to the file inside the archive
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param load_kwargs: Additional keyword arguments that are passed through to
+            :func:`read_zip_np` and transitively to :func:`numpy.load`.
+
         :returns: An array-like object
         """
         path = self.ensure(
@@ -1507,24 +1440,22 @@ class Module:
     ) -> rdflib.Graph:
         """Download a RDF file and open with :mod:`rdflib`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
-        :param precache:
-            Should the parsed :class:`rdflib.Graph` be stored as a pickle for fast loading?
-        :param parse_kwargs:
-            Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle
+            for fast loading?
+        :param parse_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.read_rdf` and transitively to
             :func:`rdflib.Graph.parse`.
-        :return: An RDF graph
+
+        :returns: An RDF graph
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1552,14 +1483,14 @@ class Module:
     ) -> rdflib.Graph:
         """Open an RDF file with :mod:`rdflib`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
-        :param parse_kwargs:
-            Keyword arguments to pass through to :func:`pystow.utils.read_rdf` and transitively to
+        :param parse_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.read_rdf` and transitively to
             :func:`rdflib.Graph.parse`.
-        :return: An RDF graph
+
+        :returns: An RDF graph
         """
         path = self.join(*subkeys, name=name, ensure_exists=False)
         return read_rdf(path=path, **(parse_kwargs or {}))
@@ -1574,14 +1505,13 @@ class Module:
     ) -> None:
         """Dump an RDF graph to a file with :mod:`rdflib`.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
         :param name: The name of the file to open
         :param obj: The object to dump
         :param format: The format to dump in
-        :param serialize_kwargs:
-            Keyword arguments to through to :func:`rdflib.Graph.serialize`.
+        :param serialize_kwargs: Keyword arguments to through to
+            :func:`rdflib.Graph.serialize`.
         """
         path = self.join(*subkeys, name=name, ensure_exists=False)
         serialize_kwargs = {} if serialize_kwargs is None else dict(serialize_kwargs)
@@ -1601,26 +1531,21 @@ class Module:
     ) -> Path:
         """Ensure a file is downloaded.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param s3_bucket:
-            The S3 bucket name
-        :param s3_key:
-            The S3 key name
-        :param name:
-            Overrides the name of the file at the end of the S3 key, if given.
-        :param client:
-            A botocore client. If none given, one will be created automatically
-        :param client_kwargs:
-            Keyword arguments to be passed to the client on instantiation.
-        :param download_file_kwargs:
-            Keyword arguments to be passed to :func:`boto3.s3.transfer.S3Transfer.download_file`
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :return:
-            The path of the file that has been downloaded (or already exists)
+        :param s3_bucket: The S3 bucket name
+        :param s3_key: The S3 key name
+        :param name: Overrides the name of the file at the end of the S3 key, if given.
+        :param client: A botocore client. If none given, one will be created
+            automatically
+        :param client_kwargs: Keyword arguments to be passed to the client on
+            instantiation.
+        :param download_file_kwargs: Keyword arguments to be passed to
+            :func:`boto3.s3.transfer.S3Transfer.download_file`
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+
+        :returns: The path of the file that has been downloaded (or already exists)
         """
         if not isinstance(s3_key, str):
             s3_key = "/".join(s3_key)  # join sequence
@@ -1648,22 +1573,18 @@ class Module:
     ) -> Path:
         """Ensure a file is downloaded from Google Drive.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param name:
-            The name of the file
-        :param file_id:
-            The file identifier of the Google file. If your share link is
-            https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view,
-            then your file ID is ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs:
-            Keyword arguments to pass through to :func:`pystow.utils.download_from_google`.
-        :return:
-            The path of the file that has been downloaded (or already exists)
+        :param name: The name of the file
+        :param file_id: The file identifier of the Google file. If your share link is
+            https://drive.google.com/file/d/1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z/view, then
+            your file ID is ``1AsPPU4ka1Rc9u-XYMGWtvV65hF3egi0z``.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download_from_google`.
+
+        :returns: The path of the file that has been downloaded (or already exists)
         """
         path = self.join(*subkeys, name=name, ensure_exists=True)
         download_from_google(file_id, path, force=force, **(download_kwargs or {}))
@@ -1680,28 +1601,22 @@ class Module:
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+
         :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
 
-        Example usage:
-        >>> import pystow
-        >>> import pandas as pd
-        >>> url = "https://s3.amazonaws.com/bbop-sqlite/obi.db"
-        >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
-        >>> module = pystow.module("test")
-        >>> with module.ensure_open_sqlite(url=url) as conn:
-        >>>     df = pd.read_sql(sql, conn)
+        Example usage: >>> import pystow >>> import pandas as pd >>> url =
+        "https://s3.amazonaws.com/bbop-sqlite/obi.db" >>> sql = "SELECT * FROM
+        entailed_edge LIMIT 10" >>> module = pystow.module("test") >>> with
+        module.ensure_open_sqlite(url=url) as conn: >>> df = pd.read_sql(sql, conn)
         """
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
@@ -1720,31 +1635,25 @@ class Module:
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database that's gzipped.
 
-        Unfortunately, it's a paid feature to directly read gzipped sqlite files,
-        so this automatically gunzips it first.
+        Unfortunately, it's a paid feature to directly read gzipped sqlite files, so
+        this automatically gunzips it first.
 
-        :param subkeys:
-            A sequence of additional strings to join. If none are given,
+        :param subkeys: A sequence of additional strings to join. If none are given,
             returns the directory for this module.
-        :param url:
-            The URL to download.
-        :param name:
-            Overrides the name of the file at the end of the URL, if given. Also
-            useful for URLs that don't have proper filenames with extensions.
-        :param force:
-            Should the download be done again, even if the path already exists?
-            Defaults to false.
-        :param download_kwargs: Keyword arguments to pass through to :func:`pystow.utils.download`.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+
         :yields: An instance of :class:`sqlite3.Connection` from :func:`sqlite3.connect`
 
-        Example usage:
-        >>> import pystow
-        >>> import pandas as pd
-        >>> url = "https://s3.amazonaws.com/bbop-sqlite/hp.db.gz"
-        >>> module = pystow.module("test")
-        >>> sql = "SELECT * FROM entailed_edge LIMIT 10"
-        >>> with module.ensure_open_sqlite_gz(url=url) as conn:
-        >>>     df = pd.read_sql(sql, conn)
+        Example usage: >>> import pystow >>> import pandas as pd >>> url =
+        "https://s3.amazonaws.com/bbop-sqlite/hp.db.gz" >>> module =
+        pystow.module("test") >>> sql = "SELECT * FROM entailed_edge LIMIT 10" >>> with
+        module.ensure_open_sqlite_gz(url=url) as conn: >>> df = pd.read_sql(sql, conn)
         """
         path = self.ensure_gunzip(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
