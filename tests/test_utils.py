@@ -28,6 +28,9 @@ from pystow.utils import (
     read_zip_np,
     read_zipfile_csv,
     read_zipfile_xml,
+    safe_open_dict_reader,
+    safe_open_reader,
+    safe_open_writer,
     write_tarfile_csv,
     write_zipfile_csv,
     write_zipfile_np,
@@ -190,6 +193,24 @@ class TestUtils(unittest.TestCase):
             write_zipfile_np(arr, inner_path=inner_path, path=path)
             reloaded_arr = read_zip_np(path=path, inner_path=inner_path)
             self.assertTrue(np.array_equal(arr, reloaded_arr))
+
+    def test_safe_writer(self) -> None:
+        """Test writers."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.tsv"
+            with safe_open_writer(path) as writer:
+                writer.writerow(("c1", "c2"))
+                writer.writerow(("v1", "v2"))
+
+            df = pd.read_csv(path, sep="\t")
+            self.assertEqual(["c1", "c2"], list(df.columns))
+
+            with safe_open_reader(path) as reader:
+                self.assertEqual(["c1", "c2"], next(reader))
+                self.assertEqual(["v1", "v2"], next(reader))
+
+            with safe_open_dict_reader(path) as reader2:
+                self.assertEqual({"c1": "v1", "c2": "v2"}, next(reader2))
 
 
 class TestDownload(unittest.TestCase):
