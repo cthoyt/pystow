@@ -1,5 +1,6 @@
 Usage
 =====
+
 .. automodapi:: pystow
     :no-inheritance-diagram:
     :no-heading:

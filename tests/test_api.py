@@ -42,7 +42,7 @@ class TestExposed(unittest.TestCase):
     def assert_io(
         self, obj: X, extension: str, dump: Callable[..., None], load: Callable[..., X]
     ) -> None:
-        """Test an object can be  dumped and loaded.
+        """Test an object can be dumped and loaded.
 
         :param obj: The object to dump
         :param extension: The extension to use

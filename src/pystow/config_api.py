@@ -74,9 +74,9 @@ class ConfigError(ValueError):
 def get_name() -> str:
     """Get the config home directory name.
 
-    :returns: The name of the pystow home directory, either loaded from
-        the :data:`CONFIG_NAME_ENVVAR`` environment variable or given by the default
-        value :data:`CONFIG_NAME_DEFAULT`.
+    :returns: The name of the pystow home directory, either loaded from the
+        :data:`CONFIG_NAME_ENVVAR`` environment variable or given by the default value
+        :data:`CONFIG_NAME_DEFAULT`.
     """
     return os.getenv(CONFIG_NAME_ENVVAR, default=CONFIG_NAME_DEFAULT)
 
@@ -85,6 +85,7 @@ def get_home(ensure_exists: bool = True) -> Path:
     """Get the config home directory.
 
     :param ensure_exists: If true, ensures the directory is created
+
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`CONFIG_HOME_ENVVAR` environment variable or
@@ -141,9 +142,11 @@ def get_config(
         this is returned.
     :param dtype: The datatype to parse out. Can either be :func:`int`, :func:`float`,
         :func:`bool`, or :func:`str`. If none, defaults to :func:`str`.
-    :param raise_on_missing: If true, will raise a value error if no data is found and no default
-        is given
+    :param raise_on_missing: If true, will raise a value error if no data is found and
+        no default is given
+
     :returns: The config value or the default.
+
     :raises ConfigError: If ``raise_on_missing`` conditions are met
     """
     if passthrough is not None:

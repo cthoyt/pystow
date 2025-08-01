@@ -170,12 +170,12 @@ def get_hexdigests_remote(
 ) -> Mapping[str, str]:
     """Process hexdigests via URLs.
 
-    :param hexdigests_remote:
-        The expected hexdigests as (algorithm_name, url to file with expected hex digest) pairs.
-    :param hexdigests_strict:
-        Set this to `False` to stop automatically checking for the `algorithm(filename)=hash` format
-    :returns:
-        A mapping of algorithms to hexdigests
+    :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
+        with expected hex digest) pairs.
+    :param hexdigests_strict: Set this to `False` to stop automatically checking for the
+        `algorithm(filename)=hash` format
+
+    :returns: A mapping of algorithms to hexdigests
     """
     rv = {}
     for key, url in (hexdigests_remote or {}).items():
@@ -193,22 +193,19 @@ def get_offending_hexdigests(
     hexdigests_remote: Mapping[str, str] | None = None,
     hexdigests_strict: bool = False,
 ) -> Collection[HexDigestMismatch]:
-    """
-    Check a file for hash sums.
+    """Check a file for hash sums.
 
-    :param path:
-        The file path.
-    :param chunk_size:
-        The chunk size for reading the file.
-    :param hexdigests:
-        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
-    :param hexdigests_remote:
-        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
-    :param hexdigests_strict:
-        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+    :param path: The file path.
+    :param chunk_size: The chunk size for reading the file.
+    :param hexdigests: The expected hexdigests as (algorithm_name, expected_hex_digest)
+        pairs.
+    :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
+        with expected hexdigest) pairs.
+    :param hexdigests_strict: Set this to false to stop automatically checking for the
+        `algorithm(filename)=hash` format
 
-    :return:
-        A collection of observed / expected hexdigests where the digests do not match.
+    :returns: A collection of observed / expected hexdigests where the digests do not
+        match.
     """
     hexdigests = dict(
         **(hexdigests or {}),
@@ -250,8 +247,7 @@ def get_hashes(
     :param names: Names of the hash algorithms in :mod:`hashlib`
     :param chunk_size: The chunk size for reading the file.
 
-    :return:
-        A collection of observed hexdigests
+    :returns: A collection of observed hexdigests
     """
     path = Path(path).resolve()
     if chunk_size is None:
@@ -279,17 +275,16 @@ def raise_on_digest_mismatch(
 ) -> None:
     """Raise a HexDigestError if the digests do not match.
 
-    :param path:
-        The file path.
-    :param hexdigests:
-        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
-    :param hexdigests_remote:
-        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
-    :param hexdigests_strict:
-        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
+    :param path: The file path.
+    :param hexdigests: The expected hexdigests as (algorithm_name, expected_hex_digest)
+        pairs.
+    :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
+        with expected hexdigest) pairs.
+    :param hexdigests_strict: Set this to false to stop automatically checking for the
+        `algorithm(filename)=hash` format
 
-    :raises HexDigestError: if there are any offending hex digests
-        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
+    :raises HexDigestError: if there are any offending hex digests The expected
+        hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
     """
     offending_hexdigests = get_offending_hexdigests(
         path=path,
@@ -317,7 +312,8 @@ class TqdmReportHook(tqdm):  # type:ignore
 
         :param blocks: Number of blocks transferred so far
         :param block_size: Size of each block (in tqdm units)
-        :param total_size: Total size (in tqdm units). If [default: None] remains unchanged.
+        :param total_size: Total size (in tqdm units). If [default: None] remains
+            unchanged.
         """
         if total_size is not None:
             self.total = total_size
@@ -342,24 +338,24 @@ def download(
     :param url: URL to download
     :param path: Path to download the file to
     :param force: If false and the file already exists, will not re-download.
-    :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param clean_on_failure: If true, will delete the file on any exception raised
+        during download
     :param backend: The downloader to use. Choose 'urllib' or 'requests'
-    :param hexdigests:
-        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
-    :param hexdigests_remote:
-        The expected hexdigests as (algorithm_name, url to file with expected hexdigest) pairs.
-    :param hexdigests_strict:
-        Set this to false to stop automatically checking for the `algorithm(filename)=hash` format
-    :param progress_bar:
-        Set to true to show a progress bar while downloading
-    :param tqdm_kwargs:
-        Override the default arguments passed to :class:`tadm.tqdm` when progress_bar is True.
-    :param kwargs:
-        The keyword arguments to pass to :func:`urllib.request.urlretrieve`
-        or to `requests.get` depending on the backend chosen. If using 'requests' backend,
-        `stream` is set to True by default.
+    :param hexdigests: The expected hexdigests as (algorithm_name, expected_hex_digest)
+        pairs.
+    :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
+        with expected hexdigest) pairs.
+    :param hexdigests_strict: Set this to false to stop automatically checking for the
+        `algorithm(filename)=hash` format
+    :param progress_bar: Set to true to show a progress bar while downloading
+    :param tqdm_kwargs: Override the default arguments passed to :class:`tadm.tqdm` when
+        progress_bar is True.
+    :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve`
+        or to `requests.get` depending on the backend chosen. If using 'requests'
+        backend, `stream` is set to True by default.
 
-    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during
+        download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     :raises ValueError: If an invalid backend is chosen
@@ -469,7 +465,8 @@ def name_from_url(url: str) -> str:
     """Get the filename from the end of the URL.
 
     :param url: A URL
-    :return: The name of the file at the end of the URL
+
+    :returns: The name of the file at the end of the URL
     """
     parse_result = urlparse(url)
     path = PurePosixPath(parse_result.path)
@@ -481,7 +478,9 @@ def base_from_gzip_name(name: str) -> str:
     """Get the base name for a file after stripping the gz ending.
 
     :param name: The name of the gz file
+
     :returns: The cleaned name of the file, with no gz ending
+
     :raises ValueError: if the file does not end with ".gz"
     """
     if not name.endswith(".gz"):
@@ -493,6 +492,7 @@ def name_from_s3_key(key: str) -> str:
     """Get the filename from the S3 key.
 
     :param key: A S3 path
+
     :returns: The name of the file
     """
     return key.split("/")[-1]
@@ -502,8 +502,8 @@ def mkdir(path: Path, ensure_exists: bool = True) -> None:
     """Make a directory (or parent directory if a file is given) if flagged with ``ensure_exists``.
 
     :param path: The path to a directory
-    :param ensure_exists:
-        Should the directories leading to the path be created if they don't already exist?
+    :param ensure_exists: Should the directories leading to the path be created if they
+        don't already exist?
     """
     if ensure_exists:
         path.mkdir(exist_ok=True, parents=True)
@@ -514,10 +514,10 @@ def mock_envvar(envvar: str, value: str) -> Iterator[None]:
     """Mock the environment variable then delete it after the test is over.
 
     :param envvar: The environment variable to mock
-    :param value: The value to temporarily put in the environment variable
-        during this mock.
-    :yield: None, since this just mocks the environment variable for the
-        time being.
+    :param value: The value to temporarily put in the environment variable during this
+        mock.
+
+    :yield: None, since this just mocks the environment variable for the time being.
     """
     original_value = os.environ.get(envvar)
     os.environ[envvar] = value
@@ -543,11 +543,11 @@ def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:
     """Get an environment variable representing a path, or use the default.
 
     :param envvar: The environmental variable name to check
-    :param default:
-        The default path to return if the environmental variable is not set
-    :param ensure_exists:
-        Should the directories leading to the path be created if they don't already exist?
-    :return: A path either specified by the environmental variable or by the default.
+    :param default: The default path to return if the environmental variable is not set
+    :param ensure_exists: Should the directories leading to the path be created if they
+        don't already exist?
+
+    :returns: A path either specified by the environmental variable or by the default.
     """
     rv = Path(os.getenv(envvar, default=default)).expanduser()
     mkdir(rv, ensure_exists=ensure_exists)
@@ -567,9 +567,10 @@ def get_df_io(df: pandas.DataFrame, sep: str = "\t", index: bool = False, **kwar
 
     :param df: A dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
-    :param index:  Should the index be output? Overrides the Pandas default to be false.
+    :param index: Should the index be output? Overrides the Pandas default to be false.
     :param kwargs: Additional kwargs to pass to :func:`pandas.DataFrame.to_csv`.
-    :return: A bytes object that can be used as a file.
+
+    :returns: A bytes object that can be used as a file.
     """
     sio = StringIO()
     df.to_csv(sio, sep=sep, index=index, **kwargs)
@@ -583,7 +584,8 @@ def get_np_io(arr: numpy.typing.ArrayLike, **kwargs: Any) -> BytesIO:
 
     :param arr: Array-like
     :param kwargs: Additional kwargs to pass to :func:`numpy.save`.
-    :return: A bytes object that can be used as a file.
+
+    :returns: A bytes object that can be used as a file.
     """
     import numpy as np
 
@@ -602,8 +604,7 @@ def write_pickle_gz(
 
     :param obj: The object to write
     :param path: The path of the file to write to
-    :param kwargs:
-        Additional kwargs to pass to :func:`pickle.dump`
+    :param kwargs: Additional kwargs to pass to :func:`pickle.dump`
     """
     with gzip.open(path, mode="wb") as file:
         pickle.dump(obj, file, **kwargs)
@@ -621,10 +622,9 @@ def write_lzma_csv(
     :param df: A dataframe
     :param path: The path to the resulting LZMA compressed dataframe file
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
-    :param index:  Should the index be output? Overrides the Pandas default to be false.
-    :param kwargs:
-        Additional kwargs to pass to :func:`get_df_io` and transitively
-        to :func:`pandas.DataFrame.to_csv`.
+    :param index: Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
+        :func:`pandas.DataFrame.to_csv`.
     """
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with lzma.open(path, "wb") as file:
@@ -645,10 +645,9 @@ def write_zipfile_csv(
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
-    :param index:  Should the index be output? Overrides the Pandas default to be false.
-    :param kwargs:
-        Additional kwargs to pass to :func:`get_df_io` and transitively
-        to :func:`pandas.DataFrame.to_csv`.
+    :param index: Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
+        :func:`pandas.DataFrame.to_csv`.
     """
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with zipfile.ZipFile(file=path, mode="w") as zip_file:
@@ -665,7 +664,8 @@ def read_zipfile_csv(
     :param inner_path: The path inside the zip archive to the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
-    :return: A dataframe
+
+    :returns: A dataframe
     """
     import pandas as pd
 
@@ -701,7 +701,8 @@ def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the xml file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
-    :return: An XML element tree
+
+    :returns: An XML element tree
     """
     from lxml import etree
 
@@ -721,9 +722,8 @@ def write_zipfile_np(
     :param arr: Array-like
     :param path: The path to the resulting zip archive
     :param inner_path: The path inside the zip archive to write the dataframe
-    :param kwargs:
-        Additional kwargs to pass to :func:`get_np_io` and transitively
-        to :func:`numpy.save`.
+    :param kwargs: Additional kwargs to pass to :func:`get_np_io` and transitively to
+        :func:`numpy.save`.
     """
     bytes_io = get_np_io(arr, **kwargs)
     with zipfile.ZipFile(file=path, mode="w") as zip_file:
@@ -737,7 +737,8 @@ def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typin
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`numpy.load`.
-    :return: A numpy array or other object
+
+    :returns: A numpy array or other object
     """
     import numpy as np
 
@@ -752,7 +753,8 @@ def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
-    :return: A graph
+
+    :returns: A graph
     """
     import rdflib
 
@@ -777,10 +779,9 @@ def write_tarfile_csv(
     :param path: The path to the resulting tar archive
     :param inner_path: The path inside the tar archive to write the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
-    :param index:  Should the index be output? Overrides the Pandas default to be false.
-    :param kwargs:
-        Additional kwargs to pass to :func:`get_df_io` and transitively
-        to :func:`pandas.DataFrame.to_csv`.
+    :param index: Should the index be output? Overrides the Pandas default to be false.
+    :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
+        :func:`pandas.DataFrame.to_csv`.
     """
     s = df.to_csv(sep=sep, index=index, **kwargs)
     tarinfo = tarfile.TarInfo(name=inner_path)
@@ -798,7 +799,8 @@ def read_tarfile_csv(
     :param inner_path: The path inside the tar archive to the dataframe
     :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
     :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
-    :return: A dataframe
+
+    :returns: A dataframe
     """
     import pandas as pd
 
@@ -813,7 +815,8 @@ def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
     :param path: The path to the tar archive
     :param inner_path: The path inside the tar archive to the xml file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`
-    :return: An XML element tree
+
+    :returns: An XML element tree
     """
     from lxml import etree
 
@@ -827,7 +830,8 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
 
     :param path: The path to the RDF file
     :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
-    :return: A parsed RDF graph
+
+    :returns: A parsed RDF graph
     """
     import rdflib
 
@@ -847,7 +851,8 @@ def write_sql(df: pandas.DataFrame, name: str, path: str | Path, **kwargs: Any) 
     :param df: A dataframe
     :param name: The table the database to write to
     :param path: The path to the resulting tar archive
-    :param kwargs: Additional keyword arguments to pass to :meth:`pandas.DataFrame.to_sql`
+    :param kwargs: Additional keyword arguments to pass to
+        :meth:`pandas.DataFrame.to_sql`
     """
     import sqlite3
 
@@ -861,8 +866,10 @@ def get_commit(org: str, repo: str, provider: str = "git") -> str:
     :param org: The GitHub organization or owner
     :param repo: The GitHub repository name
     :param provider: The method for getting the most recent commit
-    :raises ValueError: if an invalid provider is given
+
     :returns: A commit hash's hex digest as a string
+
+    :raises ValueError: if an invalid provider is given
     """
     if provider == "git":
         output = check_output(["git", "ls-remote", f"https://github.com/{org}/{repo}"])  # noqa
@@ -896,11 +903,13 @@ def download_from_google(
     :param file_id: The google file identifier
     :param path: The place to write the file
     :param force: If false and the file already exists, will not re-download.
-    :param clean_on_failure: If true, will delete the file on any exception raised during download
-    :param hexdigests:
-        The expected hexdigests as (algorithm_name, expected_hex_digest) pairs.
+    :param clean_on_failure: If true, will delete the file on any exception raised
+        during download
+    :param hexdigests: The expected hexdigests as (algorithm_name, expected_hex_digest)
+        pairs.
 
-    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during
+        download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     """
@@ -952,16 +961,16 @@ def download_from_s3(
     :param s3_bucket: The key inside the S3 bucket name
     :param s3_key: The key inside the S3 bucket
     :param path: The place to write the file
-    :param client:
-        A botocore client. If none given, one will be created automatically
-    :param client_kwargs:
-        Keyword arguments to be passed to the client on instantiation.
-    :param download_file_kwargs:
-        Keyword arguments to be passed to :func:`boto3.s3.transfer.S3Transfer.download_file`
+    :param client: A botocore client. If none given, one will be created automatically
+    :param client_kwargs: Keyword arguments to be passed to the client on instantiation.
+    :param download_file_kwargs: Keyword arguments to be passed to
+        :func:`boto3.s3.transfer.S3Transfer.download_file`
     :param force: If false and the file already exists, will not re-download.
-    :param clean_on_failure: If true, will delete the file on any exception raised during download
+    :param clean_on_failure: If true, will delete the file on any exception raised
+        during download
 
-    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during download
+    :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during
+        download
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     """
@@ -1008,9 +1017,9 @@ def _unlink(path: str | Path) -> None:
 def get_name() -> str:
     """Get the PyStow home directory name.
 
-    :returns: The name of the pystow home directory, either loaded from
-        the :data:`PYSTOW_NAME_ENVVAR`` environment variable or given by the default
-        value :data:`PYSTOW_NAME_DEFAULT`.
+    :returns: The name of the pystow home directory, either loaded from the
+        :data:`PYSTOW_NAME_ENVVAR`` environment variable or given by the default value
+        :data:`PYSTOW_NAME_DEFAULT`.
     """
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)
 
@@ -1027,11 +1036,12 @@ def get_home(ensure_exists: bool = True) -> Path:
     """Get the PyStow home directory.
 
     :param ensure_exists: If true, ensures the directory is created
+
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`PYSTOW_HOME_ENVVAR` environment variable or
-        2. The user data directory defined by :mod:`appdirs` if the :data:`PYSTOW_USE_APPDIRS`
-           environment variable is set to ``true`` or
+        2. The user data directory defined by :mod:`appdirs` if the
+           :data:`PYSTOW_USE_APPDIRS` environment variable is set to ``true`` or
         3. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
@@ -1047,14 +1057,12 @@ def get_home(ensure_exists: bool = True) -> Path:
 def get_base(key: str, ensure_exists: bool = True) -> Path:
     """Get the base directory for a module.
 
-    :param key:
-        The name of the module. No funny characters. The envvar
-        <key>_HOME where key is uppercased is checked first before using
-        the default home directory.
-    :param ensure_exists:
-        Should all directories be created automatically? Defaults to true.
-    :returns:
-        The path to the given
+    :param key: The name of the module. No funny characters. The envvar <key>_HOME where
+        key is uppercased is checked first before using the default home directory.
+    :param ensure_exists: Should all directories be created automatically? Defaults to
+        true.
+
+    :returns: The path to the given
 
     :raises ValueError: if the key is invalid (e.g., has a dot in it)
     """
@@ -1073,8 +1081,8 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
 def ensure_readme() -> None:
     """Ensure there's a README in the PyStow data directory.
 
-    :raises PermissionError: If the script calling this function does not have
-        adequate permissions to write a file into the PyStow home directory.
+    :raises PermissionError: If the script calling this function does not have adequate
+        permissions to write a file into the PyStow home directory.
     """
     try:
         readme_path = get_home(ensure_exists=True).joinpath("README.md")
@@ -1096,6 +1104,7 @@ def path_to_sqlite(path: str | Path) -> str:
     """Convert a path to a SQLite connection string.
 
     :param path: A path to a SQLite database file
+
     :returns: A standard connection string to the database
     """
     path = Path(path).expanduser().resolve()
@@ -1178,6 +1187,7 @@ def safe_open_writer(
     :param f: A path to a file, or an already open text-based IO object
     :param delimiter: The delimiter for writing to CSV
     :param kwargs: Keyword arguments to pass to :func:`csv.writer`
+
     :yields: A CSV writer object, constructed from :func:`csv.writer`
     """
     if isinstance(f, (str, Path)):
@@ -1201,6 +1211,7 @@ def safe_open_dict_writer(
     :param fieldnames: A path to a file, or an already open text-based IO object
     :param delimiter: The delimiter for writing to CSV
     :param kwargs: Keyword arguments to pass to :func:`csv.DictWriter`
+
     :yields: A CSV dictionary writer object, constructed from :func:`csv.DictWriter`
     """
     if isinstance(f, (str, Path)):
@@ -1219,6 +1230,7 @@ def safe_open_reader(
     :param f: A path to a file, or an already open text-based IO object
     :param delimiter: The delimiter for writing to CSV
     :param kwargs: Keyword arguments to pass to :func:`csv.reader`
+
     :yields: A CSV reader object, constructed from :func:`csv.reader`
     """
     if isinstance(f, (str, Path)):
@@ -1237,6 +1249,7 @@ def safe_open_dict_reader(
     :param f: A path to a file, or an already open text-based IO object
     :param delimiter: The delimiter for writing to CSV
     :param kwargs: Keyword arguments to pass to :func:`csv.DictReader`
+
     :yields: A CSV reader object, constructed from :func:`csv.DictReader`
     """
     if isinstance(f, (str, Path)):
