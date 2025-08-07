@@ -14,7 +14,7 @@ import requests
 from lxml import etree
 from requests_file import FileAdapter
 
-from pystow.github import get_repository
+from pystow.github import get_default_branch, get_repository
 from pystow.utils import (
     DownloadError,
     HexDigestError,
@@ -467,3 +467,7 @@ class TestGitHub(unittest.TestCase):
         data = get_repository("cthoyt", "pystow").json()
         self.assertEqual(318194121, data["id"])
         self.assertEqual("main", data["default_branch"])
+
+    def test_default_branch(self) -> None:
+        """Test getting the default branch."""
+        self.assertEqual("main", get_default_branch("cthoyt", "pystow"))

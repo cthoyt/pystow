@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import requests
 from ratelimit import rate_limited
@@ -11,6 +11,7 @@ from .config_api import get_config
 from .constants import TimeoutHint
 
 __all__ = [
+    "get_default_branch",
     "get_issues",
     "get_pull_requests",
     "get_repository",
@@ -47,6 +48,12 @@ def requests_get_github(
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
     """Get information about a repository."""
     return requests_get_github(f"repos/{owner}/{repo}", **kwargs)
+
+
+def get_default_branch(owner: str, repo: str, **kwargs: Any) -> str:
+    """Get the default branch for the repository."""
+    res = get_repository(owner, repo, **kwargs).json()
+    return cast(str, res["default_branch"])
 
 
 def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
