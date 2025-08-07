@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from io import StringIO
 from textwrap import dedent
-from typing import IO, Any, Callable
+from typing import IO, Any, Callable, Union
 
 from typing_extensions import TypeAlias
 
@@ -81,4 +81,4 @@ JSON = Any
 Provider = Callable[..., None]
 
 #: A hint for timeout in :func:`requests.get`
-TimeoutHint: TypeAlias = int | float | None | tuple[float | int, float | int]
+TimeoutHint: TypeAlias = Union[int, float, None, tuple[Union[float, int], Union[float, int]]]
