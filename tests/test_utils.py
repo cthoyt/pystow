@@ -14,6 +14,7 @@ import requests
 from lxml import etree
 from requests_file import FileAdapter
 
+from pystow.github import get_repository
 from pystow.utils import (
     DownloadError,
     HexDigestError,
@@ -456,3 +457,13 @@ class TestHashing(unittest.TestCase):
             },
             hexdigests,
         )
+
+
+class TestGitHub(unittest.TestCase):
+    """Tests for GitHub."""
+
+    def test_repository(self) -> None:
+        """Test getting a repository."""
+        data = get_repository("cthoyt", "pystow").json()
+        self.assertEqual(318194121, data["id"])
+        self.assertEqual("main", data["default_branch"])

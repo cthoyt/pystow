@@ -11,6 +11,9 @@ from .config_api import get_config
 from .constants import TimeoutHint
 
 __all__ = [
+    "get_issues",
+    "get_pull_requests",
+    "get_repository",
     "requests_get_github",
 ]
 
@@ -39,3 +42,18 @@ def requests_get_github(
     url = f"https://api.github.com/{path}"
     headers = get_headers(token=token, raise_on_missing=require_token)
     return requests.get(url, headers=headers, params=params, timeout=timeout)
+
+
+def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Get information about a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}", **kwargs)
+
+
+def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Get issues from a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/issues", **kwargs)
+
+
+def get_pull_requests(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Get pull requests from a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/pulls", **kwargs)
