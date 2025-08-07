@@ -7,6 +7,8 @@ from io import StringIO
 from textwrap import dedent
 from typing import IO, Any, Callable
 
+from typing_extensions import TypeAlias
+
 __all__ = [
     "JSON",
     "PYSTOW_HOME_ENVVAR",
@@ -16,6 +18,7 @@ __all__ = [
     "README_TEXT",
     "Opener",
     "Provider",
+    "TimeoutHint",
 ]
 
 PYSTOW_NAME_ENVVAR = "PYSTOW_NAME"
@@ -76,3 +79,6 @@ Opener = Generator[StringIO, None, None]
 BytesOpener = Generator[IO[bytes], None, None]
 JSON = Any
 Provider = Callable[..., None]
+
+#: A hint for timeout in :func:`requests.get`
+TimeoutHint: TypeAlias = int | float | None | tuple[float | int, float | int]

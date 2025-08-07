@@ -80,6 +80,9 @@ pandas = [
 aws = [
     "boto3",
 ]
+ratelimit = [
+    "ratelimit",
+]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
 # and also https://packaging.python.org/en/latest/specifications/well-known-project-urls/
