@@ -11,12 +11,12 @@ from .config_api import get_config
 from .constants import TimeoutHint
 
 __all__ = [
-    "get_github",
+    "requests_get_github",
 ]
 
 
 @rate_limited(calls=5_000, period=60 * 60)
-def get_github(
+def requests_get_github(
     url: str,
     accept: str | None = None,
     params: dict[str, Any] | None = None,
