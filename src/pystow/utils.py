@@ -764,7 +764,7 @@ def write_zipfile_xml(
     from lxml import etree
 
     kwargs.setdefault("pretty_print", True)
-    with open_zipfile(path, inner_path, operation="write", mode="binary") as file:
+    with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
         file.write(etree.tostring(element_tree, **kwargs))
 
 
