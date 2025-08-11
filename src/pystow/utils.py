@@ -102,6 +102,7 @@ __all__ = [
     "write_lzma_csv",
     "write_pickle_gz",
     "write_tarfile_csv",
+    "write_tarfile_xml",
     "write_zipfile_csv",
     "write_zipfile_np",
     "write_zipfile_rdf",
@@ -778,8 +779,8 @@ def write_zipfile_xml(
 
     :param element_tree: An XML element tree
     :param path: The path to the resulting zip archive
-    :param inner_path: The path inside the zip archive to write the dataframe
-    :param kwargs: Additional kwargs to pass to :func:`tostring`
+    :param inner_path: The path inside the zip archive to write the XML element
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.tostring`
     """
     from lxml import etree
 
@@ -894,6 +895,29 @@ def write_tarfile_csv(
         tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
 
 
+def write_tarfile_xml(
+    element_tree: lxml.etree.ElementTree,
+    path: str | Path,
+    inner_path: str,
+    **kwargs: Any,
+) -> None:
+    """Write an XML document a tar archive.
+
+    :param element_tree: An element
+    :param path: The path to the resulting tar archive
+    :param inner_path: The path inside the tar archive to write the dataframe
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.tostring`
+    """
+    from lxml import etree
+
+    kwargs.setdefault("pretty_print", True)
+    s = etree.tostring(element_tree, **kwargs)
+    tarinfo = tarfile.TarInfo(name=inner_path)
+    tarinfo.size = len(s)
+    with tarfile.TarFile(path, mode="w") as tar_file:
+        tar_file.addfile(tarinfo, BytesIO(s))
+
+
 def read_tarfile_csv(
     path: str | Path, inner_path: str, sep: str = "\t", **kwargs: Any
 ) -> pandas.DataFrame:
@@ -939,8 +963,6 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     """
     import rdflib
 
-    if isinstance(path, str):
-        path = Path(path)
     graph = rdflib.Graph()
     with safe_open(path, representation="binary", operation="read") as file:
         graph.parse(file, **kwargs)
