@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import rdflib
 import requests
 from lxml import etree
 from requests_file import FileAdapter
@@ -25,16 +26,23 @@ from pystow.utils import (
     mock_envvar,
     n,
     name_from_url,
+    open_zip_reader,
+    open_zip_writer,
+    open_zipfile,
     read_tarfile_csv,
+    read_tarfile_xml,
     read_zip_np,
     read_zipfile_csv,
+    read_zipfile_rdf,
     read_zipfile_xml,
     safe_open_dict_reader,
     safe_open_reader,
     safe_open_writer,
     write_tarfile_csv,
+    write_tarfile_xml,
     write_zipfile_csv,
     write_zipfile_np,
+    write_zipfile_rdf,
     write_zipfile_xml,
 )
 
@@ -172,6 +180,7 @@ class TestUtils(unittest.TestCase):
         inner_path = "okay.tsv"
         data = [
             ("test.zip", write_zipfile_xml, read_zipfile_xml),
+            ("test.tar.gz", write_tarfile_xml, read_tarfile_xml),
         ]
         for name, writer, reader in data:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
@@ -195,6 +204,25 @@ class TestUtils(unittest.TestCase):
             reloaded_arr = read_zip_np(path=path, inner_path=inner_path)
             self.assertTrue(np.array_equal(arr, reloaded_arr))
 
+    def test_rdf(self) -> None:
+        """Test reading and writing RDF."""
+        t = (
+            rdflib.URIRef("https://orcid.org/0000-0003-4423-4370"),
+            rdflib.RDF.type,
+            rdflib.URIRef("http://purl.obolibrary.org/obo/NCBITaxon_9606"),
+        )
+        graph = rdflib.Graph()
+        graph.add(t)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.zip"
+            inner_path = "test_graph.ttl"
+            write_zipfile_rdf(graph, path, inner_path)
+            g2 = read_zipfile_rdf(path, inner_path)
+            records = list(g2.query("SELECT ?s ?p ?o WHERE {?s ?p ?o}"))
+            self.assertEqual(1, len(records))
+            self.assertEqual(t, records[0])
+
     def test_safe_writer(self) -> None:
         """Test writers."""
         with tempfile.TemporaryDirectory() as directory:
@@ -212,6 +240,30 @@ class TestUtils(unittest.TestCase):
 
             with safe_open_dict_reader(path) as reader2:
                 self.assertEqual({"c1": "v1", "c2": "v2"}, next(reader2))
+
+    def test_zip_writer(self) -> None:
+        """Test ZIP writers."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.zip"
+            inner = "test_inner.tsv"
+            with open_zip_writer(path, inner) as writer:
+                writer.writerow(("c1", "c2"))
+                writer.writerow(("v1", "v2"))
+
+            df = read_zipfile_csv(path, inner)
+            self.assertEqual(["c1", "c2"], list(df.columns))
+
+            with open_zip_reader(path, inner) as reader:
+                self.assertEqual(["c1", "c2"], next(reader))
+                self.assertEqual(["v1", "v2"], next(reader))
+
+    def test_zip_writer_exc(self) -> None:
+        """Test throwing an exception."""
+        with self.assertRaises(ValueError):
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory).joinpath("test.zip")
+                with open_zipfile(path, "test.tsv", operation="write", representation="lolno"):  # type:ignore
+                    pass
 
 
 class TestDownload(unittest.TestCase):
