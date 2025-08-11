@@ -75,7 +75,6 @@ __all__ = [
     "get_name",
     "get_np_io",
     "get_offending_hexdigests",
-    "get_zipfile_reader",
     "getenv_path",
     "gunzip",
     "mkdir",
@@ -84,6 +83,8 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_zip_reader",
+    "open_zip_writer",
     "path_to_sqlite",
     "raise_on_digest_mismatch",
     "read_rdf",
@@ -117,6 +118,7 @@ DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 Hash: TypeAlias = "hashlib._Hash"
 
 Reader: TypeAlias = "_csv._reader"
+Writer: TypeAlias = "_csv._writer"
 
 #: A human-readable flag for how to open a file.
 Operation: TypeAlias = Literal["read", "write"]
@@ -732,7 +734,7 @@ def open_zipfile(
 
 
 @contextlib.contextmanager
-def get_zipfile_reader(
+def open_zip_reader(
     path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[Reader, None, None]:
     """Read an inner CSV file from a zip archive.
@@ -746,6 +748,23 @@ def get_zipfile_reader(
     """
     with open_zipfile(path, inner_path, representation="text") as file:
         yield csv.reader(file, delimiter=delimiter, **kwargs)
+
+
+@contextlib.contextmanager
+def open_zip_writer(
+    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+) -> Generator[Writer, None, None]:
+    """Open a writer for an inner CSV file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the CSV
+    :param delimiter: The separator in the CSV. Defaults to tab.
+    :param kwargs: Additional kwargs to pass to :func:`csv.writer`.
+
+    :returns: A writer over the file
+    """
+    with open_zipfile(path, inner_path, operation="write", representation="text") as file:
+        yield csv.writer(file, delimiter=delimiter, **kwargs)
 
 
 def write_zipfile_xml(
@@ -1241,7 +1260,7 @@ def safe_open(
 @contextlib.contextmanager
 def safe_open_writer(
     f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[_csv._writer, None, None]:
+) -> Generator[Writer, None, None]:
     """Open a CSV writer, wrapping :func:`csv.writer`.
 
     :param f: A path to a file, or an already open text-based IO object

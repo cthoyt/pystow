@@ -25,6 +25,8 @@ from pystow.utils import (
     mock_envvar,
     n,
     name_from_url,
+    open_zip_reader,
+    open_zip_writer,
     open_zipfile,
     read_tarfile_csv,
     read_zip_np,
@@ -213,6 +215,22 @@ class TestUtils(unittest.TestCase):
 
             with safe_open_dict_reader(path) as reader2:
                 self.assertEqual({"c1": "v1", "c2": "v2"}, next(reader2))
+
+    def test_zip_writer(self) -> None:
+        """Test ZIP writers."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.zip"
+            inner = "test_inner.tsv"
+            with open_zip_writer(path, inner) as writer:
+                writer.writerow(("c1", "c2"))
+                writer.writerow(("v1", "v2"))
+
+            df = read_zipfile_csv(path, inner)
+            self.assertEqual(["c1", "c2"], list(df.columns))
+
+            with open_zip_reader(path, inner) as reader:
+                self.assertEqual(["c1", "c2"], next(reader))
+                self.assertEqual(["v1", "v2"], next(reader))
 
     def test_zip_writer_exc(self) -> None:
         """Test throwing an exception."""
