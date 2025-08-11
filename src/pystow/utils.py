@@ -104,6 +104,7 @@ __all__ = [
     "write_tarfile_csv",
     "write_zipfile_csv",
     "write_zipfile_np",
+    "write_zipfile_rdf",
     "write_zipfile_xml",
 ]
 
@@ -852,6 +853,20 @@ def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib
     with open_zipfile(path, inner_path, operation="read", representation="binary") as file:
         graph.parse(file, **kwargs)
     return graph
+
+
+def write_zipfile_rdf(
+    graph: rdflib.Graph, path: str | Path, inner_path: str, **kwargs: Any
+) -> None:
+    """Read an inner RDF file from a zip archive.
+
+    :param graph: The graph to write
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the dataframe
+    :param kwargs: Additional kwargs to pass to :meth:`rdflib.Graph.parse`.
+    """
+    with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
+        graph.serialize(file, **kwargs)
 
 
 def write_tarfile_csv(
