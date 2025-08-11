@@ -663,9 +663,8 @@ def write_zipfile_csv(
         :func:`pandas.DataFrame.to_csv`.
     """
     bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
-    with zipfile.ZipFile(file=path, mode="w") as zip_file:
-        with zip_file.open(inner_path, mode="w") as file:
-            file.write(bytes_io.read())
+    with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
+        file.write(bytes_io.read())
 
 
 def read_zipfile_csv(
@@ -682,9 +681,8 @@ def read_zipfile_csv(
     """
     import pandas as pd
 
-    with zipfile.ZipFile(file=path) as zip_file:
-        with zip_file.open(inner_path) as file:
-            return pd.read_csv(file, sep=sep, **kwargs)
+    with open_zipfile(path, inner_path, representation="text", operation="read") as file:
+        return pd.read_csv(file, sep=sep, **kwargs)
 
 
 # docstr-coverage:excused `overload`
@@ -766,9 +764,8 @@ def write_zipfile_xml(
     from lxml import etree
 
     kwargs.setdefault("pretty_print", True)
-    with zipfile.ZipFile(file=path, mode="w") as zip_file:
-        with zip_file.open(inner_path, mode="w") as file:
-            file.write(etree.tostring(element_tree, **kwargs))
+    with open_zipfile(path, inner_path, operation="write", mode="binary") as file:
+        file.write(etree.tostring(element_tree, **kwargs))
 
 
 def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
@@ -782,7 +779,7 @@ def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
     """
     from lxml import etree
 
-    with open_zipfile(path, inner_path, representation="binary") as file:
+    with open_zipfile(path, inner_path, operation="read", representation="binary") as file:
         return etree.parse(file, **kwargs)
 
 
@@ -800,10 +797,10 @@ def write_zipfile_np(
     :param kwargs: Additional kwargs to pass to :func:`get_np_io` and transitively to
         :func:`numpy.save`.
     """
-    bytes_io = get_np_io(arr, **kwargs)
-    with zipfile.ZipFile(file=path, mode="w") as zip_file:
-        with zip_file.open(inner_path, mode="w") as file:
-            file.write(bytes_io.read())
+    import numpy as np
+
+    with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
+        np.save(file, arr, **kwargs)
 
 
 def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typing.ArrayLike:
@@ -817,9 +814,8 @@ def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typin
     """
     import numpy as np
 
-    with zipfile.ZipFile(file=path) as zip_file:
-        with zip_file.open(inner_path) as file:
-            return cast(np.typing.ArrayLike, np.load(file, **kwargs))
+    with open_zipfile(path, inner_path, operation="read", representation="binary") as file:
+        return cast(np.typing.ArrayLike, np.load(file, **kwargs))
 
 
 def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib.Graph:
@@ -834,9 +830,8 @@ def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib
     import rdflib
 
     graph = rdflib.Graph()
-    with zipfile.ZipFile(file=path) as zip_file:
-        with zip_file.open(inner_path) as file:
-            graph.parse(file, **kwargs)
+    with open_zipfile(path, inner_path, operation="read", representation="binary") as file:
+        graph.parse(file, **kwargs)
     return graph
 
 
@@ -913,10 +908,8 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     if isinstance(path, str):
         path = Path(path)
     graph = rdflib.Graph()
-    with (
-        gzip.open(path, "rb") if isinstance(path, Path) and path.suffix == ".gz" else open(path)
-    ) as file:
-        graph.parse(file, **kwargs)  # type:ignore
+    with safe_open(path, representation="binary", operation="read") as file:
+        graph.parse(file, **kwargs)
     return graph
 
 
