@@ -30,6 +30,7 @@ from pystow.utils import (
     open_zip_writer,
     open_zipfile,
     read_tarfile_csv,
+    read_tarfile_xml,
     read_zip_np,
     read_zipfile_csv,
     read_zipfile_rdf,
@@ -38,6 +39,7 @@ from pystow.utils import (
     safe_open_reader,
     safe_open_writer,
     write_tarfile_csv,
+    write_tarfile_xml,
     write_zipfile_csv,
     write_zipfile_np,
     write_zipfile_rdf,
@@ -178,6 +180,7 @@ class TestUtils(unittest.TestCase):
         inner_path = "okay.tsv"
         data = [
             ("test.zip", write_zipfile_xml, read_zipfile_xml),
+            ("test.tar.gz", write_tarfile_xml, read_tarfile_xml),
         ]
         for name, writer, reader in data:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
