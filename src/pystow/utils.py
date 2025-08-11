@@ -6,6 +6,7 @@ import contextlib
 import csv
 import gzip
 import hashlib
+import io
 import logging
 import lzma
 import os
@@ -56,6 +57,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "DownloadBackend",
+    "DownloadError",
     "Hash",
     "HexDigestError",
     "HexDigestMismatch",
@@ -73,6 +75,7 @@ __all__ = [
     "get_name",
     "get_np_io",
     "get_offending_hexdigests",
+    "get_zipfile_reader",
     "getenv_path",
     "gunzip",
     "mkdir",
@@ -112,6 +115,16 @@ DownloadBackend: TypeAlias = Literal["urllib", "requests"]
 #: hashlib._Hash isn't actually part of the code, but MyPy injects it
 #: so we can do type checking
 Hash: TypeAlias = "hashlib._Hash"
+
+Reader: TypeAlias = "_csv._reader"
+
+#: A human-readable flag for how to open a file.
+Operation: TypeAlias = Literal["read", "write"]
+OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
+
+#: A human-readable flag for how to open a file.
+Representation: TypeAlias = Literal["text", "binary"]
+REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
 
 
 class HexDigestMismatch(NamedTuple):
@@ -674,6 +687,69 @@ def read_zipfile_csv(
             return pd.read_csv(file, sep=sep, **kwargs)
 
 
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_zipfile(
+    path: str | Path,
+    inner_path: str,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"],
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_zipfile(
+    path: str | Path,
+    inner_path: str,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"],
+) -> Generator[typing.BinaryIO, None, None]: ...
+
+
+@contextlib.contextmanager
+def open_zipfile(
+    path: str | Path,
+    inner_path: str,
+    *,
+    operation: Operation = "read",
+    representation: Representation,
+) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
+    """Open a zipfile."""
+    mode: Literal["r", "w"] = "r" if operation == "read" else "w"
+    # there might be a better way to deal with the mode here
+    with zipfile.ZipFile(file=path, mode=mode) as zip_file:
+        with zip_file.open(inner_path, mode=mode) as binary_file:
+            if representation == "text":
+                with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
+                    yield text_file
+            elif representation == "binary":
+                yield cast(typing.BinaryIO, binary_file)
+            else:
+                raise ValueError
+
+
+@contextlib.contextmanager
+def get_zipfile_reader(
+    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+) -> Generator[Reader, None, None]:
+    """Read an inner CSV file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the CSV
+    :param delimiter: The separator in the CSV. Defaults to tab.
+    :param kwargs: Additional kwargs to pass to :func:`csv.reader`.
+
+    :returns: A reader over the file
+    """
+    with open_zipfile(path, inner_path, representation="text") as file:
+        yield csv.reader(file, delimiter=delimiter, **kwargs)
+
+
 def write_zipfile_xml(
     element_tree: lxml.etree.ElementTree,
     path: str | Path,
@@ -706,9 +782,8 @@ def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
     """
     from lxml import etree
 
-    with zipfile.ZipFile(file=path) as zip_file:
-        with zip_file.open(inner_path) as file:
-            return etree.parse(file, **kwargs)
+    with open_zipfile(path, inner_path, representation="binary") as file:
+        return etree.parse(file, **kwargs)
 
 
 def write_zipfile_np(
@@ -752,7 +827,7 @@ def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib
 
     :param path: The path to the zip archive
     :param inner_path: The path inside the zip archive to the dataframe
-    :param kwargs: Additional kwargs to pass to :func:`pandas.read_csv`.
+    :param kwargs: Additional kwargs to pass to :meth:`rdflib.Graph.parse`.
 
     :returns: A graph
     """
@@ -1121,14 +1196,6 @@ def gunzip(source: str | Path, target: str | Path) -> None:
         shutil.copyfileobj(in_file, out_file)
 
 
-#: A human-readable flag for how to open a file.
-Operation: TypeAlias = Literal["read", "write"]
-OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
-
-#: A human-readable flag for how to open a file.
-Representation: TypeAlias = Literal["text", "binary"]
-REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
-
 MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]] = {
     ("read", "text"): "rt",
     ("read", "binary"): "rb",
@@ -1224,7 +1291,7 @@ def safe_open_dict_writer(
 @contextlib.contextmanager
 def safe_open_reader(
     f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[_csv._reader, None, None]:
+) -> Generator[Reader, None, None]:
     """Open a CSV reader, wrapping :func:`csv.reader`.
 
     :param f: A path to a file, or an already open text-based IO object
