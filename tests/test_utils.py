@@ -26,6 +26,7 @@ from pystow.utils import (
     mock_envvar,
     n,
     name_from_url,
+    open_tarfile,
     open_zip_reader,
     open_zip_writer,
     open_zipfile,
@@ -264,6 +265,18 @@ class TestUtils(unittest.TestCase):
                 path = Path(directory).joinpath("test.zip")
                 with open_zipfile(path, "test.tsv", operation="write", representation="lolno"):  # type:ignore
                     pass
+
+    def test_tar_open(self) -> None:
+        """Test writing and reading a tar file."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.tar.gz")
+            inner = "test_inner.tsv"
+            with open_tarfile(path, inner, operation="write") as file:
+                file.write(b"c1\tc2\nv1\tv2")
+
+            with open_tarfile(path, inner, operation="read") as file:
+                self.assertEqual(b"c1\tc2\n", next(file))
+                self.assertEqual(b"v1\tv2", next(file))
 
 
 class TestDownload(unittest.TestCase):
