@@ -736,6 +736,37 @@ def open_zipfile(
 
 
 @contextlib.contextmanager
+def open_tarfile(
+    path: str | Path,
+    inner_path: str,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "binary",
+) -> Generator[typing.IO[bytes], None, None]:
+    """Open a tar file."""
+    if representation != "binary":
+        raise NotImplementedError
+
+    if operation == "read":
+        with tarfile.open(path, "r") as tar:
+            member = tar.getmember(inner_path)
+            file = tar.extractfile(member)
+            if file is None:
+                raise FileNotFoundError(f"could not find {inner_path} in tarfile {path}")
+            yield file
+    elif operation == "write":
+        file = BytesIO()
+        yield file
+        file.seek(0)
+        tarinfo = tarfile.TarInfo(name=inner_path)
+        tarinfo.size = len(file.getbuffer())
+        with tarfile.TarFile(path, mode="w") as tar_file:
+            tar_file.addfile(tarinfo, file)
+    else:
+        raise ValueError
+
+
+@contextlib.contextmanager
 def open_zip_reader(
     path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[Reader, None, None]:
@@ -888,11 +919,8 @@ def write_tarfile_csv(
     :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
         :func:`pandas.DataFrame.to_csv`.
     """
-    s = df.to_csv(sep=sep, index=index, **kwargs)
-    tarinfo = tarfile.TarInfo(name=inner_path)
-    tarinfo.size = len(s)
-    with tarfile.TarFile(path, mode="w") as tar_file:
-        tar_file.addfile(tarinfo, BytesIO(s.encode("utf-8")))
+    with open_tarfile(path, inner_path, operation="write") as file:
+        df.to_csv(file, sep=sep, index=index, **kwargs)
 
 
 def write_tarfile_xml(
@@ -911,11 +939,9 @@ def write_tarfile_xml(
     from lxml import etree
 
     kwargs.setdefault("pretty_print", True)
-    s = etree.tostring(element_tree, **kwargs)
-    tarinfo = tarfile.TarInfo(name=inner_path)
-    tarinfo.size = len(s)
-    with tarfile.TarFile(path, mode="w") as tar_file:
-        tar_file.addfile(tarinfo, BytesIO(s))
+
+    with open_tarfile(path, inner_path, operation="write") as file:
+        file.write(etree.tostring(element_tree, **kwargs))
 
 
 def read_tarfile_csv(
@@ -932,9 +958,8 @@ def read_tarfile_csv(
     """
     import pandas as pd
 
-    with tarfile.open(path) as tar_file:
-        with tar_file.extractfile(inner_path) as file:  # type: ignore
-            return pd.read_csv(file, sep=sep, **kwargs)
+    with open_tarfile(path, inner_path) as file:
+        return pd.read_csv(file, sep=sep, **kwargs)
 
 
 def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
@@ -948,9 +973,8 @@ def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
     """
     from lxml import etree
 
-    with tarfile.open(path) as tar_file:
-        with tar_file.extractfile(inner_path) as file:  # type: ignore
-            return etree.parse(file, **kwargs)
+    with open_tarfile(path, inner_path) as file:
+        return etree.parse(file, **kwargs)
 
 
 def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
