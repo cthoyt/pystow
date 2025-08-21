@@ -78,22 +78,22 @@ MAXIMUM_SEARCH_PAGE_SIZE = 40
 def search_code(
     query: str,
     *,
-    per_page: int | None = None,
+    page_size: int | None = None,
     progress: bool = True,
     inner_progress: bool = True,
 ) -> Iterable[dict[str, Any]]:
     """Search GitHub code."""
     page = 1
-    if per_page is None:
-        per_page = MAXIMUM_SEARCH_PAGE_SIZE
-    if per_page > MAXIMUM_SEARCH_PAGE_SIZE:
-        per_page = MAXIMUM_SEARCH_PAGE_SIZE
+    if page_size is None:
+        page_size = MAXIMUM_SEARCH_PAGE_SIZE
+    if page_size > MAXIMUM_SEARCH_PAGE_SIZE:
+        page_size = MAXIMUM_SEARCH_PAGE_SIZE
 
     inner_tqdm = partial(tqdm, disable=not inner_progress, unit="record", leave=False)
 
-    initial_response = _search_code_helper(per_page=per_page, page=page, query=query).json()
+    initial_response = _search_code_helper(page_size=page_size, page=page, query=query).json()
     total = initial_response["total_count"]
-    total_pages = 1 + (total // per_page)
+    total_pages = 1 + (total // page_size)
     yield from inner_tqdm(initial_response["items"], desc="Page 1")
 
     with tqdm(
@@ -101,20 +101,20 @@ def search_code(
     ) as tbar:
         tbar.update(1)
 
-        while per_page * page < total:
+        while page_size * page < total:
             page += 1
             tbar.update(1)
             successive_response = _search_code_helper(
-                page=page, per_page=per_page, query=query
+                page=page, page_size=page_size, query=query
             ).json()
             yield from inner_tqdm(successive_response["items"], desc=f"Page {page}")
 
 
-def _search_code_helper(per_page: int, page: int, query: str) -> requests.Response:
+def _search_code_helper(page_size: int, page: int, query: str) -> requests.Response:
     return requests_get_github(
         "search/code",
         params={
-            "per_page": per_page,
+            "per_page": page_size,
             "page": page,
             "sort": "indexed",
             "q": query,
