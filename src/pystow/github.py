@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from functools import partial
 from typing import Any, cast
 
 import requests
 from ratelimit import rate_limited
+from tqdm import tqdm
 
 from .config_api import get_config
 from .constants import TimeoutHint
 
 __all__ = [
+    "MAXIMUM_SEARCH_PAGE_SIZE",
     "get_default_branch",
     "get_issues",
     "get_pull_requests",
     "get_repository",
     "requests_get_github",
+    "search_code",
 ]
 
 
@@ -64,3 +69,54 @@ def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
 def get_pull_requests(owner: str, repo: str, **kwargs: Any) -> requests.Response:
     """Get pull requests from a repository."""
     return requests_get_github(f"repos/{owner}/{repo}/pulls", **kwargs)
+
+
+#: Maximum number of records per page in code search
+MAXIMUM_SEARCH_PAGE_SIZE = 40
+
+
+def search_code(
+    query: str,
+    *,
+    page_size: int | None = None,
+    progress: bool = True,
+    inner_progress: bool = True,
+) -> Iterable[dict[str, Any]]:
+    """Search GitHub code."""
+    page = 1
+    if page_size is None:
+        page_size = MAXIMUM_SEARCH_PAGE_SIZE
+    if page_size > MAXIMUM_SEARCH_PAGE_SIZE:
+        page_size = MAXIMUM_SEARCH_PAGE_SIZE
+
+    inner_tqdm = partial(tqdm, disable=not inner_progress, unit="record", leave=False)
+
+    initial_response = _search_code_helper(page_size=page_size, page=page, query=query).json()
+    total = initial_response["total_count"]
+    total_pages = 1 + (total // page_size)
+    yield from inner_tqdm(initial_response["items"], desc="Page 1")
+
+    with tqdm(
+        total=total_pages, unit="page", disable=not progress, desc="Paginating code search results"
+    ) as tbar:
+        tbar.update(1)
+
+        while page_size * page < total:
+            page += 1
+            tbar.update(1)
+            successive_response = _search_code_helper(
+                page=page, page_size=page_size, query=query
+            ).json()
+            yield from inner_tqdm(successive_response["items"], desc=f"Page {page}")
+
+
+def _search_code_helper(page_size: int, page: int, query: str) -> requests.Response:
+    return requests_get_github(
+        "search/code",
+        params={
+            "per_page": page_size,
+            "page": page,
+            "sort": "indexed",
+            "q": query,
+        },
+    )
