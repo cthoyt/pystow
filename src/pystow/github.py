@@ -106,9 +106,7 @@ def search_code(
         while page_size * page < total:
             page += 1
             tbar.update(1)
-            res = _search_code_helper(
-                page=page, page_size=page_size, query=query
-            )
+            res = _search_code_helper(page=page, page_size=page_size, query=query)
             res.raise_for_status()
             res_json = res.json()
             yield from inner_tqdm(res_json["items"], desc=f"Page {page}")
