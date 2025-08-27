@@ -43,18 +43,19 @@ from .constants import (
     PYSTOW_NAME_DEFAULT,
     PYSTOW_NAME_ENVVAR,
     PYSTOW_USE_APPDIRS,
-    README_TEXT, TimeoutHint,
+    README_TEXT,
+    TimeoutHint,
 )
 
 if TYPE_CHECKING:
     import _csv
 
     import botocore.client
+    import bs4
     import lxml.etree
     import numpy.typing
     import pandas
     import rdflib
-    import bs4
 
 __all__ = [
     "DownloadBackend",
@@ -65,7 +66,6 @@ __all__ = [
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
     "download",
-    "get_soup",
     "download_from_google",
     "download_from_s3",
     "get_base",
@@ -77,6 +77,7 @@ __all__ = [
     "get_name",
     "get_np_io",
     "get_offending_hexdigests",
+    "get_soup",
     "getenv_path",
     "gunzip",
     "mkdir",
@@ -270,7 +271,7 @@ def get_hashes(
     """
     path = Path(path).resolve()
     if chunk_size is None:
-        chunk_size = 64 * 2 ** 10
+        chunk_size = 64 * 2**10
 
     # instantiate hash algorithms
     algorithms: Mapping[str, Hash] = {name: hashlib.new(name) for name in names}
@@ -1402,7 +1403,11 @@ def safe_open_dict_reader(
 
 
 def get_soup(
-    url: str, *, verify: bool = True, timeout: TimeoutHint | None = None, user_agent: str | None = None
+    url: str,
+    *,
+    verify: bool = True,
+    timeout: TimeoutHint | None = None,
+    user_agent: str | None = None,
 ) -> bs4.BeautifulSoup:
     """Get a beautiful soup parsed version of the given web page.
 
@@ -1415,6 +1420,7 @@ def get_soup(
     :returns: A BeautifulSoup object
     """
     from bs4 import BeautifulSoup
+
     headers = {}
     if user_agent:
         headers["User-Agent"] = user_agent
