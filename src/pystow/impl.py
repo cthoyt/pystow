@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     import numpy
     import pandas as pd
     import rdflib
+    import bs4
 
 __all__ = [
     "Module",
@@ -245,6 +246,23 @@ class Module:
             **(download_kwargs or {}),
         )
         return path
+
+    def ensure_soup(
+        self,
+        *args,
+        beautiful_soup_kwargs: dict[str, Any] | None = None,
+        **kwargs,
+    ) -> bs4.BeautifulSoup:
+        """Ensure soup."""
+        from bs4 import BeautifulSoup
+
+        if beautiful_soup_kwargs is None:
+            beautiful_soup_kwargs = {}
+        beautiful_soup_kwargs.setdefault("features", "html.parser")
+
+        with self.ensure_open(*args, **kwargs) as file:
+            soup = BeautifulSoup(file, **beautiful_soup_kwargs)
+        return soup
 
     def ensure_custom(
         self,
@@ -884,6 +902,8 @@ class Module:
         # should this use unified opener instead? Pandas is pretty smart...
         path = self.join(*subkeys, name=name)
         obj.to_csv(path, **to_csv_kwargs)
+
+
 
     def ensure_json(
         self,

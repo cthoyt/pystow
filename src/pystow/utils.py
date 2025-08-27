@@ -43,7 +43,7 @@ from .constants import (
     PYSTOW_NAME_DEFAULT,
     PYSTOW_NAME_ENVVAR,
     PYSTOW_USE_APPDIRS,
-    README_TEXT,
+    README_TEXT, TimeoutHint,
 )
 
 if TYPE_CHECKING:
@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     import numpy.typing
     import pandas
     import rdflib
+    import bs4
 
 __all__ = [
     "DownloadBackend",
@@ -64,6 +65,7 @@ __all__ = [
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
     "download",
+    "get_soup",
     "download_from_google",
     "download_from_s3",
     "get_base",
@@ -268,7 +270,7 @@ def get_hashes(
     """
     path = Path(path).resolve()
     if chunk_size is None:
-        chunk_size = 64 * 2**10
+        chunk_size = 64 * 2 ** 10
 
     # instantiate hash algorithms
     algorithms: Mapping[str, Hash] = {name: hashlib.new(name) for name in names}
@@ -1397,3 +1399,25 @@ def safe_open_dict_reader(
             yield csv.DictReader(file, delimiter=delimiter, **kwargs)
     else:
         yield csv.DictReader(f, delimiter=delimiter, **kwargs)
+
+
+def get_soup(
+    url: str, *, verify: bool = True, timeout: TimeoutHint | None = None, user_agent: str | None = None
+) -> bs4.BeautifulSoup:
+    """Get a beautiful soup parsed version of the given web page.
+
+    :param url: The URL to download and parse with BeautifulSoup
+    :param verify: Should SSL be used? This is almost always true,
+        except for Ensembl, which makes a big pain
+    :param timeout: How many integer seconds to wait for a response?
+        Defaults to 15 if none given.
+    :param user_agent: A custom user-agent to set, e.g., to avoid anti-crawling mechanisms
+    :returns: A BeautifulSoup object
+    """
+    from bs4 import BeautifulSoup
+    headers = {}
+    if user_agent:
+        headers["User-Agent"] = user_agent
+    res = requests.get(url, verify=verify, timeout=timeout or 15, headers=headers)
+    soup = BeautifulSoup(res.text, features="html.parser")
+    return soup
