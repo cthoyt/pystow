@@ -257,7 +257,7 @@ class Module:
         download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
-        beautiful_soup_kwargs: dict[str, Any] | None = None,
+        beautiful_soup_kwargs: Mapping[str, Any] | None = None,
     ) -> bs4.BeautifulSoup:
         """Ensure a webpage is downloaded and parsed with :mod:`BeautifulSoup`.
 
@@ -282,8 +282,7 @@ class Module:
         """
         from bs4 import BeautifulSoup
 
-        if beautiful_soup_kwargs is None:
-            beautiful_soup_kwargs = {}
+        beautiful_soup_kwargs = dict(beautiful_soup_kwargs or {})
         beautiful_soup_kwargs.setdefault("features", "html.parser")
 
         with self.ensure_open(
@@ -427,7 +426,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: str | None,
-        version: VersionHint,
+        version: VersionHint = ...,
         force: bool,
         download_kwargs: Mapping[str, Any] | None,
         mode: Literal["r", "rt", "w", "wt"] = ...,
@@ -442,7 +441,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: str | None,
-        version: VersionHint,
+        version: VersionHint = ...,
         force: bool,
         download_kwargs: Mapping[str, Any] | None,
         mode: Literal["rb", "wb"] = ...,

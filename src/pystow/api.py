@@ -311,7 +311,7 @@ def ensure_soup(
     version: VersionHint = None,
     force: bool = False,
     download_kwargs: Mapping[str, Any] | None = None,
-    soup_kwargs: Mapping[str, Any] | None = None,
+    beautiful_soup_kwargs: Mapping[str, Any] | None = None,
 ) -> bs4.BeautifulSoup:
     """Ensure a webpage is downloaded and parsed with :mod:`BeautifulSoup`.
 
@@ -342,7 +342,7 @@ def ensure_soup(
         version=version,
         force=force,
         download_kwargs=download_kwargs,
-        soup_kwargs=soup_kwargs,
+        beautiful_soup_kwargs=beautiful_soup_kwargs,
     )
 
 
