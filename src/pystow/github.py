@@ -91,10 +91,12 @@ def search_code(
 
     inner_tqdm = partial(tqdm, disable=not inner_progress, unit="record", leave=False)
 
-    initial_response = _search_code_helper(page_size=page_size, page=page, query=query).json()
-    total = initial_response["total_count"]
+    initial_res = _search_code_helper(page_size=page_size, page=page, query=query)
+    initial_res.raise_for_status()
+    initial_res_json = initial_res.json()
+    total = initial_res_json["total_count"]
     total_pages = 1 + (total // page_size)
-    yield from inner_tqdm(initial_response["items"], desc="Page 1")
+    yield from inner_tqdm(initial_res_json["items"], desc="Page 1")
 
     with tqdm(
         total=total_pages, unit="page", disable=not progress, desc="Paginating code search results"
@@ -104,10 +106,10 @@ def search_code(
         while page_size * page < total:
             page += 1
             tbar.update(1)
-            successive_response = _search_code_helper(
-                page=page, page_size=page_size, query=query
-            ).json()
-            yield from inner_tqdm(successive_response["items"], desc=f"Page {page}")
+            res = _search_code_helper(page=page, page_size=page_size, query=query)
+            res.raise_for_status()
+            res_json = res.json()
+            yield from inner_tqdm(res_json["items"], desc=f"Page {page}")
 
 
 def _search_code_helper(page_size: int, page: int, query: str) -> requests.Response:
