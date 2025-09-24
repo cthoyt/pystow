@@ -71,6 +71,7 @@ __all__ = [
     "get_base",
     "get_commit",
     "get_df_io",
+    "get_hash_hexdigest",
     "get_hashes",
     "get_hexdigests_remote",
     "get_home",
@@ -284,6 +285,17 @@ def get_hashes(
                 alg.update(buffer[:this_chunk_size])
 
     return algorithms
+
+
+def get_hash_hexdigest(
+    path: str | Path,
+    name: str,
+    *,
+    chunk_size: int | None = None,
+) -> str:
+    """Get a hash digest for a single hash."""
+    r = get_hashes(path, [name], chunk_size=chunk_size)
+    return r[name].hexdigest()
 
 
 def raise_on_digest_mismatch(
