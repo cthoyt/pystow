@@ -274,11 +274,15 @@ class Module:
             :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`open`
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
-        :param beautiful_soup_kwargs: Additional keyword arguments passed to :class:`BeautifulSoup`
+        :param beautiful_soup_kwargs: Additional keyword arguments passed to
+            :class:`BeautifulSoup`
 
         :returns: An BeautifulSoup object
 
-        .. note:: If you don't need to cache, consider using :func:`pystow.utils.get_soup` instead.
+        .. note::
+
+            If you don't need to cache, consider using :func:`pystow.utils.get_soup`
+            instead.
         """
         from bs4 import BeautifulSoup
 

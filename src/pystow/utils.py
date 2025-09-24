@@ -1424,11 +1424,13 @@ def get_soup(
     """Get a beautiful soup parsed version of the given web page.
 
     :param url: The URL to download and parse with BeautifulSoup
-    :param verify: Should SSL be used? This is almost always true,
-        except for Ensembl, which makes a big pain
-    :param timeout: How many integer seconds to wait for a response?
-        Defaults to 15 if none given.
-    :param user_agent: A custom user-agent to set, e.g., to avoid anti-crawling mechanisms
+    :param verify: Should SSL be used? This is almost always true, except for Ensembl,
+        which makes a big pain
+    :param timeout: How many integer seconds to wait for a response? Defaults to 15 if
+        none given.
+    :param user_agent: A custom user-agent to set, e.g., to avoid anti-crawling
+        mechanisms
+
     :returns: A BeautifulSoup object
     """
     from bs4 import BeautifulSoup
