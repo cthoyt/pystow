@@ -317,22 +317,26 @@ def ensure_soup(
 
     :param key: The name of the module. No funny characters. The envvar <key>_HOME where
         key is uppercased is checked first before using the default home directory.
-    :param subkeys: A sequence of additional strings to join. If none are given,
-        returns the directory for this module.
+    :param subkeys: A sequence of additional strings to join. If none are given, returns
+        the directory for this module.
     :param url: The URL to download.
-    :param name: Overrides the name of the file at the end of the URL, if given.
-        Also useful for URLs that don't have proper filenames with extensions.
-    :param force: Should the download be done again, even if the path already
-        exists? Defaults to false.
+    :param name: Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force: Should the download be done again, even if the path already exists?
+        Defaults to false.
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param mode: The read mode, passed to :func:`open`
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
-    :param beautiful_soup_kwargs: Additional keyword arguments passed to :class:`BeautifulSoup`
+    :param beautiful_soup_kwargs: Additional keyword arguments passed to
+        :class:`BeautifulSoup`
 
     :returns: An BeautifulSoup object
 
-    .. note:: If you don't need to cache, consider using :func:`pystow.utils.get_soup` instead.
+    .. note::
+
+        If you don't need to cache, consider using :func:`pystow.utils.get_soup`
+        instead.
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_soup(
@@ -1850,12 +1854,13 @@ def ensure_nltk(resource: str = "stopwords") -> tuple[Path, bool]:
     """Ensure NLTK data is downloaded in a standard way.
 
     :param resource: Name of the resource to download, e.g., ``stopwords``
-    :returns:
-        A pair of the NLTK cache directory and a boolean that says if download was successful
+
+    :returns: A pair of the NLTK cache directory and a boolean that says if download was
+        successful
 
     This function also appends the standard PyStow location for NLTK data to the
-    :data:`nltk.data.path` list so any downstream users of NLTK will know how to
-    find it automatically.
+    :data:`nltk.data.path` list so any downstream users of NLTK will know how to find it
+    automatically.
     """
     import nltk.data
 
