@@ -20,6 +20,7 @@ from pystow.utils import (
     DownloadError,
     HexDigestError,
     download,
+    get_hash_hexdigest,
     get_hexdigests_remote,
     getenv_path,
     mkdir,
@@ -96,6 +97,10 @@ class TestUtils(unittest.TestCase):
         ]:
             with self.subTest(name=url.name):
                 self.assertEqual(value, requests.get(url.as_uri(), timeout=15).text)
+
+    def test_get_hash(self) -> None:
+        """Test directly calculating a hash digest."""
+        self.assertEqual(TEST_TXT_MD5.read_text(), get_hash_hexdigest(TEST_TXT, "md5"))
 
     def test_mkdir(self) -> None:
         """Test for ensuring a directory."""
