@@ -15,19 +15,27 @@ from .constants import TimeoutHint
 
 __all__ = [
     "MAXIMUM_SEARCH_PAGE_SIZE",
+    "get_contributions",
     "get_default_branch",
     "get_issues",
     "get_pull_requests",
     "get_repository",
+    "get_repository_commit_activity",
+    "get_topics",
+    "get_user_events",
     "requests_get_github",
     "search_code",
 ]
 
 
-def get_headers(token: str | None = None, raise_on_missing: bool = False) -> dict[str, str]:
+def get_headers(
+    token: str | None = None, *, raise_on_missing: bool = False, preview: bool = False
+) -> dict[str, str]:
     """Get GitHub headers."""
     headers = {
-        "Accept": "application/vnd.github.v3+json",
+        "Accept": "application/vnd.github.mercy-preview+json"
+        if preview
+        else "application/vnd.github.v3+json",
     }
     token = get_config("github", "token", passthrough=token, raise_on_missing=raise_on_missing)
     if token:
@@ -42,12 +50,14 @@ def requests_get_github(
     token: str | None = None,
     timeout: TimeoutHint = None,
     require_token: bool = False,
+    preview: bool = False,
+    **kwargs: Any,
 ) -> requests.Response:
     """Make a GET request to the GitHub API."""
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
-    headers = get_headers(token=token, raise_on_missing=require_token)
-    return requests.get(url, headers=headers, params=params, timeout=timeout)
+    headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
+    return requests.get(url, headers=headers, params=params, timeout=timeout, **kwargs)
 
 
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
@@ -69,6 +79,26 @@ def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
 def get_pull_requests(owner: str, repo: str, **kwargs: Any) -> requests.Response:
     """Get pull requests from a repository."""
     return requests_get_github(f"repos/{owner}/{repo}/pulls", **kwargs)
+
+
+def get_user_events(user: str) -> requests.Response:
+    """Get events for a user."""
+    return requests_get_github(f"users/{user}/events")
+
+
+def get_contributions(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Get contributors to a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/stats/contributors", **kwargs)
+
+
+def get_repository_commit_activity(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Get commit activity to a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/stats/commit_activity", **kwargs)
+
+
+def get_topics(owner: str, repo: str, *, preview: bool = True, **kwargs: Any) -> requests.Response:
+    """Get topics from the repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/topics", preview=preview, **kwargs)
 
 
 #: Maximum number of records per page in code search
