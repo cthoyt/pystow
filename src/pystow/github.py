@@ -43,11 +43,13 @@ def requests_get_github(
     timeout: TimeoutHint = None,
     require_token: bool = False,
     preview: bool = False,
+    **kwargs,
 ) -> requests.Response:
     """Make a GET request to the GitHub API."""
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
     headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
+    return requests.get(url, headers=headers, params=params, timeout=timeout, **kwargs)
 
 
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
