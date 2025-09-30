@@ -24,10 +24,10 @@ __all__ = [
 ]
 
 
-def get_headers(token: str | None = None, raise_on_missing: bool = False) -> dict[str, str]:
+def get_headers(token: str | None = None, *, raise_on_missing: bool = False, preview: bool = False) -> dict[str, str]:
     """Get GitHub headers."""
     headers = {
-        "Accept": "application/vnd.github.v3+json",
+        "Accept": "application/vnd.github.mercy-preview+json" if preview else "application/vnd.github.v3+json",
     }
     token = get_config("github", "token", passthrough=token, raise_on_missing=raise_on_missing)
     if token:
@@ -42,12 +42,12 @@ def requests_get_github(
     token: str | None = None,
     timeout: TimeoutHint = None,
     require_token: bool = False,
+    preview: bool = False,
 ) -> requests.Response:
     """Make a GET request to the GitHub API."""
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
-    headers = get_headers(token=token, raise_on_missing=require_token)
-    return requests.get(url, headers=headers, params=params, timeout=timeout)
+    headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
 
 
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
