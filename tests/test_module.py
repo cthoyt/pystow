@@ -40,6 +40,10 @@ RESOURCES = HERE.joinpath("resources")
 TSV_NAME = "test_1.tsv"
 TSV_URL = f"{n()}/{TSV_NAME}"
 
+HTML_NAME = "test.html"
+HTML_URL = f"{n()}/{HTML_NAME}"
+HTML_PATH = RESOURCES / HTML_NAME
+
 SQLITE_NAME = "test_1.db"
 SQLITE_URL = f"{n()}/{SQLITE_NAME}"
 SQLITE_PATH = RESOURCES / SQLITE_NAME
@@ -68,6 +72,7 @@ MOCK_FILES: Mapping[str, Path] = {
     PICKLE_URL: PICKLE_PATH,
     PICKLE_GZ_URL: PICKLE_GZ_PATH,
     SQLITE_URL: SQLITE_PATH,
+    HTML_URL: HTML_PATH,
 }
 
 TEST_TSV_ROWS = [
@@ -145,7 +150,7 @@ class TestJoin(unittest.TestCase):
             yield Path(self.directory.name)
 
     @staticmethod
-    def mock_download() -> mock._patch_default_new:
+    def mock_download() -> Any:
         """Mock connection to the internet using local resource files.
 
         :returns: A patch object that can be applied to the pystow download function
@@ -157,7 +162,7 @@ class TestJoin(unittest.TestCase):
         return mock.patch("pystow.utils.download", side_effect=_mock_get_data)
 
     @staticmethod
-    def mock_download_once(local_path: str | Path) -> mock._patch_default_new:
+    def mock_download_once(local_path: str | Path) -> Any:
         """Mock connection to the internet using local resource files.
 
         :param local_path: the path to the file to mock
@@ -268,6 +273,10 @@ class TestJoin(unittest.TestCase):
             with self.subTest(type="json_bz2"):
                 p = pystow.ensure_json_bz2("test", url=JSON_BZ2_URL)
                 self.assertEqual(TEST_JSON, p)
+
+            with self.subTest(type="html"):
+                soup = pystow.ensure_soup("test", url=HTML_URL)
+                self.assertEqual("test text", soup.text.strip())
 
     def test_open_fail(self) -> None:
         """Test opening a missing file."""

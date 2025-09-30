@@ -22,6 +22,7 @@ from .constants import JSON, BytesOpener, Provider
 from .impl import Module, VersionHint
 
 if TYPE_CHECKING:
+    import bs4
     import lxml.etree
     import numpy.typing
     import pandas as pd
@@ -54,6 +55,7 @@ __all__ = [
     "ensure_pickle",
     "ensure_pickle_gz",
     "ensure_rdf",
+    "ensure_soup",
     "ensure_tar_df",
     "ensure_tar_xml",
     "ensure_untar",
@@ -298,6 +300,53 @@ def ensure(
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure(
         *subkeys, url=url, name=name, version=version, force=force, download_kwargs=download_kwargs
+    )
+
+
+def ensure_soup(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: str | None = None,
+    version: VersionHint = None,
+    force: bool = False,
+    download_kwargs: Mapping[str, Any] | None = None,
+    beautiful_soup_kwargs: Mapping[str, Any] | None = None,
+) -> bs4.BeautifulSoup:
+    """Ensure a webpage is downloaded and parsed with :mod:`BeautifulSoup`.
+
+    :param key: The name of the module. No funny characters. The envvar <key>_HOME where
+        key is uppercased is checked first before using the default home directory.
+    :param subkeys: A sequence of additional strings to join. If none are given, returns
+        the directory for this module.
+    :param url: The URL to download.
+    :param name: Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force: Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to
+        :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param beautiful_soup_kwargs: Additional keyword arguments passed to
+        :class:`BeautifulSoup`
+
+    :returns: An BeautifulSoup object
+
+    .. note::
+
+        If you don't need to cache, consider using :func:`pystow.utils.get_soup`
+        instead.
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_soup(
+        *subkeys,
+        url=url,
+        name=name,
+        version=version,
+        force=force,
+        download_kwargs=download_kwargs,
+        beautiful_soup_kwargs=beautiful_soup_kwargs,
     )
 
 
@@ -1805,12 +1854,13 @@ def ensure_nltk(resource: str = "stopwords") -> tuple[Path, bool]:
     """Ensure NLTK data is downloaded in a standard way.
 
     :param resource: Name of the resource to download, e.g., ``stopwords``
-    :returns:
-        A pair of the NLTK cache directory and a boolean that says if download was successful
+
+    :returns: A pair of the NLTK cache directory and a boolean that says if download was
+        successful
 
     This function also appends the standard PyStow location for NLTK data to the
-    :data:`nltk.data.path` list so any downstream users of NLTK will know how to
-    find it automatically.
+    :data:`nltk.data.path` list so any downstream users of NLTK will know how to find it
+    automatically.
     """
     import nltk.data
 

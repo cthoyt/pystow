@@ -51,6 +51,7 @@ from .utils import (
 
 if TYPE_CHECKING:
     import botocore.client
+    import bs4
     import lxml.etree
     import numpy
     import pandas as pd
@@ -246,6 +247,61 @@ class Module:
         )
         return path
 
+    def ensure_soup(
+        self,
+        *subkeys: str,
+        url: str,
+        name: str | None = None,
+        version: VersionHint = None,
+        force: bool = False,
+        download_kwargs: Mapping[str, Any] | None = None,
+        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        open_kwargs: Mapping[str, Any] | None = None,
+        beautiful_soup_kwargs: Mapping[str, Any] | None = None,
+    ) -> bs4.BeautifulSoup:
+        """Ensure a webpage is downloaded and parsed with :mod:`BeautifulSoup`.
+
+        :param subkeys: A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param mode: The read mode, passed to :func:`open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param beautiful_soup_kwargs: Additional keyword arguments passed to
+            :class:`BeautifulSoup`
+
+        :returns: An BeautifulSoup object
+
+        .. note::
+
+            If you don't need to cache, consider using :func:`pystow.utils.get_soup`
+            instead.
+        """
+        from bs4 import BeautifulSoup
+
+        beautiful_soup_kwargs = dict(beautiful_soup_kwargs or {})
+        beautiful_soup_kwargs.setdefault("features", "html.parser")
+
+        with self.ensure_open(
+            *subkeys,
+            url=url,
+            name=name,
+            version=version,
+            force=force,
+            download_kwargs=download_kwargs,
+            mode=mode,
+            open_kwargs=open_kwargs,
+        ) as file:
+            soup = BeautifulSoup(file, **beautiful_soup_kwargs)
+        return soup
+
     def ensure_custom(
         self,
         *subkeys: str,
@@ -374,6 +430,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: str | None,
+        version: VersionHint = ...,
         force: bool,
         download_kwargs: Mapping[str, Any] | None,
         mode: Literal["r", "rt", "w", "wt"] = ...,
@@ -388,6 +445,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: str | None,
+        version: VersionHint = ...,
         force: bool,
         download_kwargs: Mapping[str, Any] | None,
         mode: Literal["rb", "wb"] = ...,
@@ -400,6 +458,7 @@ class Module:
         *subkeys: str,
         url: str,
         name: str | None = None,
+        version: VersionHint = None,
         force: bool = False,
         download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
@@ -412,6 +471,8 @@ class Module:
         :param url: The URL to download.
         :param name: Overrides the name of the file at the end of the URL, if given.
             Also useful for URLs that don't have proper filenames with extensions.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to
@@ -422,7 +483,12 @@ class Module:
         :yields: An open file object
         """
         path = self.ensure(
-            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+            *subkeys,
+            url=url,
+            name=name,
+            version=version,
+            force=force,
+            download_kwargs=download_kwargs,
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
