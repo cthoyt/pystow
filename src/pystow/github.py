@@ -21,6 +21,8 @@ __all__ = [
     "get_repository",
     "requests_get_github",
     "search_code",
+    "get_contributions",
+    "get_user_events",
 ]
 
 
@@ -71,6 +73,18 @@ def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
 def get_pull_requests(owner: str, repo: str, **kwargs: Any) -> requests.Response:
     """Get pull requests from a repository."""
     return requests_get_github(f"repos/{owner}/{repo}/pulls", **kwargs)
+
+
+def get_user_events(user: str) -> requests.Response:
+    """Get events for a user."""
+    return requests_get_github(f"users/{user}/events")
+
+
+def get_contributions(owner: str, repo: str, **kwargs) -> requests.Response:
+    """Get contributors to a repository."""
+    return requests_get_github(
+        f"repos/{owner}/{repo}/stats/contributors", **kwargs
+    )
 
 
 #: Maximum number of records per page in code search
