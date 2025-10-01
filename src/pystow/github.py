@@ -34,10 +34,8 @@ __all__ = [
 
 def get_token(*, passthrough: str | None = None, raise_on_missing: bool = False) -> str | None:
     """Get a GitHub token."""
-    return cast(
-        str | None,
-        get_config("github", "token", passthrough=passthrough, raise_on_missing=raise_on_missing),
-    )
+    rv = get_config("github", "token", passthrough=passthrough, raise_on_missing=raise_on_missing)
+    return rv  # type:ignore
 
 
 def get_headers(
