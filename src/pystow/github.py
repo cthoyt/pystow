@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from functools import partial
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import requests
 from ratelimit import rate_limited
@@ -17,15 +17,25 @@ __all__ = [
     "MAXIMUM_SEARCH_PAGE_SIZE",
     "get_contributions",
     "get_default_branch",
+    "get_issue",
     "get_issues",
     "get_pull_requests",
     "get_repository",
     "get_repository_commit_activity",
+    "get_token",
     "get_topics",
     "get_user_events",
+    "post_pull",
     "requests_get_github",
+    "requests_post_github",
     "search_code",
 ]
+
+
+def get_token(*, passthrough: str | None = None, raise_on_missing: bool = False) -> str | None:
+    """Get a GitHub token."""
+    rv = get_config("github", "token", passthrough=passthrough, raise_on_missing=raise_on_missing)
+    return rv  # type:ignore
 
 
 def get_headers(
@@ -37,14 +47,25 @@ def get_headers(
         if preview
         else "application/vnd.github.v3+json",
     }
-    token = get_config("github", "token", passthrough=token, raise_on_missing=raise_on_missing)
+    token = get_token(passthrough=token, raise_on_missing=raise_on_missing)
     if token:
         headers["Authorization"] = f"token {token}"
     return headers
 
 
+def requests_get_github(path: str, **kwargs: Any) -> requests.Response:
+    """Make a GET request to the GitHub API."""
+    return _request_github("GET", path, **kwargs)
+
+
+def requests_post_github(path: str, **kwargs: Any) -> requests.Response:
+    """Make a POST request to the GitHub API."""
+    return _request_github("POST", path, **kwargs)
+
+
 @rate_limited(calls=5_000, period=60 * 60)
-def requests_get_github(
+def _request_github(
+    method: Literal["GET", "POST"],
     path: str,
     params: dict[str, Any] | None = None,
     token: str | None = None,
@@ -53,11 +74,16 @@ def requests_get_github(
     preview: bool = False,
     **kwargs: Any,
 ) -> requests.Response:
-    """Make a GET request to the GitHub API."""
+    """Make a POST request to the GitHub API."""
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
     headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
-    return requests.get(url, headers=headers, params=params, timeout=timeout, **kwargs)
+    return requests.request(method, url, headers=headers, params=params, timeout=timeout, **kwargs)
+
+
+def post_pull(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+    """Post a pull request."""
+    return requests_post_github(f"repos/{owner}/{repo}/pulls", **kwargs)
 
 
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
@@ -74,6 +100,11 @@ def get_default_branch(owner: str, repo: str, **kwargs: Any) -> str:
 def get_issues(owner: str, repo: str, **kwargs: Any) -> requests.Response:
     """Get issues from a repository."""
     return requests_get_github(f"repos/{owner}/{repo}/issues", **kwargs)
+
+
+def get_issue(owner: str, repo: str, issue: int, **kwargs: Any) -> requests.Response:
+    """Get an issue from a repository."""
+    return requests_get_github(f"repos/{owner}/{repo}/issues/{issue}", **kwargs)
 
 
 def get_pull_requests(owner: str, repo: str, **kwargs: Any) -> requests.Response:
