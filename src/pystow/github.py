@@ -15,6 +15,7 @@ from .constants import TimeoutHint
 
 __all__ = [
     "MAXIMUM_SEARCH_PAGE_SIZE",
+    "delete_branch",
     "get_contributions",
     "get_default_branch",
     "get_issue",
@@ -63,9 +64,14 @@ def requests_post_github(path: str, **kwargs: Any) -> requests.Response:
     return _request_github("POST", path, **kwargs)
 
 
+def requests_delete_github(path: str, **kwargs: Any) -> requests.Response:
+    """Make a DELETE request to the GitHub API."""
+    return _request_github("DELETE", path, **kwargs)
+
+
 @rate_limited(calls=5_000, period=60 * 60)
 def _request_github(
-    method: Literal["GET", "POST"],
+    method: Literal["GET", "POST", "DELETE"],
     path: str,
     params: dict[str, Any] | None = None,
     token: str | None = None,
@@ -81,9 +87,52 @@ def _request_github(
     return requests.request(method, url, headers=headers, params=params, timeout=timeout, **kwargs)
 
 
-def post_pull(owner: str, repo: str, **kwargs: Any) -> requests.Response:
+def post_pull(
+    owner: str,
+    repo: str,
+    *,
+    title: str | None = None,
+    head: str,
+    head_repo: str | None = None,
+    base: str,
+    body: str | None = None,
+    maintainer_can_modify: bool = True,
+    draft: bool = False,
+    issue: int | None = None,
+    **kwargs: Any,
+) -> requests.Response:
     """Post a pull request."""
-    return requests_post_github(f"repos/{owner}/{repo}/pulls", **kwargs)
+    # https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request
+    if title is None and issue is None:
+        raise ValueError("title and issue can't both be none")
+    if "params" in kwargs:
+        raise ValueError("should pass arguments directly")
+    return requests_post_github(
+        f"repos/{owner}/{repo}/pulls",
+        params={
+            "title": title,
+            "head": head,
+            "head_repo": head_repo,
+            "base": base,
+            "body": body,
+            "maintainer_can_modify": maintainer_can_modify,
+            "draft": draft,
+            "issue": issue,
+        },
+        **kwargs,
+    )
+
+
+def delete_branch(owner: str, repo: str, branch_name: str, **kwargs: Any) -> requests.Response:
+    """Delete a branch.
+
+    :param owner: The repository owner
+    :param repo: The repository name
+    :param branch_name: The branch name or head ref
+    :returns: A response from the GitHub API after running the (secret) delete endpoint
+    """
+    # see https://github.com/orgs/community/discussions/24603
+    return requests_delete_github(f"repos/{owner}/{repo}/git/refs/heads/{branch_name}", **kwargs)
 
 
 def get_repository(owner: str, repo: str, **kwargs: Any) -> requests.Response:
