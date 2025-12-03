@@ -60,6 +60,7 @@ __all__ = [
     "ensure_tar_xml",
     "ensure_untar",
     "ensure_xml",
+    "ensure_yaml",
     "ensure_zip_df",
     "ensure_zip_np",
     "join",
@@ -70,6 +71,7 @@ __all__ = [
     "load_pickle_gz",
     "load_rdf",
     "load_xml",
+    "load_yaml",
     "module",
     "open",
     "open_gz",
@@ -904,6 +906,45 @@ def load_df(
     )
 
 
+def ensure_yaml(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: str | None = None,
+    force: bool = False,
+    download_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    yaml_load_kwargs: Mapping[str, Any] | None = None,
+) -> JSON:
+    """Download YAML and open with :mod:`yaml`.
+
+    :param key: The module name
+    :param subkeys: A sequence of additional strings to join. If none are given, returns
+        the directory for this module.
+    :param url: The URL to download.
+    :param name: Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force: Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to
+        :func:`pystow.utils.download`.
+    :param open_kwargs: Additional keyword arguments passed to :func:`open`
+    :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+
+    :returns: A JSON object (list, dict, etc.)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.ensure_yaml(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        open_kwargs=open_kwargs,
+        yaml_load_kwargs=yaml_load_kwargs,
+    )
+
+
 def dump_df(
     key: str,
     *subkeys: str,
@@ -1029,6 +1070,26 @@ def ensure_json_bz2(
         open_kwargs=open_kwargs,
         json_load_kwargs=json_load_kwargs,
     )
+
+
+def load_yaml(
+    key: str,
+    *subkeys: str,
+    name: str,
+    yaml_load_kwargs: Mapping[str, Any] | None = None,
+) -> JSON:
+    """Open a JSON file :mod:`json`.
+
+    :param key: The module name
+    :param subkeys: A sequence of additional strings to join. If none are given, returns
+        the directory for this module.
+    :param name: The name of the file to open
+    :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+
+    :returns: A JSON object (list, dict, etc.)
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    return _module.load_yaml(*subkeys, name=name, yaml_load_kwargs=yaml_load_kwargs)
 
 
 def load_json(
