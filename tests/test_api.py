@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import inspect
 import unittest
-from typing import Callable, TypeVar, cast
+from collections.abc import Callable
+from typing import TypeVar, cast
 
 import pandas as pd
 import rdflib

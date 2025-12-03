@@ -28,6 +28,7 @@ from typing import (
     Literal,
     NamedTuple,
     TextIO,
+    TypeAlias,
     cast,
 )
 from urllib.parse import urlparse
@@ -36,7 +37,6 @@ from uuid import uuid4
 
 import requests
 from tqdm.auto import tqdm
-from typing_extensions import TypeAlias
 
 from .constants import (
     PYSTOW_HOME_ENVVAR,
