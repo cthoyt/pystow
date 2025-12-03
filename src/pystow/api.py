@@ -930,14 +930,6 @@ def ensure_yaml(
     :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
 
     :returns: A JSON object (list, dict, etc.)
-
-    Example usage:
-
-    ::
-
-        >>> import pystow
-        >>> url = "https://maayanlab.cloud/CREEDS/download/single_gene_perturbations-v1.0.json"
-        >>> perturbations = pystow.ensure_json("bio", "creeds", "1.0", url=url)
     """
     _module = Module.from_key(key, ensure_exists=True)
     return _module.ensure_yaml(

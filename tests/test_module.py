@@ -269,7 +269,7 @@ class TestJoin(unittest.TestCase):
                 j = pystow.ensure_yaml("test", url=YAML_URL)
                 self.assertEqual(TEST_YAML, j)
 
-                j2 = pystow.load_json("test", name=YAML_NAME)
+                j2 = pystow.load_yaml("test", name=YAML_NAME)
                 self.assertEqual(j, j2)
 
             with self.subTest(type="pickle"):
