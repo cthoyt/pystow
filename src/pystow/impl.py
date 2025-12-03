@@ -28,7 +28,6 @@ from typing import (
     overload,
 )
 
-import yaml
 from typing_extensions import TypeAlias
 
 from . import utils
@@ -1050,6 +1049,8 @@ class Module:
 
         :returns: A JSON object (list, dict, etc.)
         """
+        import yaml
+
         with self.ensure_open(
             *subkeys,
             url=url,
@@ -1077,6 +1078,8 @@ class Module:
 
         :returns: A JSON object (list, dict, etc.)
         """
+        import yaml
+
         with self.open(
             *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=False
         ) as file:
