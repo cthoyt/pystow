@@ -28,6 +28,7 @@ from typing import (
     overload,
 )
 
+import yaml
 from typing_extensions import TypeAlias
 
 from . import utils
@@ -1022,6 +1023,64 @@ class Module:
             open_kwargs=open_kwargs,
         ) as file:
             return json.load(file, **(json_load_kwargs or {}))
+
+    def ensure_yaml(
+        self,
+        *subkeys: str,
+        url: str,
+        name: str | None = None,
+        force: bool = False,
+        download_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = None,
+        yaml_load_kwargs: Mapping[str, Any] | None = None,
+    ) -> JSON:
+        """Download YAML and open with :mod:`yaml`.
+
+        :param subkeys: A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+
+        :returns: A JSON object (list, dict, etc.)
+        """
+        with self.ensure_open(
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            download_kwargs=download_kwargs,
+            open_kwargs=open_kwargs,
+        ) as file:
+            return yaml.safe_load(file, **(yaml_load_kwargs or {}))
+
+    def load_yaml(
+        self,
+        *subkeys: str,
+        name: str,
+        open_kwargs: Mapping[str, Any] | None = None,
+        yaml_load_kwargs: Mapping[str, Any] | None = None,
+    ) -> JSON:
+        """Open a JSON file :mod:`json`.
+
+        :param subkeys: A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param name: The name of the file to open
+        :param open_kwargs: Additional keyword arguments passed to :func:`open`
+        :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+
+        :returns: A JSON object (list, dict, etc.)
+        """
+        with self.open(
+            *subkeys, name=name, mode="r", open_kwargs=open_kwargs, ensure_exists=False
+        ) as file:
+            return yaml.safe_load(file, **(yaml_load_kwargs or {}))
 
     def load_json(
         self,

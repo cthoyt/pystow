@@ -54,6 +54,7 @@ dependencies = [
     "requests",
     "tqdm",
     "typing-extensions",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]
