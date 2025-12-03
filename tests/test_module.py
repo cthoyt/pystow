@@ -18,6 +18,7 @@ from typing import Any
 from unittest import mock
 
 import pandas as pd
+import yaml
 
 import pystow
 from pystow import join
@@ -53,6 +54,10 @@ JSON_NAME = "test_1.json"
 JSON_URL = f"{n()}/{JSON_NAME}"
 JSON_PATH = RESOURCES / JSON_NAME
 
+YAML_NAME = "test_1.yaml"
+YAML_URL = f"{n()}/{YAML_NAME}"
+YAML_PATH = RESOURCES / YAML_NAME
+
 PICKLE_NAME = "test_1.pkl"
 PICKLE_URL = f"{n()}/{PICKLE_NAME}"
 PICKLE_PATH = RESOURCES / PICKLE_NAME
@@ -68,6 +73,7 @@ JSON_BZ2_PATH = RESOURCES / JSON_BZ2_NAME
 MOCK_FILES: Mapping[str, Path] = {
     TSV_URL: RESOURCES / TSV_NAME,
     JSON_URL: JSON_PATH,
+    YAML_URL: YAML_PATH,
     JSON_BZ2_URL: JSON_BZ2_PATH,
     PICKLE_URL: PICKLE_PATH,
     PICKLE_GZ_URL: PICKLE_GZ_PATH,
@@ -81,7 +87,7 @@ TEST_TSV_ROWS = [
     ("v2_1", "v2_2", "v2_3"),
 ]
 TEST_DF = pd.DataFrame(TEST_TSV_ROWS)
-TEST_JSON = {"key": "value"}
+TEST_JSON = TEST_YAML = {"key": "value"}
 
 # Make the pickle file
 if not PICKLE_PATH.is_file():
@@ -92,6 +98,9 @@ if not SQLITE_PATH.is_file():
 
 if not JSON_PATH.is_file():
     JSON_PATH.write_text(json.dumps(TEST_JSON))
+
+if not YAML_PATH.is_file():
+    YAML_PATH.write_text(yaml.safe_dump(TEST_YAML))
 
 if not JSON_BZ2_PATH.is_file():
     with bz2.open(JSON_BZ2_PATH, mode="wt") as file:
@@ -254,6 +263,13 @@ class TestJoin(unittest.TestCase):
                 self.assertEqual(TEST_JSON, j)
 
                 j2 = pystow.load_json("test", name=JSON_NAME)
+                self.assertEqual(j, j2)
+
+            with self.subTest(type="yaml"):
+                j = pystow.ensure_yaml("test", url=YAML_URL)
+                self.assertEqual(TEST_YAML, j)
+
+                j2 = pystow.load_yaml("test", name=YAML_NAME)
                 self.assertEqual(j, j2)
 
             with self.subTest(type="pickle"):
