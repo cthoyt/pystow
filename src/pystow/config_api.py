@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from configparser import ConfigParser
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from .utils import getenv_path
 

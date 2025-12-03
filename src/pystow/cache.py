@@ -7,15 +7,13 @@ import json
 import logging
 import pickle
 from abc import ABC, abstractmethod
-from collections.abc import MutableMapping
+from collections.abc import Callable, MutableMapping
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Generic,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -35,11 +33,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-JSONType = Union[
-    dict[str, Any],
-    list[Any],
-]
-
+JSONType = dict[str, Any] | list[Any]
 X = TypeVar("X")
 Getter = Callable[[], X]
 

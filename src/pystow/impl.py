@@ -13,22 +13,18 @@ import pickle
 import sqlite3
 import tarfile
 import zipfile
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Literal,
-    Optional,
-    Union,
+    TypeAlias,
     cast,
     overload,
 )
-
-from typing_extensions import TypeAlias
 
 from . import utils
 from .constants import JSON, BytesOpener, Provider
@@ -66,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 #: A type hint for something that can be passed to the
 #: `version` argument of Module.join, Module.ensure, etc.
-VersionHint: TypeAlias = Union[None, str, Callable[[], Optional[str]]]
+VersionHint: TypeAlias = None | str | Callable[[], str | None]
 
 
 class Module:
