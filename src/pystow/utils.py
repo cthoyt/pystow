@@ -170,16 +170,15 @@ UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
 
 
 def get_mode_pair(
-    mode: UnqualifiedMode | QualifiedMode,
-    unqualified_interpretation: Representation,
+    mode: UnqualifiedMode | QualifiedMode, interpretation: Representation
 ) -> ModePair:
     """Get the mode pair."""
     match mode:
         case "rt" | "wt" | "rb" | "wb":
             return REVERSE_MODE_MAP[mode]
-        case "r" | "w" if unqualified_interpretation == "text":
+        case "r" | "w" if interpretation == "text":
             return UNQUALIFIED_TEXT_MAP[mode]
-        case "r" | "w" if unqualified_interpretation == "binary":
+        case "r" | "w" if interpretation == "binary":
             return UNQUALIFIED_BINARY_MAP[mode]
         case _:
             raise ValueError(f"invalid mode: {mode}")

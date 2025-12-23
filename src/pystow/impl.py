@@ -786,12 +786,11 @@ class Module:
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
+
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
+        operation, representation = get_mode_pair(open_kwargs.pop("mode"), interpretation="binary")
 
-        operation, representation = get_mode_pair(
-            open_kwargs.pop("mode"), unqualified_interpretation="binary"
-        )
         with open_zipfile(
             path=path,
             inner_path=inner_path,
