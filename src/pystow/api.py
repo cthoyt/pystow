@@ -6,6 +6,7 @@ import bz2
 import io
 import lzma
 import sqlite3
+import typing
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from functools import lru_cache
@@ -533,6 +534,40 @@ def ensure_open(
         yield yv
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_zip(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: str | None = ...,
+    force: bool = ...,
+    download_kwargs: Mapping[str, Any] | None = ...,
+    mode: Literal["r", "w", "rb", "wb"] = ...,
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.BinaryIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_zip(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: str | None = ...,
+    force: bool = ...,
+    download_kwargs: Mapping[str, Any] | None = ...,
+    mode: Literal["rt", "wt"] = ...,
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.TextIO, None, None]: ...
+
+
 @contextmanager
 def ensure_open_zip(
     key: str,
@@ -542,9 +577,10 @@ def ensure_open_zip(
     name: str | None = None,
     force: bool = False,
     download_kwargs: Mapping[str, Any] | None = None,
-    mode: str = "r",
+    mode: Literal["r", "w", "rb", "wb"] | Literal["rt", "wt"] = "r",
+    zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
-) -> BytesOpener:
+) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -561,12 +597,17 @@ def ensure_open_zip(
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param mode: The read mode, passed to :func:`zipfile.open`
+    :param zipfile_kwargs: Additional keyword arguments passed to :class:`zipfile.ZipFile`
     :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
 
     :yields: An open file object
     """
     _module = Module.from_key(key, ensure_exists=True)
-    with _module.ensure_open_zip(
+    # ignore the call overload because mypy doesn't understand
+    # when multiple overloads cascade (i.e., this function's
+    # overloads correspond to the _module.ensure_open_zip's
+    # overloads
+    with _module.ensure_open_zip(  # type:ignore[misc,call-overload]
         *subkeys,
         url=url,
         inner_path=inner_path,
@@ -574,6 +615,7 @@ def ensure_open_zip(
         force=force,
         download_kwargs=download_kwargs,
         mode=mode,
+        zipfile_kwargs=zipfile_kwargs,
         open_kwargs=open_kwargs,
     ) as yv:
         yield yv

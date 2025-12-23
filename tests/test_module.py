@@ -323,8 +323,16 @@ class TestJoin(unittest.TestCase):
             inner_path = n()
             with self.mock_download_once(path):
                 write_zipfile_csv(TEST_DF, path, inner_path)
-                with pystow.ensure_open_zip("test", url=n(), inner_path=inner_path) as file:
+                # test many modes, luckily, because pandas can handle everything
+                with pystow.ensure_open_zip(
+                    "test", url=n(), inner_path=inner_path, mode="rb"
+                ) as file:
                     df = pd.read_csv(file, sep="\t")
+                    self.assertEqual(3, len(df.columns))
+                with pystow.ensure_open_zip(
+                    "test", url=n(), inner_path=inner_path, mode="rt"
+                ) as file_text:
+                    df = pd.read_csv(file_text, sep="\t")
                     self.assertEqual(3, len(df.columns))
 
     def test_ensure_open_tarfile(self) -> None:

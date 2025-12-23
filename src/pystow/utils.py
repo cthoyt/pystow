@@ -22,15 +22,7 @@ from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    NamedTuple,
-    TextIO,
-    TypeAlias,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -58,11 +50,17 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
+    "MODE_MAP",
+    "OPERATION_VALUES",
+    "REPRESENTATION_VALUES",
+    "REVERSE_MODE_MAP",
     "DownloadBackend",
     "DownloadError",
     "Hash",
     "HexDigestError",
     "HexDigestMismatch",
+    "Operation",
+    "Representation",
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
     "download",
@@ -75,6 +73,7 @@ __all__ = [
     "get_hashes",
     "get_hexdigests_remote",
     "get_home",
+    "get_mode_pair",
     "get_name",
     "get_np_io",
     "get_offending_hexdigests",
@@ -133,6 +132,56 @@ OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
 #: A human-readable flag for how to open a file.
 Representation: TypeAlias = Literal["text", "binary"]
 REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
+
+#: Characters for "unqualified" modes, which might be interpreted
+#: differently by different functions
+UnqualifiedMode: TypeAlias = Literal["r", "w"]
+
+#: Characters for "qualified" modes, which are absolute (as opposed to
+#: :data:`UnqualifiedMode`, which is context-dependent)
+QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
+
+ModePair: TypeAlias = tuple[Operation, Representation]
+
+#: A mapping between operation/representation pairs and qualified modes
+MODE_MAP: dict[ModePair, QualifiedMode] = {
+    ("read", "text"): "rt",
+    ("read", "binary"): "rb",
+    ("write", "text"): "wt",
+    ("write", "binary"): "wb",
+}
+
+#: A mapping between qualified modes and operation/representation pairs
+REVERSE_MODE_MAP: dict[QualifiedMode, ModePair] = {
+    "rt": ("read", "text"),
+    "rb": ("read", "binary"),
+    "wt": ("write", "text"),
+    "wb": ("write", "binary"),
+}
+
+UNQUALIFIED_TEXT_MAP: dict[UnqualifiedMode, ModePair] = {
+    "r": ("read", "text"),
+    "w": ("write", "text"),
+}
+UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
+    "r": ("read", "binary"),
+    "w": ("write", "binary"),
+}
+
+
+def get_mode_pair(
+    mode: UnqualifiedMode | QualifiedMode, interpretation: Representation
+) -> ModePair:
+    """Get the mode pair."""
+    match mode:
+        case "rt" | "wt" | "rb" | "wb":
+            return REVERSE_MODE_MAP[mode]
+        case "r" | "w" if interpretation == "text":
+            return UNQUALIFIED_TEXT_MAP[mode]
+        case "r" | "w" if interpretation == "binary":
+            return UNQUALIFIED_BINARY_MAP[mode]
+        case _:
+            raise ValueError(f"invalid mode: {mode}")
 
 
 class HexDigestMismatch(NamedTuple):
@@ -713,6 +762,8 @@ def open_zipfile(
     *,
     operation: Operation = ...,
     representation: Literal["text"],
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -725,6 +776,8 @@ def open_zipfile(
     *,
     operation: Operation = ...,
     representation: Literal["binary"],
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -735,19 +788,21 @@ def open_zipfile(
     *,
     operation: Operation = "read",
     representation: Representation,
+    zipfile_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
     mode: Literal["r", "w"] = "r" if operation == "read" else "w"
     # there might be a better way to deal with the mode here
-    with zipfile.ZipFile(file=path, mode=mode) as zip_file:
-        with zip_file.open(inner_path, mode=mode) as binary_file:
+    with zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file:
+        with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
             if representation == "text":
                 with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
                     yield text_file
             elif representation == "binary":
                 yield cast(typing.BinaryIO, binary_file)
             else:
-                raise ValueError
+                raise ValueError(f"unsupported representation: {representation}")
 
 
 @contextlib.contextmanager
@@ -1282,14 +1337,6 @@ def gunzip(source: str | Path, target: str | Path) -> None:
     """
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
         shutil.copyfileobj(in_file, out_file)
-
-
-MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]] = {
-    ("read", "text"): "rt",
-    ("read", "binary"): "rb",
-    ("write", "text"): "wt",
-    ("write", "binary"): "wb",
-}
 
 
 # docstr-coverage:excused `overload`

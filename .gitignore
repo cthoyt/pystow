@@ -899,3 +899,7 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,windows,python,jupyternotebooks,jetbrains,pycharm,vim,emacs,visualstudiocode,visualstudio
 
 scratch/
+tests/resources/test_1.db
+tests/resources/test_1.json.bz2
+tests/resources/test_1.yaml
+tests/resources/test_1.pkl.gz
