@@ -22,15 +22,7 @@ from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    NamedTuple,
-    TextIO,
-    TypeAlias,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -149,37 +141,31 @@ UnqualifiedMode: TypeAlias = Literal["r", "w"]
 #: :data:`UnqualifiedMode`, which is context-dependent)
 QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
 
-
-class ModePair(NamedTuple):
-    """A pair of operation and representation."""
-
-    operation: Operation
-    representation: Representation
-
+ModePair: TypeAlias = tuple[Operation, Representation]
 
 #: A mapping between operation/representation pairs and qualified modes
 MODE_MAP: dict[ModePair, QualifiedMode] = {
-    ModePair("read", "text"): "rt",
-    ModePair("read", "binary"): "rb",
-    ModePair("write", "text"): "wt",
-    ModePair("write", "binary"): "wb",
+    ("read", "text"): "rt",
+    ("read", "binary"): "rb",
+    ("write", "text"): "wt",
+    ("write", "binary"): "wb",
 }
 
 #: A mapping between qualified modes and operation/representation pairs
 REVERSE_MODE_MAP: dict[QualifiedMode, ModePair] = {
-    "rt": ModePair("read", "text"),
-    "rb": ModePair("read", "binary"),
-    "wt": ModePair("write", "text"),
-    "wb": ModePair("write", "binary"),
+    "rt": ("read", "text"),
+    "rb": ("read", "binary"),
+    "wt": ("write", "text"),
+    "wb": ("write", "binary"),
 }
 
 UNQUALIFIED_TEXT_MAP: dict[UnqualifiedMode, ModePair] = {
-    "r": ModePair("read", "text"),
-    "w": ModePair("write", "text"),
+    "r": ("read", "text"),
+    "w": ("write", "text"),
 }
 UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
-    "r": ModePair("read", "binary"),
-    "w": ModePair("write", "binary"),
+    "r": ("read", "binary"),
+    "w": ("write", "binary"),
 }
 
 
@@ -188,14 +174,15 @@ def get_mode_pair(
     unqualified_interpretation: Representation,
 ) -> ModePair:
     """Get the mode pair."""
-    if mode in REVERSE_MODE_MAP:
-        return REVERSE_MODE_MAP[mode]
-    if unqualified_interpretation == "text":
-        return UNQUALIFIED_TEXT_MAP[mode]
-    elif unqualified_interpretation == "binary":
-        return UNQUALIFIED_BINARY_MAP[mode]
-    else:
-        raise ValueError(f"invalid mode: {mode}")
+    match mode:
+        case "rt" | "wt" | "rb" | "wb":
+            return REVERSE_MODE_MAP[mode]
+        case "r" | "w" if unqualified_interpretation == "text":
+            return UNQUALIFIED_TEXT_MAP[mode]
+        case "r" | "w" if unqualified_interpretation == "binary":
+            return UNQUALIFIED_BINARY_MAP[mode]
+        case _:
+            raise ValueError(f"invalid mode: {mode}")
 
 
 class HexDigestMismatch(NamedTuple):
