@@ -12,21 +12,15 @@ import os
 import pickle
 import sqlite3
 import tarfile
+import typing
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    TypeAlias,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, overload
 
 from . import utils
-from .constants import JSON, BytesOpener, Opener, Provider
+from .constants import JSON, BytesOpener, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -740,7 +734,7 @@ class Module:
         download_kwargs: Mapping[str, Any] | None = ...,
         mode: Literal["r", "w", "rb", "wb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> BytesOpener: ...
+    ) -> Generator[typing.BinaryIO, None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -755,7 +749,7 @@ class Module:
         download_kwargs: Mapping[str, Any] | None = ...,
         mode: Literal["rt", "wt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> Opener: ...
+    ) -> Generator[typing.TextIO, None, None]: ...
 
     @contextmanager
     def ensure_open_zip(
@@ -769,7 +763,7 @@ class Module:
         mode: Literal["r", "w", "rb", "rt", "wb", "wt"] = "r",
         zipfile_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> BytesOpener | Opener:
+    ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
