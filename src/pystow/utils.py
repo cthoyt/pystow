@@ -763,6 +763,8 @@ def open_zipfile(
     *,
     operation: Operation = ...,
     representation: Literal["text"],
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -775,6 +777,8 @@ def open_zipfile(
     *,
     operation: Operation = ...,
     representation: Literal["binary"],
+    zipfile_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -785,8 +789,8 @@ def open_zipfile(
     *,
     operation: Operation = "read",
     representation: Representation,
-    zipfile_kwargs: dict[str, Any] | None = None,
-    open_kwargs: dict[str, Any] | None = None,
+    zipfile_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
     mode: Literal["r", "w"] = "r" if operation == "read" else "w"
