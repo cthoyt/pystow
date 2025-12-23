@@ -12,7 +12,6 @@ import os
 import pickle
 import sqlite3
 import tarfile
-import zipfile
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from io import BytesIO, StringIO
@@ -33,10 +32,12 @@ from .utils import (
     download_from_google,
     download_from_s3,
     get_base,
+    get_mode_pair,
     gunzip,
     mkdir,
     name_from_s3_key,
     name_from_url,
+    open_zipfile,
     path_to_sqlite,
     read_rdf,
     read_tarfile_csv,
@@ -766,6 +767,7 @@ class Module:
         force: bool = False,
         download_kwargs: Mapping[str, Any] | None = None,
         mode: Literal["r", "w", "rb", "rt", "wb", "wt"] = "r",
+        zipfile_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> BytesOpener | Opener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
@@ -782,6 +784,7 @@ class Module:
             :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`zipfile.open`. Defaults to bytes mode
             for ``r`` and ``w``.
+        :param zipfile_kwargs: Additional keyword arguments passed to :class:`zipfile.ZipFile`
         :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
 
         :yields: An open file object
@@ -792,17 +795,18 @@ class Module:
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
 
-        if open_kwargs["mode"] in {"r", "w", "rb", "wb"}:
-            with zipfile.ZipFile(file=path) as zip_file:
-                with zip_file.open(inner_path, **open_kwargs) as file:
-                    yield file
-        elif open_kwargs["mode"] in {"rt", "wt"}:
-            with zipfile.ZipFile(file=path) as zip_file:
-                with zip_file.open(inner_path, **open_kwargs) as file:
-                    with io.TextIOWrapper(file, encoding="utf-8") as text_file:
-                        yield text_file
-        else:
-            raise ValueError(f"Unknown mode: {open_kwargs['mode']}")
+        operation, representation = get_mode_pair(
+            open_kwargs.pop("mode"), unqualified_interpretation="binary"
+        )
+        with open_zipfile(
+            path=path,
+            inner_path=inner_path,
+            operation=operation,
+            representation=representation,
+            zipfile_kwargs=zipfile_kwargs,
+            open_kwargs=open_kwargs,
+        ) as file:
+            yield file
 
     # docstr-coverage:excused `overload`
     @overload

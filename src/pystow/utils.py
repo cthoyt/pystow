@@ -58,11 +58,17 @@ if TYPE_CHECKING:
     import rdflib
 
 __all__ = [
+    "MODE_MAP",
+    "OPERATION_VALUES",
+    "REPRESENTATION_VALUES",
+    "REVERSE_MODE_MAP",
     "DownloadBackend",
     "DownloadError",
     "Hash",
     "HexDigestError",
     "HexDigestMismatch",
+    "Operation",
+    "Representation",
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
     "download",
@@ -75,6 +81,7 @@ __all__ = [
     "get_hashes",
     "get_hexdigests_remote",
     "get_home",
+    "get_mode_pair",
     "get_name",
     "get_np_io",
     "get_offending_hexdigests",
@@ -133,6 +140,62 @@ OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
 #: A human-readable flag for how to open a file.
 Representation: TypeAlias = Literal["text", "binary"]
 REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
+
+#: Characters for "unqualified" modes, which might be interpreted
+#: differently by different functions
+UnqualifiedMode: TypeAlias = Literal["r", "w"]
+
+#: Characters for "qualified" modes, which are absolute (as opposed to
+#: :data:`UnqualifiedMode`, which is context-dependent)
+QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
+
+
+class ModePair(NamedTuple):
+    """A pair of operation and representation."""
+
+    operation: Operation
+    representation: Representation
+
+
+#: A mapping between operation/representation pairs and qualified modes
+MODE_MAP: dict[ModePair, QualifiedMode] = {
+    ModePair("read", "text"): "rt",
+    ModePair("read", "binary"): "rb",
+    ModePair("write", "text"): "wt",
+    ModePair("write", "binary"): "wb",
+}
+
+#: A mapping between qualified modes and operation/representation pairs
+REVERSE_MODE_MAP: dict[QualifiedMode, ModePair] = {
+    "rt": ModePair("read", "text"),
+    "rb": ModePair("read", "binary"),
+    "wt": ModePair("write", "text"),
+    "wb": ModePair("write", "binary"),
+}
+
+UNQUALIFIED_TEXT_MAP: dict[UnqualifiedMode, ModePair] = {
+    "r": ModePair("read", "text"),
+    "w": ModePair("write", "text"),
+}
+UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
+    "r": ModePair("read", "binary"),
+    "w": ModePair("write", "binary"),
+}
+
+
+def get_mode_pair(
+    mode: UnqualifiedMode | QualifiedMode,
+    unqualified_interpretation: Representation,
+) -> ModePair:
+    """Get the mode pair."""
+    if mode in REVERSE_MODE_MAP:
+        return REVERSE_MODE_MAP[mode]
+    if unqualified_interpretation == "text":
+        return UNQUALIFIED_TEXT_MAP[mode]
+    elif unqualified_interpretation == "binary":
+        return UNQUALIFIED_BINARY_MAP[mode]
+    else:
+        raise ValueError(f"invalid mode: {mode}")
 
 
 class HexDigestMismatch(NamedTuple):
@@ -735,19 +798,21 @@ def open_zipfile(
     *,
     operation: Operation = "read",
     representation: Representation,
+    zipfile_kwargs: dict[str, Any] | None = None,
+    open_kwargs: dict[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
     mode: Literal["r", "w"] = "r" if operation == "read" else "w"
     # there might be a better way to deal with the mode here
-    with zipfile.ZipFile(file=path, mode=mode) as zip_file:
-        with zip_file.open(inner_path, mode=mode) as binary_file:
+    with zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file:
+        with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
             if representation == "text":
                 with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
                     yield text_file
             elif representation == "binary":
                 yield cast(typing.BinaryIO, binary_file)
             else:
-                raise ValueError
+                raise ValueError(f"unsupported representation: {representation}")
 
 
 @contextlib.contextmanager
@@ -1282,14 +1347,6 @@ def gunzip(source: str | Path, target: str | Path) -> None:
     """
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
         shutil.copyfileobj(in_file, out_file)
-
-
-MODE_MAP: dict[tuple[Operation, Representation], Literal["rt", "wt", "rb", "wb"]] = {
-    ("read", "text"): "rt",
-    ("read", "binary"): "rb",
-    ("write", "text"): "wt",
-    ("write", "binary"): "wb",
-}
 
 
 # docstr-coverage:excused `overload`
