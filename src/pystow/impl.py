@@ -27,7 +27,7 @@ from typing import (
 )
 
 from . import utils
-from .constants import JSON, BytesOpener, Provider
+from .constants import JSON, BytesOpener, Opener, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -726,6 +726,36 @@ class Module:
             with tar_file.extractfile(inner_path) as file:  # type:ignore
                 yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_zip(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: str | None = ...,
+        force: bool = ...,
+        download_kwargs: Mapping[str, Any] | None = ...,
+        mode: Literal["r", "w", "rb", "wb"] = ...,
+        open_kwargs: Mapping[str, Any] | None = ...,
+    ) -> BytesOpener: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_zip(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: str | None = ...,
+        force: bool = ...,
+        download_kwargs: Mapping[str, Any] | None = ...,
+        mode: Literal["rt", "wt"] = ...,
+        open_kwargs: Mapping[str, Any] | None = ...,
+    ) -> Opener: ...
+
     @contextmanager
     def ensure_open_zip(
         self,
@@ -735,9 +765,9 @@ class Module:
         name: str | None = None,
         force: bool = False,
         download_kwargs: Mapping[str, Any] | None = None,
-        mode: str = "r",
+        mode: Literal["r", "w", "rb", "rt", "wb", "wt"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> BytesOpener:
+    ) -> BytesOpener | Opener:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
@@ -750,7 +780,8 @@ class Module:
             exists? Defaults to false.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
-        :param mode: The read mode, passed to :func:`zipfile.open`
+        :param mode: The read mode, passed to :func:`zipfile.open`. Defaults to bytes mode
+            for ``r`` and ``w``.
         :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
 
         :yields: An open file object
@@ -760,9 +791,18 @@ class Module:
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
-        with zipfile.ZipFile(file=path) as zip_file:
-            with zip_file.open(inner_path) as file:
-                yield file
+
+        if open_kwargs["mode"] in {"r", "w", "rb", "wb"}:
+            with zipfile.ZipFile(file=path) as zip_file:
+                with zip_file.open(inner_path, **open_kwargs) as file:
+                    yield file
+        elif open_kwargs["mode"] in {"rt", "wt"}:
+            with zipfile.ZipFile(file=path) as zip_file:
+                with zip_file.open(inner_path, **open_kwargs) as file:
+                    with io.TextIOWrapper(file, encoding="utf-8") as text_file:
+                        yield text_file
+        else:
+            raise ValueError(f"Unknown mode: {open_kwargs['mode']}")
 
     # docstr-coverage:excused `overload`
     @overload
