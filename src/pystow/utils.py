@@ -59,6 +59,8 @@ __all__ = [
     "Hash",
     "HexDigestError",
     "HexDigestMismatch",
+    "InvalidOperationError",
+    "InvalidRepresentationError",
     "Operation",
     "Representation",
     "UnexpectedDirectory",
