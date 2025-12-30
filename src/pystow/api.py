@@ -12,14 +12,9 @@ from contextlib import contextmanager
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Literal, overload
 
-from .constants import JSON, BytesOpener, Provider
+from .constants import JSON, Provider
 from .impl import Module, VersionHint
 
 if TYPE_CHECKING:
@@ -694,6 +689,38 @@ def ensure_open_lzma(
         yield yv
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_tarfile(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: str | None = ...,
+    force: bool = False,
+    download_kwargs: Mapping[str, Any] | None = ...,
+    mode: Literal["rt"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextmanager
+def ensure_open_tarfile(
+    key: str,
+    *subkeys: str,
+    url: str,
+    inner_path: str,
+    name: str | None = ...,
+    force: bool = False,
+    download_kwargs: Mapping[str, Any] | None = ...,
+    mode: Literal["r", "rb"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.IO[bytes], None, None]: ...
+
+
 @contextmanager
 def ensure_open_tarfile(
     key: str,
@@ -703,9 +730,9 @@ def ensure_open_tarfile(
     name: str | None = None,
     force: bool = False,
     download_kwargs: Mapping[str, Any] | None = None,
-    mode: str = "r",
+    mode: Literal["r", "rb", "rt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> BytesOpener:
+) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
     """Ensure a tar file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`

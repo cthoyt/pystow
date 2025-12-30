@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, overload
 
 from . import utils
-from .constants import JSON, BytesOpener, Provider
+from .constants import JSON, Provider
 from .utils import (
     base_from_gzip_name,
     download_from_google,
@@ -31,6 +31,7 @@ from .utils import (
     mkdir,
     name_from_s3_key,
     name_from_url,
+    open_tarfile,
     open_zipfile,
     path_to_sqlite,
     read_rdf,
@@ -683,6 +684,36 @@ class Module:
         with lzma.open(path, **open_kwargs) as file:
             yield file
 
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_tarfile(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: str | None = ...,
+        force: bool = ...,
+        download_kwargs: Mapping[str, Any] | None = ...,
+        mode: Literal["rt"] = ...,
+        open_kwargs: Mapping[str, Any] | None = ...,
+    ) -> Generator[typing.TextIO, None, None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    @contextmanager
+    def ensure_open_tarfile(
+        self,
+        *subkeys: str,
+        url: str,
+        inner_path: str,
+        name: str | None = ...,
+        force: bool = ...,
+        download_kwargs: Mapping[str, Any] | None = ...,
+        mode: Literal["r", "rb"] = ...,
+        open_kwargs: Mapping[str, Any] | None = ...,
+    ) -> Generator[typing.IO[bytes], None, None]: ...
+
     @contextmanager
     def ensure_open_tarfile(
         self,
@@ -692,9 +723,9 @@ class Module:
         name: str | None = None,
         force: bool = False,
         download_kwargs: Mapping[str, Any] | None = None,
-        mode: str = "r",
+        mode: Literal["r", "rb", "rt"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> BytesOpener:
+    ) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
         """Ensure a tar file is downloaded and open a file inside it.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
@@ -717,9 +748,16 @@ class Module:
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
-        with tarfile.open(path, **open_kwargs) as tar_file:
-            with tar_file.extractfile(inner_path) as file:  # type:ignore
-                yield file
+        operation, representation = get_mode_pair(open_kwargs.pop("mode"), interpretation="binary")
+
+        with open_tarfile(
+            path=path,
+            inner_path=inner_path,
+            operation=operation,
+            representation=representation,
+            open_kwargs=open_kwargs,
+        ) as file:
+            yield file
 
     # docstr-coverage:excused `overload`
     @overload
@@ -732,7 +770,7 @@ class Module:
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: Mapping[str, Any] | None = ...,
-        mode: Literal["r", "w", "rb", "wb"] = ...,
+        mode: Literal["r", "rb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.BinaryIO, None, None]: ...
 
@@ -747,7 +785,7 @@ class Module:
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: Mapping[str, Any] | None = ...,
-        mode: Literal["rt", "wt"] = ...,
+        mode: Literal["rt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.TextIO, None, None]: ...
 
@@ -760,7 +798,7 @@ class Module:
         name: str | None = None,
         force: bool = False,
         download_kwargs: Mapping[str, Any] | None = None,
-        mode: Literal["r", "w", "rb", "rt", "wb", "wt"] = "r",
+        mode: Literal["r", "rb", "rt"] = "r",
         zipfile_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:

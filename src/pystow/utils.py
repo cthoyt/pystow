@@ -86,8 +86,10 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_tarfile",
     "open_zip_reader",
     "open_zip_writer",
+    "open_zipfile",
     "path_to_sqlite",
     "raise_on_digest_mismatch",
     "read_rdf",
@@ -792,7 +794,14 @@ def open_zipfile(
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
-    mode: Literal["r", "w"] = "r" if operation == "read" else "w"
+    mode: Literal["r", "w"]
+    if operation == "read":
+        mode = "r"
+    elif operation == "write":
+        mode = "w"
+    else:
+        raise InvalidOperationError(operation)
+
     # there might be a better way to deal with the mode here
     with zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file:
         with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
@@ -802,7 +811,7 @@ def open_zipfile(
             elif representation == "binary":
                 yield cast(typing.BinaryIO, binary_file)
             else:
-                raise ValueError(f"unsupported representation: {representation}")
+                raise InvalidRepresentationError(representation)
 
 
 @contextlib.contextmanager
@@ -812,13 +821,14 @@ def open_tarfile(
     *,
     operation: Operation = "read",
     representation: Representation = "binary",
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.IO[bytes], None, None]:
     """Open a tar file."""
     if representation != "binary":
-        raise NotImplementedError
+        raise NotImplementedError("tarfile must use binary representation")
 
     if operation == "read":
-        with tarfile.open(path, "r") as tar:
+        with tarfile.open(path, "r", **(open_kwargs or {})) as tar:
             member = tar.getmember(inner_path)
             file = tar.extractfile(member)
             if file is None:
@@ -833,7 +843,34 @@ def open_tarfile(
         with tarfile.TarFile(path, mode="w") as tar_file:
             tar_file.addfile(tarinfo, file)
     else:
-        raise ValueError
+        raise InvalidOperationError(operation)
+
+
+class InvalidRepresentationError(ValueError):
+    """Raised when passing an invalid representation."""
+
+    def __init__(self, representation: str) -> None:
+        """Instantiate the exception."""
+        self.representation = representation
+
+    def __str__(self) -> str:
+        """Create a string for the exception."""
+        return (
+            f"Invalid representation: {self.representation}. "
+            f"Should be one of {REPRESENTATION_VALUES}."
+        )
+
+
+class InvalidOperationError(ValueError):
+    """Raised when passing an invalid operation."""
+
+    def __init__(self, operation: str) -> None:
+        """Instantiate the exception."""
+        self.operation = operation
+
+    def __str__(self) -> str:
+        """Create a string for the exception."""
+        return f"Invalid operation: {self.operation}. Should be one of {OPERATION_VALUES}."
 
 
 @contextlib.contextmanager
@@ -1361,14 +1398,9 @@ def safe_open(
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
-        raise ValueError(
-            f"Invalid operation given: {operation}. Should be one of {OPERATION_VALUES}."
-        )
+        raise InvalidOperationError(operation)
     if representation not in REPRESENTATION_VALUES:
-        raise ValueError(
-            f"Invalid representation given: {representation}. "
-            f"Should be one of {REPRESENTATION_VALUES}."
-        )
+        raise InvalidRepresentationError(representation)
 
     mode = MODE_MAP[operation, representation]
     path = Path(path).expanduser().resolve()
