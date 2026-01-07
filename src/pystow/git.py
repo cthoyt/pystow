@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import shutil
-import tempfile
 from contextlib import contextmanager
-from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess, run
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+    from pathlib import Path
+    from subprocess import CompletedProcess
 
 __all__ = [
     "clone_github_tempdir",
@@ -21,6 +19,7 @@ __all__ = [
     "get_current_branch",
     "git",
     "has_local_branch",
+    "is_likely_default_branch",
     "push",
 ]
 
@@ -36,6 +35,10 @@ def clone_github_tempdir(owner: str, repo: str) -> Generator[Path, None, None]:
 @contextmanager
 def clone_tempdir(url: str) -> Generator[Path, None, None]:
     """Temporarily clone a repository from a URL."""
+    import shutil
+    import tempfile
+    from pathlib import Path
+
     with tempfile.TemporaryDirectory() as directory_:
         directory = Path(directory_)
         clone(directory, url)
@@ -43,7 +46,7 @@ def clone_tempdir(url: str) -> Generator[Path, None, None]:
         shutil.rmtree(directory)
 
 
-GitReturn: TypeAlias = CompletedProcess[str] | CalledProcessError
+GitReturn: TypeAlias = "CompletedProcess[str]"
 
 
 def git(directory: Path, *args: str) -> GitReturn:
@@ -58,17 +61,14 @@ def clone(directory: Path, url: str) -> GitReturn:
 
 
 def _check_output(*args: str, directory: Path | None = None) -> GitReturn:
-    try:
-        completed_process = run(  # noqa: S603
-            args,
-            cwd=None if directory is None else directory.as_posix(),
-            capture_output=True,
-            text=True,
-        )
-    except CalledProcessError as e:
-        return e
-    else:
-        return completed_process
+    from subprocess import run
+
+    return run(  # noqa: S603
+        args,
+        cwd=None if directory is None else directory.as_posix(),
+        capture_output=True,
+        text=True,
+    )
 
 
 def commit(directory: Path, message: str) -> GitReturn:
@@ -92,13 +92,7 @@ def fetch(directory: Path) -> GitReturn:
 def has_local_branch(directory: Path, branch: str) -> bool:
     """Check if a branch exists in the git repo."""
     completed_process = git(directory, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")
-    match completed_process.returncode:
-        case 0:
-            return True
-        case 1:
-            return False
-        case other:
-            raise RuntimeError(f"unexpected return code: {other}")
+    return completed_process.returncode == 0
 
 
 def get_current_branch(directory: Path) -> str:
@@ -110,3 +104,11 @@ def get_current_branch(directory: Path) -> str:
 def create_branch(directory: Path, branch: str) -> GitReturn:
     """Create a branch and check it out."""
     return git(directory, "checkout", "-b", branch)
+
+
+LIKELY_DEFAULT_BRANCHES = {"master", "main"}
+
+
+def is_likely_default_branch(directory: Path) -> bool:
+    """Guess if the current branch is the "default"."""
+    return get_current_branch(directory) in LIKELY_DEFAULT_BRANCHES
