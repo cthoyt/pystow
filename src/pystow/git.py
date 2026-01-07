@@ -111,4 +111,4 @@ LIKELY_DEFAULT_BRANCHES = {"master", "main"}
 
 def guess_if_default_branch(directory: Path) -> bool:
     """Guess if the current branch is the "default"."""
-    return get_current_branch(directory) not in LIKELY_DEFAULT_BRANCHES
+    return get_current_branch(directory) in LIKELY_DEFAULT_BRANCHES
