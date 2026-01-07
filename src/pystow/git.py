@@ -8,7 +8,7 @@ import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from subprocess import CalledProcessError, check_output
+from subprocess import CalledProcessError, CompletedProcess, run
 from typing import TypeAlias
 
 __all__ = [
@@ -20,14 +20,6 @@ __all__ = [
     "push",
     "temporary_git_clone",
 ]
-
-
-@contextmanager
-def temporary_git_clone_new_branch(url: str, name: str) -> Generator[Path, None, None]:
-    """Temporarily clone a repository from a URL, create the given branch, and switch to it."""
-    with temporary_git_clone(url) as directory:
-        create_branch(directory, name)
-        yield directory
 
 
 @contextmanager
@@ -48,32 +40,33 @@ def temporary_git_clone(url: str) -> Generator[Path, None, None]:
         shutil.rmtree(directory)
 
 
-GitReturn: TypeAlias = str | CalledProcessError
+GitReturn: TypeAlias = CompletedProcess[str] | CalledProcessError
 
 
 def git(directory: Path, *args: str) -> GitReturn:
     """Run the git command with the given arguments in the given directory."""
-    return _check_output(["git", *args], directory)
+    return _check_output("git", *args, directory=directory)
 
 
 def clone(directory: Path, url: str) -> GitReturn:
     """Clone the git repository with the given URL."""
     args = ["git", "clone", url, directory.as_posix()]
-    return _check_output(args, directory)
+    return _check_output(*args, directory=directory)
 
 
-def _check_output(args, directory: Path | None = None) -> GitReturn:
-    with open(os.devnull, "w") as devnull:
+def _check_output(*args: str, directory: Path | None = None) -> GitReturn:
+    with open(os.devnull, "w"):
         try:
-            ret = check_output(  # noqa: S603
+            completed_process = run(  # noqa: S603
                 args,
                 cwd=None if directory is None else directory.as_posix(),
-                stderr=devnull,
+                capture_output=True,
+                text=True,
             )
         except CalledProcessError as e:
             return e
         else:
-            return ret.strip().decode("utf-8")
+            return completed_process
 
 
 def commit(directory: Path, message: str) -> GitReturn:
@@ -94,9 +87,22 @@ def fetch(directory: Path) -> GitReturn:
     return git(directory, "fetch", "--all")
 
 
-def get_current_branch(directory: Path) -> GitReturn:
+def has_local_branch(directory: Path, branch: str) -> bool:
+    """Check if a branch exists in the git repo."""
+    completed_process = git(directory, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")
+    match completed_process.returncode:
+        case 0:
+            return True
+        case 1:
+            return False
+        case other:
+            raise RuntimeError(f"unexpected return code: {other}")
+
+
+def get_current_branch(directory: Path) -> str:
     """Return if on the master/main branch."""
-    return git(directory, "rev-parse", "--abbrev-ref", "HEAD")
+    completed_process = git(directory, "rev-parse", "--abbrev-ref", "HEAD")
+    return completed_process.stdout.strip()
 
 
 def create_branch(directory: Path, branch: str) -> GitReturn:
