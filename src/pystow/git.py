@@ -18,8 +18,8 @@ __all__ = [
     "fetch",
     "get_current_branch",
     "git",
-    "guess_if_default_branch",
     "has_local_branch",
+    "is_likely_default_branch",
     "push",
 ]
 
@@ -109,6 +109,6 @@ def create_branch(directory: Path, branch: str) -> GitReturn:
 LIKELY_DEFAULT_BRANCHES = {"master", "main"}
 
 
-def guess_if_default_branch(directory: Path) -> bool:
+def is_likely_default_branch(directory: Path) -> bool:
     """Guess if the current branch is the "default"."""
     return get_current_branch(directory) in LIKELY_DEFAULT_BRANCHES
