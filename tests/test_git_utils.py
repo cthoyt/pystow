@@ -2,7 +2,7 @@
 
 import unittest
 
-from pystow.git import create_branch, get_current_branch, has_local_branch, temporary_github_clone
+from pystow.git import clone_github_tempdir, create_branch, get_current_branch, has_local_branch
 
 
 class TestGitUtils(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestGitUtils(unittest.TestCase):
         """Test temporarily cloning a GitHub repository."""
         name = "test-branch-name"
 
-        with temporary_github_clone("cthoyt", "cthoyt") as directory:
+        with clone_github_tempdir("cthoyt", "cthoyt") as directory:
             self.assertTrue(directory.joinpath("README.md").is_file())
             self.assertEqual("master", get_current_branch(directory))
 
@@ -21,5 +21,5 @@ class TestGitUtils(unittest.TestCase):
             self.assertTrue(has_local_branch(directory, name))
 
         # Test if we do this again, the branch didn't persist
-        with temporary_github_clone("cthoyt", "cthoyt") as directory:
+        with clone_github_tempdir("cthoyt", "cthoyt") as directory:
             self.assertFalse(has_local_branch(directory, name))

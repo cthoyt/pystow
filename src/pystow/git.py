@@ -2,36 +2,39 @@
 
 from __future__ import annotations
 
-import os
 import shutil
 import tempfile
-from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess, run
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 __all__ = [
+    "clone_github_tempdir",
+    "clone_tempdir",
     "commit",
     "create_branch",
     "fetch",
     "get_current_branch",
     "git",
+    "has_local_branch",
     "push",
-    "temporary_git_clone",
 ]
 
 
 @contextmanager
-def temporary_github_clone(owner: str, repo: str) -> Generator[Path, None, None]:
+def clone_github_tempdir(owner: str, repo: str) -> Generator[Path, None, None]:
     """Temporarily clone a repository from a URL."""
     url = f"https://github.com/{owner}/{repo}.git"
-    with temporary_git_clone(url) as directory:
+    with clone_tempdir(url) as directory:
         yield directory
 
 
 @contextmanager
-def temporary_git_clone(url: str) -> Generator[Path, None, None]:
+def clone_tempdir(url: str) -> Generator[Path, None, None]:
     """Temporarily clone a repository from a URL."""
     with tempfile.TemporaryDirectory() as directory_:
         directory = Path(directory_)
@@ -55,18 +58,17 @@ def clone(directory: Path, url: str) -> GitReturn:
 
 
 def _check_output(*args: str, directory: Path | None = None) -> GitReturn:
-    with open(os.devnull, "w"):
-        try:
-            completed_process = run(  # noqa: S603
-                args,
-                cwd=None if directory is None else directory.as_posix(),
-                capture_output=True,
-                text=True,
-            )
-        except CalledProcessError as e:
-            return e
-        else:
-            return completed_process
+    try:
+        completed_process = run(  # noqa: S603
+            args,
+            cwd=None if directory is None else directory.as_posix(),
+            capture_output=True,
+            text=True,
+        )
+    except CalledProcessError as e:
+        return e
+    else:
+        return completed_process
 
 
 def commit(directory: Path, message: str) -> GitReturn:
