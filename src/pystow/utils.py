@@ -1468,11 +1468,8 @@ def safe_open_writer(
 
     :yields: A CSV writer object, constructed from :func:`csv.writer`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="write", representation="text") as file:
-            yield csv.writer(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.writer(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="write", representation="text") as file:
+        yield csv.writer(file, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1492,11 +1489,8 @@ def safe_open_dict_writer(
 
     :yields: A CSV dictionary writer object, constructed from :func:`csv.DictWriter`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="write", representation="text") as file:
-            yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.DictWriter(f, fieldnames, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="write", representation="text") as file:
+        yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1511,11 +1505,8 @@ def safe_open_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.reader`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="read", representation="text") as file:
-            yield csv.reader(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.reader(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="read", representation="text") as file:
+        yield csv.reader(file, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1530,11 +1521,8 @@ def safe_open_dict_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.DictReader`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="read", representation="text") as file:
-            yield csv.DictReader(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.DictReader(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="read", representation="text") as file:
+        yield csv.DictReader(file, delimiter=delimiter, **kwargs)
 
 
 def get_soup(
