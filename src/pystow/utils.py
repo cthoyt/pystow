@@ -1382,7 +1382,21 @@ def gunzip(source: str | Path, target: str | Path) -> None:
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = ..., representation: Literal["text"] = "text"
+    path: typing.BinaryIO,
+    *,
+    operation: Operation = ...,
+    representation: Representation = ...,
+) -> Generator[typing.BinaryIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: typing.TextIO,
+    *,
+    operation: Operation = ...,
+    representation: Representation = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1390,13 +1404,30 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = ..., representation: Literal["binary"] = "binary"
+    path: str | Path,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = "text",
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: str | Path,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = "binary",
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = "read", representation: Representation = "text"
+    path: str | Path | typing.TextIO | typing.BinaryIO,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1404,14 +1435,25 @@ def safe_open(
     if representation not in REPRESENTATION_VALUES:
         raise InvalidRepresentationError(representation)
 
-    mode = MODE_MAP[operation, representation]
-    path = Path(path).expanduser().resolve()
-    if path.suffix.endswith(".gz"):
-        with gzip.open(path, mode=mode) as file:
-            yield file  # type:ignore
+    if isinstance(path, (str, Path)):
+        mode = MODE_MAP[operation, representation]
+        path = Path(path).expanduser().resolve()
+        if path.suffix.endswith(".gz"):
+            with gzip.open(path, mode=mode) as file:
+                yield file  # type:ignore
+        else:
+            with open(path, mode=mode) as file:
+                yield file  # type:ignore
+    elif isinstance(path, typing.TextIO):
+        if representation != "text":
+            raise ValueError
+        yield path
+    elif isinstance(path, typing.BinaryIO):
+        if representation != "binary":
+            raise ValueError
+        yield path
     else:
-        with open(path, mode=mode) as file:
-            yield file  # type:ignore
+        raise TypeError
 
 
 @contextlib.contextmanager
@@ -1426,11 +1468,8 @@ def safe_open_writer(
 
     :yields: A CSV writer object, constructed from :func:`csv.writer`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="write", representation="text") as file:
-            yield csv.writer(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.writer(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="write", representation="text") as file:
+        yield csv.writer(file, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1450,11 +1489,8 @@ def safe_open_dict_writer(
 
     :yields: A CSV dictionary writer object, constructed from :func:`csv.DictWriter`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="write", representation="text") as file:
-            yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.DictWriter(f, fieldnames, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="write", representation="text") as file:
+        yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1469,11 +1505,8 @@ def safe_open_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.reader`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="read", representation="text") as file:
-            yield csv.reader(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.reader(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="read", representation="text") as file:
+        yield csv.reader(file, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
@@ -1488,11 +1521,8 @@ def safe_open_dict_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.DictReader`
     """
-    if isinstance(f, (str, Path)):
-        with safe_open(f, operation="read", representation="text") as file:
-            yield csv.DictReader(file, delimiter=delimiter, **kwargs)
-    else:
-        yield csv.DictReader(f, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="read", representation="text") as file:
+        yield csv.DictReader(file, delimiter=delimiter, **kwargs)
 
 
 def get_soup(
