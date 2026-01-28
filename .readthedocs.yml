@@ -24,5 +24,5 @@ build:
     - asdf install uv latest
     - asdf global uv latest
     - uv venv $READTHEDOCS_VIRTUALENV_PATH
-    - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv pip install .[docs,rdf,pandas,xml,aws,yaml]
+    - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv pip install .[docs,rdf,pandas,xml,aws,yaml,pydantic]
     - python -m sphinx -T -b html -d docs/_build/doctrees -D language=en docs/source $READTHEDOCS_OUTPUT/html

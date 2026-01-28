@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import os
 import tempfile
 import unittest
@@ -31,6 +32,7 @@ from pystow.utils import (
     open_zip_reader,
     open_zip_writer,
     open_zipfile,
+    read_pydantic_jsonl,
     read_tarfile_csv,
     read_tarfile_xml,
     read_zip_np,
@@ -40,6 +42,7 @@ from pystow.utils import (
     safe_open_dict_reader,
     safe_open_reader,
     safe_open_writer,
+    write_pydantic_jsonl,
     write_tarfile_csv,
     write_tarfile_xml,
     write_zipfile_csv,
@@ -282,6 +285,23 @@ class TestUtils(unittest.TestCase):
             with open_tarfile(path, inner, operation="read") as file:
                 self.assertEqual(b"c1\tc2\n", next(file))
                 self.assertEqual(b"v1\tv2", next(file))
+
+    @unittest.skipUnless(importlib.util.find_spec("pydantic"), "pydantic not installed")
+    def test_pydantic_io(self) -> None:
+        """Test writing Pydantic."""
+        from pydantic import BaseModel
+
+        class Model(BaseModel):
+            """A test model."""
+
+            name: str
+
+        models = [Model(name=f"test {i}") for i in range(3)]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("data.jsonl")
+            write_pydantic_jsonl(models, path)
+            reconstituted = read_pydantic_jsonl(path, Model)
+            self.assertEqual(models, reconstituted)
 
 
 class TestDownload(unittest.TestCase):
