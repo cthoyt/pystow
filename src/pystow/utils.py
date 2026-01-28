@@ -1382,7 +1382,21 @@ def gunzip(source: str | Path, target: str | Path) -> None:
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = ..., representation: Literal["text"] = "text"
+    path: typing.BinaryIO,
+    *,
+    operation: Operation = ...,
+    representation: Representation = ...,
+) -> Generator[typing.BinaryIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: typing.TextIO,
+    *,
+    operation: Operation = ...,
+    representation: Representation = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1390,13 +1404,30 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = ..., representation: Literal["binary"] = "binary"
+    path: str | Path,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = "text",
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def safe_open(
+    path: str | Path,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = "binary",
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path, *, operation: Operation = "read", representation: Representation = "text"
+    path: str | Path | typing.TextIO | typing.BinaryIO,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1404,14 +1435,25 @@ def safe_open(
     if representation not in REPRESENTATION_VALUES:
         raise InvalidRepresentationError(representation)
 
-    mode = MODE_MAP[operation, representation]
-    path = Path(path).expanduser().resolve()
-    if path.suffix.endswith(".gz"):
-        with gzip.open(path, mode=mode) as file:
-            yield file  # type:ignore
+    if isinstance(path, (str, Path)):
+        mode = MODE_MAP[operation, representation]
+        path = Path(path).expanduser().resolve()
+        if path.suffix.endswith(".gz"):
+            with gzip.open(path, mode=mode) as file:
+                yield file  # type:ignore
+        else:
+            with open(path, mode=mode) as file:
+                yield file  # type:ignore
+    elif isinstance(path, typing.TextIO):
+        if representation != "text":
+            raise ValueError
+        yield path
+    elif isinstance(path, typing.BinaryIO):
+        if representation != "binary":
+            raise ValueError
+        yield path
     else:
-        with open(path, mode=mode) as file:
-            yield file  # type:ignore
+        raise TypeError
 
 
 @contextlib.contextmanager
