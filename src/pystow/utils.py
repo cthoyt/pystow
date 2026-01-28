@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     import lxml.etree
     import numpy.typing
     import pandas
+    import pydantic
     import rdflib
 
 __all__ = [
@@ -94,6 +95,7 @@ __all__ = [
     "open_zipfile",
     "path_to_sqlite",
     "raise_on_digest_mismatch",
+    "read_pydantic_jsonl",
     "read_rdf",
     "read_tarfile_csv",
     "read_tarfile_xml",
@@ -108,6 +110,7 @@ __all__ = [
     "safe_open_writer",
     "write_lzma_csv",
     "write_pickle_gz",
+    "write_pydantic_jsonl",
     "write_tarfile_csv",
     "write_tarfile_xml",
     "write_zipfile_csv",
@@ -1552,3 +1555,30 @@ def get_soup(
     res = requests.get(url, verify=verify, timeout=timeout or 15, headers=headers)
     soup = BeautifulSoup(res.text, features="html.parser")
     return soup
+
+
+def write_pydantic_jsonl(
+    models: Iterable[pydantic.BaseModel], file: str | Path | TextIO, **kwargs: Any
+) -> None:
+    """Write models to a file as JSONL."""
+    kwargs.setdefault("exclude_none", True)
+    kwargs.setdefault("exclude_unset", True)
+    kwargs.setdefault("exclude_defaults", True)
+    with safe_open(file, operation="write", representation="text") as file:
+        for model in models:
+            file.write(model.model_dump_json(**kwargs) + "\n")
+
+
+M = typing.TypeVar("M", bound="pydantic.BaseModel")
+
+
+def read_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> list[M]:
+    """Read models to a file as JSONL."""
+    return list(_iterread_pydantic_jsonl(file, model_cls))
+
+
+def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> Iterable[M]:
+    """Read models to a file as JSONL."""
+    with safe_open(file, operation="read", representation="text") as file:
+        for line in file:
+            yield model_cls.model_validate_json(line)
