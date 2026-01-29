@@ -774,7 +774,7 @@ def open_zipfile(
     inner_path: str,
     *,
     operation: Operation = ...,
-    representation: Literal["text"],
+    representation: Literal["text"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
@@ -788,7 +788,7 @@ def open_zipfile(
     inner_path: str,
     *,
     operation: Operation = ...,
-    representation: Literal["binary"],
+    representation: Literal["binary"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
@@ -800,7 +800,7 @@ def open_zipfile(
     inner_path: str,
     *,
     operation: Operation = "read",
-    representation: Representation,
+    representation: Representation = "text",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
@@ -826,8 +826,8 @@ def open_inner_zipfile(
     zip_file: zipfile.ZipFile,
     inner_path: str,
     *,
-    operation: Operation,
-    representation: Literal["text"],
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
@@ -839,8 +839,8 @@ def open_inner_zipfile(
     zip_file: zipfile.ZipFile,
     inner_path: str,
     *,
-    operation: Operation,
-    representation: Literal["binary"],
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
@@ -850,8 +850,8 @@ def open_inner_zipfile(
     zip_file: zipfile.ZipFile,
     inner_path: str,
     *,
-    operation: Operation,
-    representation: Representation,
+    operation: Operation = "read",
+    representation: Representation = "text",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a file inside an already opened zip archive."""
