@@ -813,19 +813,47 @@ def open_zipfile(
             operation=operation,
             representation=representation,
             open_kwargs=open_kwargs,
-        ) as file
+        ) as file,
     ):
         yield file
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_inner_zipfile(
+    zip_file: zipfile.ZipFile,
+    inner_path: str,
+    *,
+    operation: Operation,
+    representation: Literal["text"],
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_inner_zipfile(
+    zip_file: zipfile.ZipFile,
+    inner_path: str,
+    *,
+    operation: Operation,
+    representation: Literal["binary"],
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[typing.BinaryIO, None, None]: ...
 
 
 @contextlib.contextmanager
 def open_inner_zipfile(
     zip_file: zipfile.ZipFile,
     inner_path: str,
+    *,
     operation: Operation,
     representation: Representation,
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[typing.TextIO, None, None]:
+) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
+    """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
