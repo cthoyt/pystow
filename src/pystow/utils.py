@@ -150,6 +150,11 @@ QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
 
 ModePair: TypeAlias = tuple[Operation, Representation]
 
+_MODE_TO_SIMPLE: Mapping[Operation, UnqualifiedMode] = {
+    "read": "r",
+    "write": "w",
+}
+
 #: A mapping between operation/representation pairs and qualified modes
 MODE_MAP: dict[ModePair, QualifiedMode] = {
     ("read", "text"): "rt",
@@ -799,24 +804,37 @@ def open_zipfile(
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
-    mode: Literal["r", "w"]
-    if operation == "read":
-        mode = "r"
-    elif operation == "write":
-        mode = "w"
-    else:
-        raise InvalidOperationError(operation)
+    mode = _MODE_TO_SIMPLE[operation]
+    with (
+        zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file,
+        open_inner_zipfile(
+            zip_file,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            open_kwargs=open_kwargs,
+        ) as file
+    ):
+        yield file
 
-    # there might be a better way to deal with the mode here
-    with zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file:
-        with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
-            if representation == "text":
-                with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
-                    yield text_file
-            elif representation == "binary":
-                yield cast(typing.BinaryIO, binary_file)
-            else:
-                raise InvalidRepresentationError(representation)
+
+@contextlib.contextmanager
+def open_inner_zipfile(
+    zip_file: zipfile.ZipFile,
+    inner_path: str,
+    operation: Operation,
+    representation: Representation,
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Generator[typing.TextIO, None, None]:
+    mode = _MODE_TO_SIMPLE[operation]
+    with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
+        if representation == "text":
+            with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
+                yield text_file
+        elif representation == "binary":
+            yield cast(typing.BinaryIO, binary_file)
+        else:
+            raise InvalidRepresentationError(representation)
 
 
 @contextlib.contextmanager
