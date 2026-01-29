@@ -89,6 +89,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_inner_zipfile",
     "open_tarfile",
     "open_zip_reader",
     "open_zip_writer",
