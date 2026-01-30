@@ -2,9 +2,8 @@
 
 import tempfile
 import unittest
-from pathlib import Path
 
-from pystow.graph import MemoryGraph, construct
+from pystow.graph import construct
 
 
 class TestGraph(unittest.TestCase):
@@ -21,9 +20,10 @@ class TestGraph(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            directory = Path(tmpdir)
-            construct(lambda: edges, directory, sort_nodes=True, progress=False)
-            graph = MemoryGraph.from_directory(directory)
+            with self.assertRaises(ValueError):
+                construct(edges, tmpdir)
+
+            graph = construct(lambda: edges, tmpdir, sort_nodes=True, progress=False)
 
             self.assertEqual({"b", "c", "d"}, set(graph.get_out_edges("a")))
             self.assertEqual({"d"}, set(graph.get_out_edges("b")))

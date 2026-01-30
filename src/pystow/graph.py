@@ -99,13 +99,20 @@ class MemoryGraph:
 
 def construct(
     edges: Callable[[], Iterable[tuple[str, str]]],
-    directory: Path,
+    directory: str | Path,
     *,
     sort_nodes: bool = False,
     progress: bool = True,
     estimated_edges: int | None = None,
-) -> None:
+) -> MemoryGraph:
     """Construct a memory graph."""
+    if not callable(edges):
+        raise ValueError(
+            "`edges` argument must be callable. This is because construction "
+            "takes three passes, so it's better that a function that can iterate "
+            "is given, to avoid needing to load into memory. If you already have "
+            "your graph in memory, pass edges=lambda: edges`"
+        )
     paths = Paths.from_directory(directory)
     nodes: set[str] = set()
     n_edges = 0
@@ -170,3 +177,5 @@ def construct(
     rev_indptr.tofile(paths.reverse_index_pointer)
     fwd_indices.flush()
     rev_indices.flush()
+
+    return MemoryGraph(paths)
