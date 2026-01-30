@@ -21,7 +21,7 @@ class TestGraph(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with self.assertRaises(ValueError):
-                build_digraph_cache(edges, tmpdir)
+                build_digraph_cache(edges, tmpdir)  # type:ignore[arg-type]
 
             graph = build_digraph_cache(lambda: edges, tmpdir, sort_nodes=True, progress=False)
 
