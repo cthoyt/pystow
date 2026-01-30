@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import importlib.util
 import os
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +26,7 @@ from pystow.utils import (
     get_hash_hexdigest,
     get_hexdigests_remote,
     getenv_path,
+    iter_zipped_csv_readers,
     mkdir,
     mock_envvar,
     n,
@@ -302,6 +305,22 @@ class TestUtils(unittest.TestCase):
             write_pydantic_jsonl(models, path)
             reconstituted = read_pydantic_jsonl(path, Model)
             self.assertEqual(models, reconstituted)
+
+    def test_zip_csvs(self) -> None:
+        """Test reading many CSVs from insize a zip file."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.zip")
+            with zipfile.ZipFile(path, "w") as zip_file:
+                for i in range(4):
+                    with zip_file.open(f"test-{i}", "w") as file:
+                        writer = csv.writer(file)
+                        writer.writerow(("c1", "c2"))
+                        for j in range(4):
+                            writer.writerow((f"key-{i}-{j}", f"value-{i}-{j}"))
+
+            with iter_zipped_csv_readers(path) as rows:
+                rows_l = list(rows)
+                self.assertEqual([], rows_l)
 
 
 class TestDownload(unittest.TestCase):

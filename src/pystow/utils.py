@@ -17,12 +17,21 @@ import tempfile
 import typing
 import urllib.error
 import zipfile
-from collections.abc import Collection, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast, Callable, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    NamedTuple,
+    TextIO,
+    TypeAlias,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -54,7 +63,6 @@ __all__ = [
     "MODE_MAP",
     "OPERATION_VALUES",
     "REPRESENTATION_VALUES",
-    "iterate_tar_info",
     "REVERSE_MODE_MAP",
     "DownloadBackend",
     "DownloadError",
@@ -84,6 +92,7 @@ __all__ = [
     "get_soup",
     "getenv_path",
     "gunzip",
+    "iterate_tar_info",
     "mkdir",
     "mock_envvar",
     "mock_home",
@@ -1633,11 +1642,15 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
 
 
 @overload
-def iterate_tar_info(tar: tarfile.TarFile, representation: Literal["binary"]) -> Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]: ...
+def iterate_tar_info(
+    tar: tarfile.TarFile, representation: Literal["binary"]
+) -> Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]: ...
 
 
 @overload
-def iterate_tar_info(tar: tarfile.TarFile, representation: Literal["text"]) -> Iterable[tuple[tarfile.TarInfo, TextIO]]: ...
+def iterate_tar_info(
+    tar: tarfile.TarFile, representation: Literal["text"]
+) -> Iterable[tuple[tarfile.TarInfo, TextIO]]: ...
 
 
 def iterate_tar_info(
@@ -1646,7 +1659,7 @@ def iterate_tar_info(
     representation: Representation = "text",
     progress: bool = True,
     tqdm_kwargs: dict[str, Any] | None = None,
-    keep: Callable[[tarfile.TarInfo], bool] | None = None
+    keep: Callable[[tarfile.TarInfo], bool] | None = None,
 ) -> Iterable[tuple[tarfile.TarInfo, TextIO]] | Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]:
     """
 
@@ -1675,12 +1688,10 @@ def iterate_tar_info(
             yield member, file
 
 
-
 def iter_zipped_csv_readers(path):
     with zipfile.ZipFile(path, mode="r") as zip_file:
         for info in zip_file.infolist():
             if not info.filename.endswith(".csv"):
                 continue
             with open_inner_zipfile(zip_file, info.filename) as file:
-                yield csv.reader(file)
-
+                yield from csv.reader(io.TextIOWrapper(file))
