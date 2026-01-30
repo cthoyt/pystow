@@ -105,7 +105,8 @@ directory based on the ``user data dir`` option.
 
 .. warning::
 
-    If you use this setting, make sure you first do ``pip install platformdirs``
+    If you use this setting, make sure you first do ``pip install appdirs`` or ``pip
+    install platformdirs``
 
 .. note::
 
