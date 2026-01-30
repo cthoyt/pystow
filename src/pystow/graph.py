@@ -103,14 +103,19 @@ def construct(
     *,
     sort_nodes: bool = False,
     progress: bool = True,
-    estimated_edges: int | None = None
+    estimated_edges: int | None = None,
 ) -> None:
     """Construct a memory graph."""
     paths = Paths.from_directory(directory)
     nodes: set[str] = set()
     n_edges = 0
     for edge in tqdm(
-        edges(), unit="edge", unit_scale=True, desc="indexing nodes", disable=not progress, total=estimated_edges
+        edges(),
+        unit="edge",
+        unit_scale=True,
+        desc="indexing nodes",
+        disable=not progress,
+        total=estimated_edges,
     ):
         nodes.update(edge)
         n_edges += 1
