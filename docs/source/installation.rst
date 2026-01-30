@@ -99,12 +99,14 @@ users might want to use the `XDG specifications
 their app data.
 
 If you set the environment variable ``PYSTOW_USE_APPDIRS`` to ``true`` or ``True``, then
-the `appdirs <https://pypi.org/project/appdirs>`_ package will be used to choose the
-base directory based on the ``user data dir`` option.
+the `appdirs <https://pypi.org/project/appdirs>`_ or `platformdirs
+<https://pypi.org/project/platformdirs>`_ package will be used to choose the base
+directory based on the ``user data dir`` option.
 
 .. warning::
 
-    If you use this setting, make sure you first do ``pip install appdirs``
+    If you use this setting, make sure you first do ``pip install appdirs`` or
+    ``pip install platformdirs``
 
 .. note::
 
