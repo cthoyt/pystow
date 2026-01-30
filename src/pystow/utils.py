@@ -1353,7 +1353,10 @@ def get_home(ensure_exists: bool = True) -> Path:
            returned by :func:`get_name`.
     """
     if use_appdirs():
-        from platformdirs import user_data_dir
+        try:
+            from platformdirs import user_data_dir
+        except ImportError:
+            from appdirs import user_data_dir
 
         default = Path(user_data_dir())
     else:
@@ -1377,7 +1380,10 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         raise ValueError(f"The module should not have a dot in it: {key}")
     envvar = f"{key.upper()}_HOME"
     if use_appdirs():
-        from platformdirs import user_data_dir
+        try:
+            from platformdirs import user_data_dir
+        except ImportError:
+            from appdirs import user_data_dir
 
         default = Path(user_data_dir(appname=key))
     else:
