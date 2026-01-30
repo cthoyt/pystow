@@ -3,7 +3,7 @@
 import tempfile
 import unittest
 
-from pystow.graph import construct
+from pystow.graph import build_digraph_cache
 
 
 class TestGraph(unittest.TestCase):
@@ -21,18 +21,18 @@ class TestGraph(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with self.assertRaises(ValueError):
-                construct(edges, tmpdir)
+                build_digraph_cache(edges, tmpdir)
 
-            graph = construct(lambda: edges, tmpdir, sort_nodes=True, progress=False)
+            graph = build_digraph_cache(lambda: edges, tmpdir, sort_nodes=True, progress=False)
 
-            self.assertEqual({"b", "c", "d"}, set(graph.get_out_edges("a")))
-            self.assertEqual({"d"}, set(graph.get_out_edges("b")))
-            self.assertEqual(set(), set(graph.get_out_edges("c")))
-            self.assertEqual({"e"}, set(graph.get_out_edges("d")))
-            self.assertEqual(set(), set(graph.get_out_edges("e")))
+            self.assertEqual({"b", "c", "d"}, set(graph.out_edges("a")))
+            self.assertEqual({"d"}, set(graph.out_edges("b")))
+            self.assertEqual(set(), set(graph.out_edges("c")))
+            self.assertEqual({"e"}, set(graph.out_edges("d")))
+            self.assertEqual(set(), set(graph.out_edges("e")))
 
-            self.assertEqual(set(), set(graph.get_in_edges("a")))
-            self.assertEqual({"a"}, set(graph.get_in_edges("b")))
-            self.assertEqual({"a"}, set(graph.get_in_edges("c")))
-            self.assertEqual({"a", "b"}, set(graph.get_in_edges("d")))
-            self.assertEqual({"d"}, set(graph.get_in_edges("e")))
+            self.assertEqual(set(), set(graph.in_edges("a")))
+            self.assertEqual({"a"}, set(graph.in_edges("b")))
+            self.assertEqual({"a"}, set(graph.in_edges("c")))
+            self.assertEqual({"a", "b"}, set(graph.in_edges("d")))
+            self.assertEqual({"d"}, set(graph.in_edges("e")))

@@ -13,14 +13,14 @@ from typing_extensions import Self
 from .utils import safe_open
 
 __all__ = [
-    "MemoryGraph",
-    "Paths",
-    "construct",
+    "DigraphCache",
+    "DigraphCachePaths",
+    "build_digraph_cache",
 ]
 
 
 @dataclass
-class Paths:
+class DigraphCachePaths:
     """An object with the paths for cached graph data."""
 
     nodes: Path
@@ -44,7 +44,7 @@ class Paths:
         )
 
 
-class MemoryGraphUndirected:
+class GraphCache:
     """A tool for a one-directional graph."""
 
     def __init__(
@@ -68,44 +68,44 @@ class MemoryGraphUndirected:
         return self.index[self.index_pointers[u] : self.index_pointers[u + 1]]
 
 
-class MemoryGraph:
+class DigraphCache:
     """A tool for looking up in and out edges quickly."""
 
-    def __init__(self, paths: Paths) -> None:
+    def __init__(self, paths: DigraphCachePaths) -> None:
         """Construct a memory graph."""
         with safe_open(paths.nodes) as file:
             node_to_id = {node.strip(): i for i, node in enumerate(file)}
         id_to_node = {v: k for k, v in node_to_id.items()}
-        self.forward = MemoryGraphUndirected(
+        self.forward = GraphCache(
             paths.forward_index_pointer, paths.forward_index, node_to_id, id_to_node
         )
-        self.reverse = MemoryGraphUndirected(
+        self.reverse = GraphCache(
             paths.reverse_index_pointer, paths.reverse_index, node_to_id, id_to_node
         )
 
     @classmethod
     def from_directory(cls, directory: str | Path) -> Self:
         """Construct a memory graph from a directory."""
-        return cls(Paths.from_directory(directory))
+        return cls(DigraphCachePaths.from_directory(directory))
 
-    def get_in_edges(self, node: str) -> list[str]:
+    def in_edges(self, node: str) -> list[str]:
         """Get in-edges for the node."""
         return self.reverse.get_edges(node)
 
-    def get_out_edges(self, node: str) -> list[str]:
+    def out_edges(self, node: str) -> list[str]:
         """Get out-edges for the node."""
         return self.forward.get_edges(node)
 
 
-def construct(
+def build_digraph_cache(
     edges: Callable[[], Iterable[tuple[str, str]]],
     directory: str | Path,
     *,
     sort_nodes: bool = False,
     progress: bool = True,
     estimated_edges: int | None = None,
-) -> MemoryGraph:
-    """Construct a memory graph."""
+) -> DigraphCache:
+    """Cache the directed graph to the disk using a CSR data structure."""
     if not callable(edges):
         raise ValueError(
             "`edges` argument must be callable. This is because construction "
@@ -113,7 +113,7 @@ def construct(
             "is given, to avoid needing to load into memory. If you already have "
             "your graph in memory, pass edges=lambda: edges`"
         )
-    paths = Paths.from_directory(directory)
+    paths = DigraphCachePaths.from_directory(directory)
     nodes: set[str] = set()
     n_edges = 0
     for edge in tqdm(
@@ -178,4 +178,4 @@ def construct(
     fwd_indices.flush()
     rev_indices.flush()
 
-    return MemoryGraph(paths)
+    return DigraphCache(paths)
