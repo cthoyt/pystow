@@ -183,9 +183,9 @@ hidden, some users might want to use the
 for storing their app data.
 
 If you set the environment variable `PYSTOW_USE_APPDIRS` to `true` or `True`,
-then the [`platformdirs`](https://pypi.org/project/platformdirs/) package will be used to
-choose the base directory based on the `user data dir` option. This can still be
-overridden by `PYSTOW_HOME`.
+then the [`appdirs`](https://pypi.org/project/appdirs/) or [`platformdirs`](https://pypi.org/project/platformdirs/) package will
+be used to choose the base directory based on the `user data dir` option. This
+can still be overridden by `PYSTOW_HOME`.
 
 ## 🚀 Installation
 
