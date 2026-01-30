@@ -10,18 +10,24 @@ import numpy as np
 from tqdm import tqdm
 from typing_extensions import Self
 
-from pystow.utils import safe_open
+from .utils import safe_open
+
+__all__ = [
+    "MemoryGraph",
+    "Paths",
+    "construct",
+]
 
 
 @dataclass
 class Paths:
     """An object with the paths for cached graph data."""
 
-    nodes_path: Path
+    nodes: Path
     forward_index_pointer: Path
-    forward_indices: Path
+    forward_index: Path
     reverse_index_pointer: Path
-    reverse_indicies: Path
+    reverse_index: Path
 
     @classmethod
     def from_directory(cls, directory: str | Path) -> Self:
@@ -30,41 +36,65 @@ class Paths:
         if not directory.is_dir():
             raise NotADirectoryError
         return cls(
-            nodes_path=directory / "nodes.txt.gz",
+            nodes=directory / "nodes.txt.gz",
             forward_index_pointer=directory / "fwd_indptr.bin",
-            forward_indices=directory / "fwd_indices.bin",
+            forward_index=directory / "fwd_indices.bin",
             reverse_index_pointer=directory / "rev_indptr.bin",
-            reverse_indicies=directory / "rev_indices.bin",
+            reverse_index=directory / "rev_indices.bin",
         )
+
+
+class MemoryGraphUndirected:
+    """A tool for a one-directional graph."""
+
+    def __init__(
+        self,
+        index_pointer_path: Path,
+        index_path: Path,
+        node_to_id: dict[str, int],
+        id_to_node: dict[int, str],
+    ) -> None:
+        """Construct a memory graph."""
+        self.node_to_id = node_to_id
+        self.id_to_node = id_to_node
+        self.index_pointers = np.memmap(index_pointer_path, dtype=np.int64, mode="r")
+        self.index = np.memmap(index_path, dtype=np.int32, mode="r")
+
+    def get_edges(self, u: str) -> list[str]:
+        """Get edges for the node."""
+        return [self.id_to_node[neighbor] for neighbor in self._get_edges(self.node_to_id[u])]
+
+    def _get_edges(self, u: int) -> Collection[int]:
+        return self.index[self.index_pointers[u] : self.index_pointers[u + 1]]
 
 
 class MemoryGraph:
     """A tool for looking up in and out edges quickly."""
 
-    def __init__(self, directory: Path) -> None:
+    def __init__(self, paths: Paths) -> None:
         """Construct a memory graph."""
-        paths = Paths.from_directory(directory)
-        with safe_open(paths.nodes_path) as file:
-            self.node_to_id = {node.strip(): i for i, node in enumerate(file)}
-        self.id_to_node = {v: k for k, v in self.node_to_id.items()}
-        self.fwd_indptr = np.memmap(paths.forward_index_pointer, dtype=np.int64, mode="r")
-        self.fwd_indices = np.memmap(paths.forward_indices, dtype=np.int32, mode="r")
-        self.rev_indptr = np.memmap(paths.reverse_index_pointer, dtype=np.int64, mode="r")
-        self.rev_indices = np.memmap(paths.reverse_indicies, dtype=np.int32, mode="r")
+        with safe_open(paths.nodes) as file:
+            node_to_id = {node.strip(): i for i, node in enumerate(file)}
+        id_to_node = {v: k for k, v in node_to_id.items()}
+        self.forward = MemoryGraphUndirected(
+            paths.forward_index_pointer, paths.forward_index, node_to_id, id_to_node
+        )
+        self.reverse = MemoryGraphUndirected(
+            paths.reverse_index_pointer, paths.reverse_index, node_to_id, id_to_node
+        )
 
-    def get_in_edges(self, u: str) -> list[str]:
+    @classmethod
+    def from_directory(cls, directory: str | Path) -> Self:
+        """Construct a memory graph from a directory."""
+        return cls(Paths.from_directory(directory))
+
+    def get_in_edges(self, node: str) -> list[str]:
         """Get in-edges for the node."""
-        return [self.id_to_node[node] for node in self._get_in_edges(self.node_to_id[u])]
+        return self.reverse.get_edges(node)
 
-    def _get_in_edges(self, u: int) -> Collection[int]:
-        return self.rev_indices[self.rev_indptr[u] : self.rev_indptr[u + 1]]
-
-    def get_out_edges(self, u: str) -> list[str]:
+    def get_out_edges(self, node: str) -> list[str]:
         """Get out-edges for the node."""
-        return [self.id_to_node[node] for node in self._get_out_edges(self.node_to_id[u])]
-
-    def _get_out_edges(self, u: int) -> Collection[int]:
-        return self.fwd_indices[self.fwd_indptr[u] : self.fwd_indptr[u + 1]]
+        return self.forward.get_edges(node)
 
 
 def construct(
@@ -73,13 +103,14 @@ def construct(
     *,
     sort_nodes: bool = False,
     progress: bool = True,
+    estimated_edges: int | None = None
 ) -> None:
     """Construct a memory graph."""
     paths = Paths.from_directory(directory)
     nodes: set[str] = set()
     n_edges = 0
     for edge in tqdm(
-        edges(), unit="edge", unit_scale=True, desc="indexing nodes", disable=not progress
+        edges(), unit="edge", unit_scale=True, desc="indexing nodes", disable=not progress, total=estimated_edges
     ):
         nodes.update(edge)
         n_edges += 1
@@ -87,7 +118,7 @@ def construct(
     n = len(nodes)
 
     node_to_id = {}
-    with safe_open(paths.nodes_path, operation="write") as file:
+    with safe_open(paths.nodes, operation="write") as file:
         for i, node in enumerate(sorted(nodes) if sort_nodes else nodes):
             node_to_id[node] = i
             print(node, file=file)
@@ -109,13 +140,9 @@ def construct(
     np.cumsum(fwd_indptr, out=fwd_indptr)
     np.cumsum(rev_indptr, out=rev_indptr)
 
-    fwd_indices = np.memmap(
-        paths.forward_indices, dtype=np.int32, mode="w+", shape=(fwd_indptr[-1],)
-    )
+    fwd_indices = np.memmap(paths.forward_index, dtype=np.int32, mode="w+", shape=(fwd_indptr[-1],))
 
-    rev_indices = np.memmap(
-        paths.reverse_indicies, dtype=np.int32, mode="w+", shape=(rev_indptr[-1],)
-    )
+    rev_indices = np.memmap(paths.reverse_index, dtype=np.int32, mode="w+", shape=(rev_indptr[-1],))
 
     fwd_cursor = fwd_indptr.copy()
     rev_cursor = rev_indptr.copy()

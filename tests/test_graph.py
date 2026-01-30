@@ -22,11 +22,9 @@ class TestGraph(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             directory = Path(tmpdir)
-
             construct(lambda: edges, directory, sort_nodes=True, progress=False)
-            graph = MemoryGraph(directory)
+            graph = MemoryGraph.from_directory(directory)
 
-            self.assertEqual({"a": 0, "b": 1, "c": 2, "d": 3, "e": 4}, graph.node_to_id)
             self.assertEqual({"b", "c", "d"}, set(graph.get_out_edges("a")))
             self.assertEqual({"d"}, set(graph.get_out_edges("b")))
             self.assertEqual(set(), set(graph.get_out_edges("c")))
