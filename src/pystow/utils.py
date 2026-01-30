@@ -22,7 +22,7 @@ from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast, Callable, overload
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -54,6 +54,7 @@ __all__ = [
     "MODE_MAP",
     "OPERATION_VALUES",
     "REPRESENTATION_VALUES",
+    "iterate_tar_info",
     "REVERSE_MODE_MAP",
     "DownloadBackend",
     "DownloadError",
@@ -1629,3 +1630,57 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
     with safe_open(file, operation="read", representation="text") as file:
         for line in file:
             yield model_cls.model_validate_json(line)
+
+
+@overload
+def iterate_tar_info(tar: tarfile.TarFile, representation: Literal["binary"]) -> Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]: ...
+
+
+@overload
+def iterate_tar_info(tar: tarfile.TarFile, representation: Literal["text"]) -> Iterable[tuple[tarfile.TarInfo, TextIO]]: ...
+
+
+def iterate_tar_info(
+    tar: tarfile.TarFile,
+    *,
+    representation: Representation = "text",
+    progress: bool = True,
+    tqdm_kwargs: dict[str, Any] | None = None,
+    keep: Callable[[tarfile.TarInfo], bool] | None = None
+) -> Iterable[tuple[tarfile.TarInfo, TextIO]] | Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]:
+    """
+
+    :param tar:
+    :param representation:
+    :param progress:
+    :param tqdm_kwargs:
+    :param keep:
+    :return:
+
+    .. code-block:: python
+
+        tar = tarfile.open("...")
+        for member, file in iterate_tar_info(tar):
+
+    """
+    for member in tqdm(tar.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
+        if keep is not None and not keep(member):
+            continue
+        file = tar.extractfile(member)
+        if file is None:
+            continue
+        if representation == "text":
+            yield member, io.TextIOWrapper(file, encoding="utf-8")
+        else:
+            yield member, file
+
+
+
+def iter_zipped_csv_readers(path):
+    with zipfile.ZipFile(path, mode="r") as zip_file:
+        for info in zip_file.infolist():
+            if not info.filename.endswith(".csv"):
+                continue
+            with open_inner_zipfile(zip_file, info.filename) as file:
+                yield csv.reader(file)
+
