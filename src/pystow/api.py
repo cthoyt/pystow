@@ -1725,9 +1725,7 @@ def ensure_rdf(
         import rdflib
 
         url = "https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz"
-        rdf_graph: rdflib.Graph = pystow.ensure_rdf(
-            "rhea", url=url, parse_kwargs={"format": "xml"}
-        )
+        rdf_graph: rdflib.Graph = pystow.ensure_rdf("rhea", url=url, parse_kwargs={"format": "xml"})
 
     .. note::
 
