@@ -1,5 +1,6 @@
-Usage
-=====
+#######
+ Usage
+#######
 
 .. automodapi:: pystow
     :no-inheritance-diagram:

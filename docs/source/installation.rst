@@ -1,5 +1,6 @@
-Installation
-============
+##############
+ Installation
+##############
 
 The most recent release can be installed from `PyPI <https://pypi.org/project/pystow>`_
 with uv:
@@ -14,8 +15,9 @@ or with pip:
 
     $ python3 -m pip install pystow
 
-Installing from git
--------------------
+*********************
+ Installing from git
+*********************
 
 The most recent code and data can be installed directly from GitHub with uv:
 
@@ -29,8 +31,9 @@ or with pip:
 
     $ python3 -m pip install git+https://github.com/cthoyt/pystow.git
 
-Installing for development
---------------------------
+****************************
+ Installing for development
+****************************
 
 To install in development mode with uv:
 
@@ -46,8 +49,9 @@ or with pip:
 
     $ python3 -m pip install -e .
 
-Configuration
-=============
+###############
+ Configuration
+###############
 
 By default, data is stored in the ``$HOME/.data`` directory. By default, the ``<app>``
 app will create the ``$HOME/.data/<app>`` folder.
@@ -90,8 +94,9 @@ the ``/usr/local/pykeen/`` directory:
 
     If you set ``PYSTOW_HOME``, then ``PYSTOW_NAME`` is disregarded.
 
-X Desktop Group (XDG) Compatibility
------------------------------------
+*************************************
+ X Desktop Group (XDG) Compatibility
+*************************************
 
 While PyStow's main goal is to make application data less opaque and less hidden, some
 users might want to use the `XDG specifications
@@ -105,8 +110,8 @@ directory based on the ``user data dir`` option.
 
 .. warning::
 
-    If you use this setting, make sure you first do ``pip install appdirs`` or
-    ``pip install platformdirs``
+    If you use this setting, make sure you first do ``pip install appdirs`` or ``pip
+    install platformdirs``
 
 .. note::
 

@@ -1,5 +1,6 @@
-Utilities
-=========
+###########
+ Utilities
+###########
 
 .. automodapi:: pystow.utils
     :no-inheritance-diagram:
