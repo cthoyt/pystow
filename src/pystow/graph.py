@@ -29,6 +29,19 @@ class GraphCachePaths:
     reverse_indices_pointer: Path
     reverse_indices: Path
 
+    def exists(self) -> bool:
+        """Check that the cache exists."""
+        return all(
+            path.is_file()
+            for path in (
+                self.nodes,
+                self.forward_indices_pointer,
+                self.reverse_indices_pointer,
+                self.forward_indices,
+                self.reverse_indices,
+            )
+        )
+
     @classmethod
     def from_directory(cls, directory: str | Path) -> Self:
         """Instantiate the object from the given directory."""
@@ -99,13 +112,29 @@ class GraphCache:
 
 def build_graph_cache(
     edges: Callable[[], Iterable[tuple[str, str]]],
-    directory: str | Path,
+    directory: str | Path | GraphCachePaths,
     *,
     sort_nodes: bool = False,
     progress: bool = True,
     estimated_edges: int | None = None,
 ) -> GraphCache:
-    """Cache the directed graph to the disk using a CSR data structure."""
+    """Cache the directed graph to the disk using a CSR data structure.
+
+    :param edges: A function, that when called, produces an iterable of edges (pairs of
+        strings). This function accepts an iterable because it needs to make three
+        passes over the edges, and to support large edge lists, this might take an
+        iterator that reads a file.
+    :param directory: The directory to use for caching, or a pre-instantiated cache
+        directory object
+    :param sort_nodes: Whether to sort the nodes first. This is not really needed in
+        case of testing.
+    :param progress: Whether to show a progress bar on the three passes of
+    :param estimated_edges: On the first pass of the edge iterator, it's unknown how
+        many edges there are. If you know, or have a good estimate, use this parameter
+        to give more information to the progress bar.
+
+    :returns: A graph cache object, which can access the written binaries quickly
+    """
     if not callable(edges):
         raise ValueError(
             "`edges` argument must be callable. This is because construction "
@@ -113,7 +142,12 @@ def build_graph_cache(
             "is given, to avoid needing to load into memory. If you already have "
             "your graph in memory, pass edges=lambda: edges`"
         )
-    paths = GraphCachePaths.from_directory(directory)
+
+    if isinstance(directory, GraphCachePaths):
+        paths = directory
+    else:
+        paths = GraphCachePaths.from_directory(directory)
+
     nodes: set[str] = set()
     n_edges = 0
     for edge in tqdm(

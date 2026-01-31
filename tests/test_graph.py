@@ -3,11 +3,16 @@
 import tempfile
 import unittest
 
-from pystow.graph import build_graph_cache
+from pystow.graph import GraphCachePaths, build_graph_cache
 
 
 class TestGraph(unittest.TestCase):
     """Test graph."""
+
+    def test_cache(self) -> None:
+        """Test error on missing directory."""
+        with self.assertRaises(NotADirectoryError):
+            GraphCachePaths.from_directory("blahblahblah")
 
     def test_graph(self) -> None:
         """Test building a graph."""
@@ -23,7 +28,12 @@ class TestGraph(unittest.TestCase):
             with self.assertRaises(ValueError):
                 build_graph_cache(edges, tmpdir)  # type:ignore[arg-type]
 
-            graph = build_graph_cache(lambda: edges, tmpdir, sort_nodes=True, progress=False)
+            paths = GraphCachePaths.from_directory(tmpdir)
+            self.assertFalse(paths.exists())
+
+            graph = build_graph_cache(lambda: edges, paths, sort_nodes=True, progress=False)
+
+            self.assertTrue(paths.exists())
 
             self.assertEqual({"b", "c", "d"}, set(graph.out_edges("a")))
             self.assertEqual({"d"}, set(graph.out_edges("b")))
