@@ -13,14 +13,14 @@ from typing_extensions import Self
 from .utils import safe_open
 
 __all__ = [
-    "DigraphCache",
-    "DigraphCachePaths",
-    "build_digraph_cache",
+    "GraphCache",
+    "GraphCachePaths",
+    "build_graph_cache",
 ]
 
 
 @dataclass
-class DigraphCachePaths:
+class GraphCachePaths:
     """An object with the paths for cached graph data."""
 
     nodes: Path
@@ -44,7 +44,7 @@ class DigraphCachePaths:
         )
 
 
-class GraphCache:
+class SingleGraphCache:
     """A tool for a one-directional graph."""
 
     def __init__(
@@ -68,25 +68,25 @@ class GraphCache:
         return self.indices[self.indices_pointers[node] : self.indices_pointers[node + 1]]
 
 
-class DigraphCache:
+class GraphCache:
     """A tool for looking up in and out edges quickly."""
 
-    def __init__(self, paths: DigraphCachePaths) -> None:
+    def __init__(self, paths: GraphCachePaths) -> None:
         """Construct a memory graph."""
         with safe_open(paths.nodes) as file:
             node_to_id = {node.strip(): i for i, node in enumerate(file)}
         id_to_node = {v: k for k, v in node_to_id.items()}
-        self.forward = GraphCache(
+        self.forward = SingleGraphCache(
             paths.forward_indices_pointer, paths.forward_indices, node_to_id, id_to_node
         )
-        self.reverse = GraphCache(
+        self.reverse = SingleGraphCache(
             paths.reverse_indices_pointer, paths.reverse_indices, node_to_id, id_to_node
         )
 
     @classmethod
     def from_directory(cls, directory: str | Path) -> Self:
         """Construct a memory graph from a directory."""
-        return cls(DigraphCachePaths.from_directory(directory))
+        return cls(GraphCachePaths.from_directory(directory))
 
     def in_edges(self, node: str) -> list[str]:
         """Get in-edges for the node."""
@@ -97,14 +97,14 @@ class DigraphCache:
         return self.forward.edges(node)
 
 
-def build_digraph_cache(
+def build_graph_cache(
     edges: Callable[[], Iterable[tuple[str, str]]],
     directory: str | Path,
     *,
     sort_nodes: bool = False,
     progress: bool = True,
     estimated_edges: int | None = None,
-) -> DigraphCache:
+) -> GraphCache:
     """Cache the directed graph to the disk using a CSR data structure."""
     if not callable(edges):
         raise ValueError(
@@ -113,7 +113,7 @@ def build_digraph_cache(
             "is given, to avoid needing to load into memory. If you already have "
             "your graph in memory, pass edges=lambda: edges`"
         )
-    paths = DigraphCachePaths.from_directory(directory)
+    paths = GraphCachePaths.from_directory(directory)
     nodes: set[str] = set()
     n_edges = 0
     for edge in tqdm(
@@ -138,7 +138,7 @@ def build_digraph_cache(
     forward_indices_pointer = np.zeros(n + 1, dtype=np.int64)
     reverse_indices_pointer = np.zeros(n + 1, dtype=np.int64)
 
-    for u, v in tqdm(
+    for u_str, v_str in tqdm(
         edges(),
         total=n_edges,
         unit="edge",
@@ -146,23 +146,23 @@ def build_digraph_cache(
         desc="constructing pointers",
         disable=not progress,
     ):
-        forward_indices_pointer[node_to_id[u] + 1] += 1
-        reverse_indices_pointer[node_to_id[v] + 1] += 1
+        forward_indices_pointer[node_to_id[u_str] + 1] += 1
+        reverse_indices_pointer[node_to_id[v_str] + 1] += 1
 
     np.cumsum(forward_indices_pointer, out=forward_indices_pointer)
     np.cumsum(reverse_indices_pointer, out=reverse_indices_pointer)
 
-    reverse_indices = np.memmap(
+    forward_indices = np.memmap(
         paths.forward_indices, dtype=np.int32, mode="w+", shape=(forward_indices_pointer[-1],)
     )
-    forward_indices = np.memmap(
+    reverse_indices = np.memmap(
         paths.reverse_indices, dtype=np.int32, mode="w+", shape=(reverse_indices_pointer[-1],)
     )
 
     forward_cursor = forward_indices_pointer.copy()
     reverse_cursor = reverse_indices_pointer.copy()
 
-    for u, v in tqdm(
+    for u_str, v_str in tqdm(
         edges(),
         total=n_edges,
         unit="edge",
@@ -170,15 +170,18 @@ def build_digraph_cache(
         desc="filling edges",
         disable=not progress,
     ):
-        reverse_indices[forward_cursor[node_to_id[u]]] = node_to_id[v]
-        forward_cursor[node_to_id[u]] += 1
+        u = node_to_id[u_str]
+        v = node_to_id[v_str]
 
-        forward_indices[reverse_cursor[node_to_id[v]]] = node_to_id[u]
-        reverse_cursor[node_to_id[v]] += 1
+        forward_indices[forward_cursor[u]] = v
+        forward_cursor[u] += 1
+
+        reverse_indices[reverse_cursor[v]] = u
+        reverse_cursor[v] += 1
 
     forward_indices_pointer.tofile(paths.forward_indices_pointer)
     reverse_indices_pointer.tofile(paths.reverse_indices_pointer)
     reverse_indices.flush()
     forward_indices.flush()
 
-    return DigraphCache(paths)
+    return GraphCache(paths)

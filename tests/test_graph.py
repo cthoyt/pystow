@@ -3,7 +3,7 @@
 import tempfile
 import unittest
 
-from pystow.graph import build_digraph_cache
+from pystow.graph import build_graph_cache
 
 
 class TestGraph(unittest.TestCase):
@@ -21,9 +21,9 @@ class TestGraph(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with self.assertRaises(ValueError):
-                build_digraph_cache(edges, tmpdir)  # type:ignore[arg-type]
+                build_graph_cache(edges, tmpdir)  # type:ignore[arg-type]
 
-            graph = build_digraph_cache(lambda: edges, tmpdir, sort_nodes=True, progress=False)
+            graph = build_graph_cache(lambda: edges, tmpdir, sort_nodes=True, progress=False)
 
             self.assertEqual({"b", "c", "d"}, set(graph.out_edges("a")))
             self.assertEqual({"d"}, set(graph.out_edges("b")))
