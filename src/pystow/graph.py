@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, TypeAlias
 
 import numpy as np
 from tqdm import tqdm
@@ -17,6 +18,8 @@ __all__ = [
     "GraphCachePaths",
     "build_graph_cache",
 ]
+
+MissingAction: TypeAlias = Literal["raise", "none", "list"]
 
 
 @dataclass
@@ -73,9 +76,15 @@ class SingleGraphCache:
         self.indices_pointers = np.memmap(index_pointer_path, dtype=np.int64, mode="r")
         self.indices = np.memmap(index_path, dtype=np.int32, mode="r")
 
-    def edges(self, node: str) -> list[str]:
+    def edges(self, node: str, *, raise_on_missing: bool = False) -> list[str]:
         """Get edges for the node."""
-        return [self.id_to_node[neighbor] for neighbor in self._get_edges(self.node_to_id[node])]
+        # is not None is important vs. regular falsy check, because one node will have id = 0
+        if (node_id := self.node_to_id.get(node)) is not None:
+            return [self.id_to_node[neighbor_id] for neighbor_id in self._get_edges(node_id)]
+        elif raise_on_missing:
+            raise KeyError(f"{node} is not in the graph cache.") from None
+        else:
+            return []
 
     def _get_edges(self, node: int) -> Collection[int]:
         return self.indices[self.indices_pointers[node] : self.indices_pointers[node + 1]]
@@ -90,10 +99,16 @@ class GraphCache:
             node_to_id = {node.strip(): i for i, node in enumerate(file)}
         id_to_node = {v: k for k, v in node_to_id.items()}
         self.forward = SingleGraphCache(
-            paths.forward_indices_pointer, paths.forward_indices, node_to_id, id_to_node
+            paths.forward_indices_pointer,
+            paths.forward_indices,
+            node_to_id=node_to_id,
+            id_to_node=id_to_node,
         )
         self.reverse = SingleGraphCache(
-            paths.reverse_indices_pointer, paths.reverse_indices, node_to_id, id_to_node
+            paths.reverse_indices_pointer,
+            paths.reverse_indices,
+            node_to_id=node_to_id,
+            id_to_node=id_to_node,
         )
 
     @classmethod
@@ -101,13 +116,13 @@ class GraphCache:
         """Construct a memory graph from a directory."""
         return cls(GraphCachePaths.from_directory(directory))
 
-    def in_edges(self, node: str) -> list[str]:
+    def in_edges(self, node: str, *, raise_on_missing: bool = False) -> list[str]:
         """Get in-edges for the node."""
-        return self.reverse.edges(node)
+        return self.reverse.edges(node, raise_on_missing=raise_on_missing)
 
-    def out_edges(self, node: str) -> list[str]:
+    def out_edges(self, node: str, *, raise_on_missing: bool = False) -> list[str]:
         """Get out-edges for the node."""
-        return self.forward.edges(node)
+        return self.forward.edges(node, raise_on_missing=raise_on_missing)
 
 
 def build_graph_cache(
@@ -161,7 +176,8 @@ def build_graph_cache(
         nodes.update(edge)
         n_edges += 1
 
-    n = len(nodes)
+    n_nodes = len(nodes)
+    tqdm.write(f"observed {n_nodes:,} nodes and {n_edges:,} edges")
 
     node_to_id = {}
     with safe_open(paths.nodes, operation="write") as file:
@@ -169,8 +185,8 @@ def build_graph_cache(
             node_to_id[node] = i
             print(node, file=file)
 
-    forward_indices_pointer = np.zeros(n + 1, dtype=np.int64)
-    reverse_indices_pointer = np.zeros(n + 1, dtype=np.int64)
+    forward_indices_pointer = np.zeros(n_nodes + 1, dtype=np.int64)
+    reverse_indices_pointer = np.zeros(n_nodes + 1, dtype=np.int64)
 
     for u_str, v_str in tqdm(
         edges(),

@@ -35,6 +35,13 @@ class TestGraph(unittest.TestCase):
 
             self.assertTrue(paths.exists())
 
+            self.assertEqual([], graph.out_edges("ZZZ"))
+            self.assertEqual([], graph.in_edges("ZZZ"))
+            with self.assertRaises(KeyError):
+                graph.out_edges("ZZZ", raise_on_missing=True)
+            with self.assertRaises(KeyError):
+                graph.in_edges("ZZZ", raise_on_missing=True)
+
             self.assertEqual({"b", "c", "d"}, set(graph.out_edges("a")))
             self.assertEqual({"d"}, set(graph.out_edges("b")))
             self.assertEqual(set(), set(graph.out_edges("c")))
