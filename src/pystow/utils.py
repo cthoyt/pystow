@@ -28,6 +28,7 @@ from typing import (
     BinaryIO,
     Literal,
     NamedTuple,
+    Protocol,
     TextIO,
     TypeAlias,
     TypeVar,
@@ -196,8 +197,50 @@ UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
     "w": ("write", "binary"),
 }
 
-X = TypeVar("X")
+X = TypeVar("X", contravariant=True)
+Y = TypeVar("Y", covariant=True)
 Predicate: TypeAlias = Callable[[X], bool]
+
+
+class ArchivedFileIterator(Protocol[X, Y]):
+    """A protocol for opening files in an archive."""
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Literal["binary"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[BinaryIO]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Literal["text"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO]: ...
+
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Representation = ...,
+        progress: bool = True,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
 
 def get_mode_pair(
@@ -1652,41 +1695,44 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_files(
-    tar_file: str | Path | tarfile.TarFile,
+    path: str | Path | tarfile.TarFile,
     *,
     representation: Literal["binary"] = ...,
     progress: bool = ...,
     tqdm_kwargs: dict[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[BinaryIO]: ...
 
 
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_files(
-    tar_file: str | Path | tarfile.TarFile,
+    path: str | Path | tarfile.TarFile,
     *,
     representation: Literal["text"] = ...,
     progress: bool = ...,
     tqdm_kwargs: dict[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[TextIO]: ...
 
 
 def iter_tarred_files(
-    tar_file: str | Path | tarfile.TarFile,
+    path: str | Path | tarfile.TarFile,
     *,
     representation: Representation = "text",
     progress: bool = True,
     tqdm_kwargs: dict[str, Any] | None = None,
     keep: Predicate[tarfile.TarInfo] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    with safe_tarfile_open(tar_file) as tf:
-        for member in tqdm(tf.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
+    with safe_tarfile_open(path) as tar_file:
+        for member in tqdm(tar_file.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
             if keep is not None and not keep(member):
                 continue
-            file = tf.extractfile(member)
+            file = tar_file.extractfile(member, **(open_kwargs or {}))
             if file is None:
                 continue
             if representation == "text":
@@ -1707,62 +1753,77 @@ def safe_tarfile_open(
         yield tar_file
 
 
-def iter_tarred_csvs(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+@overload
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[False] = ...
+) -> Iterable[Sequence[str]]: ...
+
+
+@overload
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[True] = ...
+) -> Iterable[dict[str, Any]]: ...
+
+
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile, *, progress: bool = True, return_dicts: bool = False
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
-    header: Sequence[str] | None = None
-    for file in iter_tarred_files(
+    yield from _iter_archived_csvs(
         path,
-        representation="text",
-        keep=lambda tar_info: tar_info.name.endswith(".csv"),
         progress=progress,
-    ):
-        reader = csv.reader(file)
-        if header is None:
-            header = next(reader)
-        elif (current_header := next(reader)) != header:
-            raise HeaderMismatchError(header, current_header)
-        yield from reader
+        return_dicts=return_dicts,
+        iter_files=iter_tarred_files,
+        keep=_keep_tar_info_csv,
+    )
+
+
+def _keep_tar_info_csv(tar_info: tarfile.TarInfo) -> bool:
+    return tar_info.name.endswith(".csv")
 
 
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_files(
-    zip_file: str | Path | zipfile.ZipFile,
+    path: str | Path | zipfile.ZipFile,
     *,
     representation: Literal["binary"] = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
-    keep: Predicate[zipfile.ZipInfo] | None = ...,
     progress: bool = ...,
+    tqdm_kwargs: dict[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[typing.BinaryIO]: ...
 
 
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_files(
-    zip_file: str | Path | zipfile.ZipFile,
+    path: str | Path | zipfile.ZipFile,
     *,
     representation: Literal["text"] = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
-    keep: Predicate[zipfile.ZipInfo] | None = ...,
     progress: bool = ...,
+    tqdm_kwargs: dict[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[typing.TextIO]: ...
 
 
 def iter_zipped_files(
-    zip_file: str | Path | zipfile.ZipFile,
+    path: str | Path | zipfile.ZipFile,
     *,
     representation: Representation = "text",
-    open_kwargs: Mapping[str, Any] | None = None,
-    keep: Predicate[zipfile.ZipInfo] | None = None,
     progress: bool = True,
+    tqdm_kwargs: dict[str, Any] | None = None,
+    keep: Predicate[zipfile.ZipInfo] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
-    with safe_zipfile_open(zip_file) as zf:
-        for info in tqdm(zf.infolist(), disable=not progress):
+    with safe_zipfile_open(path) as zip_file:
+        for info in tqdm(zip_file.infolist(), disable=not progress, **(tqdm_kwargs or {})):
             if keep is not None and not keep(info):
                 continue
             with open_inner_zipfile(
-                zf,
+                zip_file,
                 info.filename,
                 operation="read",
                 representation=representation,
@@ -1783,21 +1844,54 @@ def safe_zipfile_open(
         yield zip_file
 
 
-def iter_zipped_csvs(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile, *, progress: bool = True, return_dicts: bool = False
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
+    """Iterate over the lines from zipped CSV files."""
+    yield from _iter_archived_csvs(
+        path,
+        progress=progress,
+        return_dicts=return_dicts,
+        iter_files=iter_zipped_files,
+        keep=_keep_zip_info_csv,
+    )
+
+
+def _keep_zip_info_csv(zip_info: zipfile.ZipInfo) -> bool:
+    return zip_info.filename.endswith(".csv")
+
+
+def _iter_archived_csvs(
+    path: str | Path | X,
+    *,
+    progress: bool = True,
+    tqdm_kwargs: dict[str, Any] | None = None,
+    keep: Predicate[Y] | None = None,
+    return_dicts: bool = False,
+    iter_files: ArchivedFileIterator[X, Y],
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     header: Sequence[str] | None = None
-    for file in iter_zipped_files(
+    for file in iter_files(
         path,
         representation="text",
-        keep=lambda zip_info: zip_info.filename.endswith(".csv"),
         progress=progress,
+        tqdm_kwargs=tqdm_kwargs,
+        keep=keep,
     ):
-        reader = csv.reader(file)
+        reader = csv.DictReader(file) if return_dicts else csv.reader(file)
         if header is None:
-            header = next(reader)
-        elif (current_header := next(reader)) != header:
+            header = _get_header(reader)
+        elif (current_header := _get_header(reader)) != header:
             raise HeaderMismatchError(header, current_header)
         yield from reader
+
+
+def _get_header(reader: csv.DictReader[str] | _csv.Reader) -> Sequence[str]:
+    if isinstance(reader, csv.DictReader):
+        return cast(Sequence[str], reader.fieldnames)
+    else:
+        return next(reader)
 
 
 class HeaderMismatchError(ValueError):
