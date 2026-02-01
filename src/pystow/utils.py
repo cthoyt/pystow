@@ -197,10 +197,6 @@ UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
     "w": ("write", "binary"),
 }
 
-X = TypeVar("X", contravariant=True)
-Y = TypeVar("Y", covariant=True)
-Predicate: TypeAlias = Callable[[X], bool]
-
 
 def get_mode_pair(
     mode: UnqualifiedMode | QualifiedMode, interpretation: Representation
@@ -1651,19 +1647,24 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
             yield model_cls.model_validate_json(line)
 
 
-class ArchivedFileIterator(Protocol[X, Y]):
+ArchiveType = TypeVar("ArchiveType", contravariant=True)
+ArchiveInfo = TypeVar("ArchiveInfo", covariant=True)
+Predicate: TypeAlias = Callable[[ArchiveInfo], bool]
+
+
+class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
     """A protocol for opening files in an archive."""
 
     # docstr-coverage:excused `overload`
     @overload
     def __call__(
         self,
-        path: str | Path | X,
+        path: str | Path | ArchiveType,
         *,
         representation: Literal["binary"] = ...,
         progress: bool = ...,
         tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[BinaryIO]: ...
 
@@ -1671,23 +1672,23 @@ class ArchivedFileIterator(Protocol[X, Y]):
     @overload
     def __call__(
         self,
-        path: str | Path | X,
+        path: str | Path | ArchiveType,
         *,
         representation: Literal["text"] = ...,
         progress: bool = ...,
         tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[TextIO]: ...
 
     def __call__(
         self,
-        path: str | Path | X,
+        path: str | Path | ArchiveType,
         *,
         representation: Representation = ...,
         progress: bool = True,
         tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
@@ -1864,13 +1865,13 @@ def _keep_zip_info_csv(zip_info: zipfile.ZipInfo) -> bool:
 
 
 def _iter_archived_csvs(
-    path: str | Path | X,
+    path: str | Path | ArchiveType,
     *,
     progress: bool = True,
     tqdm_kwargs: dict[str, Any] | None = None,
-    keep: Predicate[Y] | None = None,
+    keep: Predicate[ArchiveInfo] | None = None,
     return_dicts: bool = False,
-    iter_files: ArchivedFileIterator[X, Y],
+    iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     header: Sequence[str] | None = None
