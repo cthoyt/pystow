@@ -202,47 +202,6 @@ Y = TypeVar("Y", covariant=True)
 Predicate: TypeAlias = Callable[[X], bool]
 
 
-class ArchivedFileIterator(Protocol[X, Y]):
-    """A protocol for opening files in an archive."""
-
-    # docstr-coverage:excused `overload`
-    @overload
-    def __call__(
-        self,
-        path: str | Path | X,
-        *,
-        representation: Literal["binary"] = ...,
-        progress: bool = ...,
-        tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Iterable[BinaryIO]: ...
-
-    # docstr-coverage:excused `overload`
-    @overload
-    def __call__(
-        self,
-        path: str | Path | X,
-        *,
-        representation: Literal["text"] = ...,
-        progress: bool = ...,
-        tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Iterable[TextIO]: ...
-
-    def __call__(
-        self,
-        path: str | Path | X,
-        *,
-        representation: Representation = ...,
-        progress: bool = True,
-        tqdm_kwargs: dict[str, Any] | None = ...,
-        keep: Predicate[Y] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
-
-
 def get_mode_pair(
     mode: UnqualifiedMode | QualifiedMode, interpretation: Representation
 ) -> ModePair:
@@ -1690,6 +1649,47 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
     with safe_open(file, operation="read", representation="text") as file:
         for line in file:
             yield model_cls.model_validate_json(line)
+
+
+class ArchivedFileIterator(Protocol[X, Y]):
+    """A protocol for opening files in an archive."""
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Literal["binary"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[BinaryIO]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Literal["text"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO]: ...
+
+    def __call__(
+        self,
+        path: str | Path | X,
+        *,
+        representation: Representation = ...,
+        progress: bool = True,
+        tqdm_kwargs: dict[str, Any] | None = ...,
+        keep: Predicate[Y] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
 
 # docstr-coverage:excused `overload`
