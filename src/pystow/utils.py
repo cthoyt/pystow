@@ -19,7 +19,7 @@ import urllib.error
 import zipfile
 from collections.abc import Collection, Generator, Iterable, Iterator, Mapping
 from functools import partial
-from io import BytesIO, StringIO
+from io import BytesIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast
@@ -666,11 +666,7 @@ def get_df_io(df: pandas.DataFrame, sep: str = "\t", index: bool = False, **kwar
 
     :returns: A bytes object that can be used as a file.
     """
-    sio = StringIO()
-    df.to_csv(sio, sep=sep, index=index, **kwargs)
-    sio.seek(0)
-    bio = BytesIO(sio.read().encode("utf-8"))
-    return bio
+    return io.BytesIO(df.to_csv(sep=sep, index=index, **kwargs).encode("utf-8"))
 
 
 def get_np_io(arr: numpy.typing.ArrayLike, **kwargs: Any) -> BytesIO:
