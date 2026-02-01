@@ -1673,7 +1673,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         *,
         representation: Literal["binary"] = ...,
         progress: bool = ...,
-        tqdm_kwargs: dict[str, Any] | None = ...,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[BinaryIO]: ...
@@ -1686,7 +1686,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         *,
         representation: Literal["text"] = ...,
         progress: bool = ...,
-        tqdm_kwargs: dict[str, Any] | None = ...,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[TextIO]: ...
@@ -1697,7 +1697,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         *,
         representation: Representation = ...,
         progress: bool = True,
-        tqdm_kwargs: dict[str, Any] | None = ...,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
@@ -1710,7 +1710,7 @@ def iter_tarred_files(
     *,
     representation: Literal["binary"] = ...,
     progress: bool = ...,
-    tqdm_kwargs: dict[str, Any] | None = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[BinaryIO]: ...
@@ -1723,7 +1723,7 @@ def iter_tarred_files(
     *,
     representation: Literal["text"] = ...,
     progress: bool = ...,
-    tqdm_kwargs: dict[str, Any] | None = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[TextIO]: ...
@@ -1734,13 +1734,20 @@ def iter_tarred_files(
     *,
     representation: Representation = "text",
     progress: bool = True,
-    tqdm_kwargs: dict[str, Any] | None = None,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[tarfile.TarInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
     with safe_tarfile_open(path) as tar_file:
-        for member in tqdm(tar_file.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
+        _tqdm_kwargs = {
+            "desc": f"reading {cast(str, tar_file.name)}",
+            "unit": "file",
+            "unit_scale": True,
+        }
+        if tqdm_kwargs is not None:
+            _tqdm_kwargs.update(tqdm_kwargs)
+        for member in tqdm(tar_file.getmembers(), disable=not progress, **_tqdm_kwargs):
             if keep is not None and not keep(member):
                 continue
             file = tar_file.extractfile(member, **(open_kwargs or {}))
@@ -1807,7 +1814,7 @@ def iter_zipped_files(
     *,
     representation: Literal["binary"] = ...,
     progress: bool = ...,
-    tqdm_kwargs: dict[str, Any] | None = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[typing.BinaryIO]: ...
@@ -1820,7 +1827,7 @@ def iter_zipped_files(
     *,
     representation: Literal["text"] = ...,
     progress: bool = ...,
-    tqdm_kwargs: dict[str, Any] | None = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[typing.TextIO]: ...
@@ -1831,13 +1838,20 @@ def iter_zipped_files(
     *,
     representation: Representation = "text",
     progress: bool = True,
-    tqdm_kwargs: dict[str, Any] | None = None,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[zipfile.ZipInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
     with safe_zipfile_open(path) as zip_file:
-        for info in tqdm(zip_file.infolist(), disable=not progress, **(tqdm_kwargs or {})):
+        _tqdm_kwargs = {
+            "desc": f"reading {zip_file.filename}",
+            "unit": "file",
+            "unit_scale": True,
+        }
+        if tqdm_kwargs is not None:
+            _tqdm_kwargs.update(tqdm_kwargs)
+        for info in tqdm(zip_file.infolist(), disable=not progress, **_tqdm_kwargs):
             if keep is not None and not keep(info):
                 continue
             with open_inner_zipfile(
@@ -1897,7 +1911,7 @@ def _iter_archived_csvs(
     path: str | Path | ArchiveType,
     *,
     progress: bool = True,
-    tqdm_kwargs: dict[str, Any] | None = None,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[ArchiveInfo] | None = None,
     return_dicts: bool = False,
     iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
@@ -1916,7 +1930,15 @@ def _iter_archived_csvs(
             header = _get_header(reader)
         elif (current_header := _get_header(reader)) != header:
             raise HeaderMismatchError(header, current_header)
-        yield from reader
+        it = tqdm(
+            reader,
+            disable=not progress,
+            leave=False,
+            desc=f"reading {file.name}",
+            unit="row",
+            unit_scale=True,
+        )
+        yield from it
 
 
 def _get_header(reader: csv.DictReader[str] | _csv.Reader) -> Sequence[str]:
