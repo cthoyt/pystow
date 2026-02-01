@@ -17,7 +17,7 @@ import tempfile
 import typing
 import urllib.error
 import zipfile
-from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
@@ -25,10 +25,12 @@ from subprocess import check_output
 from typing import (
     TYPE_CHECKING,
     Any,
+    BinaryIO,
     Literal,
     NamedTuple,
     TextIO,
     TypeAlias,
+    TypeVar,
     cast,
     overload,
 )
@@ -92,7 +94,10 @@ __all__ = [
     "get_soup",
     "getenv_path",
     "gunzip",
-    "iterate_tar_info",
+    "iter_tarred_files",
+    "iter_tarred_readers",
+    "iter_zipped_files",
+    "iter_zipped_readers",
     "mkdir",
     "mock_envvar",
     "mock_home",
@@ -190,6 +195,9 @@ UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
     "r": ("read", "binary"),
     "w": ("write", "binary"),
 }
+
+X = TypeVar("X")
+Predicate: TypeAlias = Callable[[X], bool]
 
 
 def get_mode_pair(
@@ -1641,41 +1649,39 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
             yield model_cls.model_validate_json(line)
 
 
+# docstr-coverage:excused `overload`
 @overload
-def iterate_tar_info(
-    tar: tarfile.TarFile, representation: Literal["binary"]
-) -> Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]: ...
+def iter_tarred_files(
+    tar: tarfile.TarFile,
+    *,
+    representation: Literal["binary"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: dict[str, Any] | None = ...,
+    keep: Predicate[tarfile.TarInfo] | None = ...,
+) -> Iterable[BinaryIO]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
-def iterate_tar_info(
-    tar: tarfile.TarFile, representation: Literal["text"]
-) -> Iterable[tuple[tarfile.TarInfo, TextIO]]: ...
+def iter_tarred_files(
+    tar: tarfile.TarFile,
+    *,
+    representation: Literal["text"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: dict[str, Any] | None = ...,
+    keep: Predicate[tarfile.TarInfo] | None = ...,
+) -> Iterable[TextIO]: ...
 
 
-def iterate_tar_info(
+def iter_tarred_files(
     tar: tarfile.TarFile,
     *,
     representation: Representation = "text",
     progress: bool = True,
     tqdm_kwargs: dict[str, Any] | None = None,
-    keep: Callable[[tarfile.TarInfo], bool] | None = None,
-) -> Iterable[tuple[tarfile.TarInfo, TextIO]] | Iterable[tuple[tarfile.TarInfo, typing.BinaryIO]]:
-    """
-
-    :param tar:
-    :param representation:
-    :param progress:
-    :param tqdm_kwargs:
-    :param keep:
-    :return:
-
-    .. code-block:: python
-
-        tar = tarfile.open("...")
-        for member, file in iterate_tar_info(tar):
-
-    """
+    keep: Predicate[tarfile.TarInfo] | None = None,
+) -> Iterable[TextIO] | Iterable[BinaryIO]:
+    """Iterate over opened files in a tar archive in read mode."""
     for member in tqdm(tar.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
         if keep is not None and not keep(member):
             continue
@@ -1683,15 +1689,93 @@ def iterate_tar_info(
         if file is None:
             continue
         if representation == "text":
-            yield member, io.TextIOWrapper(file, encoding="utf-8")
+            yield io.TextIOWrapper(file, encoding="utf-8")
         else:
-            yield member, file
+            yield cast(BinaryIO, file)  # FIXME
 
 
-def iter_zipped_csv_readers(path):
+def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+    """Iterate over the lines from tarred files."""
+    path = Path(path).expanduser().resolve()
+    with tarfile.open(path, mode="r") as tar_file:
+        for file in iter_tarred_files(
+            tar_file,
+            representation="text",
+            keep=lambda tar_info: tar_info.name.endswith(".csv"),
+            progress=progress,
+        ):
+            reader = csv.reader(file)
+            _header = next(reader)
+            # TODO logic for checking header consistency?
+            yield from reader
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_files(
+    zip_file: zipfile.ZipFile,
+    *,
+    representation: Literal["binary"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    progress: bool = ...,
+) -> Iterable[typing.BinaryIO]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_files(
+    zip_file: zipfile.ZipFile,
+    *,
+    representation: Literal["text"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    progress: bool = ...,
+) -> Iterable[typing.TextIO]: ...
+
+
+def iter_zipped_files(
+    zip_file: zipfile.ZipFile,
+    *,
+    representation: Representation = "text",
+    open_kwargs: Mapping[str, Any] | None = None,
+    keep: Predicate[zipfile.ZipInfo] | None = None,
+    progress: bool = True,
+) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
+    """Iterate over opened files in a zip file in read mode."""
+    for info in tqdm(zip_file.infolist(), disable=not progress):
+        if keep is not None and not keep(info):
+            continue
+        with open_inner_zipfile(
+            zip_file,
+            info.filename,
+            operation="read",
+            representation=representation,
+            open_kwargs=open_kwargs,
+        ) as file:
+            yield file
+
+
+def iter_zipped_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+    """Iterate over the lines from zipped files."""
+    path = Path(path).expanduser().resolve()
     with zipfile.ZipFile(path, mode="r") as zip_file:
-        for info in zip_file.infolist():
-            if not info.filename.endswith(".csv"):
-                continue
-            with open_inner_zipfile(zip_file, info.filename) as file:
-                yield from csv.reader(io.TextIOWrapper(file))
+        for file in iter_zipped_files(
+            zip_file,
+            representation="text",
+            keep=lambda zip_info: zip_info.filename.endswith(".csv"),
+            progress=progress,
+        ):
+            reader = csv.reader(file)
+            _header = next(reader)
+            # TODO logic for checking header consistency?
+            yield from reader
+
+
+def tarfile_writestr(tar_file: tarfile.TarFile, filename: str, data: str) -> None:
+    """Write to a tarfile."""
+    # TODO later, combine with other tarfile writing
+    d2 = data.encode("utf-8")
+    info2 = tarfile.TarInfo(name=filename)
+    info2.size = len(d2)
+    tar_file.addfile(info2, io.BytesIO(d2))

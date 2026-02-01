@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import csv
 import hashlib
 import importlib.util
 import os
+import tarfile
 import tempfile
 import unittest
 import zipfile
@@ -26,7 +26,8 @@ from pystow.utils import (
     get_hash_hexdigest,
     get_hexdigests_remote,
     getenv_path,
-    iter_zipped_csv_readers,
+    iter_tarred_readers,
+    iter_zipped_readers,
     mkdir,
     mock_envvar,
     n,
@@ -45,6 +46,7 @@ from pystow.utils import (
     safe_open_dict_reader,
     safe_open_reader,
     safe_open_writer,
+    tarfile_writestr,
     write_pydantic_jsonl,
     write_tarfile_csv,
     write_tarfile_xml,
@@ -307,20 +309,29 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(models, reconstituted)
 
     def test_zip_csvs(self) -> None:
-        """Test reading many CSVs from insize a zip file."""
+        """Test reading many CSVs from inside a zip file."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("test.zip")
             with zipfile.ZipFile(path, "w") as zip_file:
-                for i in range(4):
-                    with zip_file.open(f"test-{i}", "w") as file:
-                        writer = csv.writer(file)
-                        writer.writerow(("c1", "c2"))
-                        for j in range(4):
-                            writer.writerow((f"key-{i}-{j}", f"value-{i}-{j}"))
+                zip_file.writestr("test-1.csv", "c1,c2\nv1,v2")
+                zip_file.writestr("test-2.csv", "c1,c2\nv3,v4")
+                # this is a decoy file
+                zip_file.writestr("test-3.xxx", "c1,c2\nv5,v6")
+            rows = list(iter_zipped_readers(path, progress=False))
+            self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
 
-            with iter_zipped_csv_readers(path) as rows:
-                rows_l = list(rows)
-                self.assertEqual([], rows_l)
+    def test_tarred_csvs(self) -> None:
+        """Test reading many CSVs from inside a tar file."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.tar.gz")
+            with tarfile.open(path, "w") as tar_file:
+                tarfile_writestr(tar_file, "test-1.csv", "c1,c2\nv1,v2")
+                tarfile_writestr(tar_file, "test-2.csv", "c1,c2\nv3,v4")
+                # decoy, with wrong extension
+                tarfile_writestr(tar_file, "test-3.xxx", "c1,c2\nv5,v6")
+
+            rows = list(iter_tarred_readers(path, progress=False))
+            self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
 
 
 class TestDownload(unittest.TestCase):
