@@ -1779,7 +1779,11 @@ def iter_tarred_csvs(
 
 
 def iter_tarred_csvs(
-    path: str | Path | tarfile.TarFile, *, progress: bool = True, return_dicts: bool = False
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = True,
+    return_dicts: bool = False,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
     yield from _iter_archived_csvs(
@@ -1788,6 +1792,7 @@ def iter_tarred_csvs(
         return_dicts=return_dicts,
         iter_files=iter_tarred_files,
         keep=_keep_tar_info_csv,
+        tqdm_kwargs=tqdm_kwargs,
     )
 
 
