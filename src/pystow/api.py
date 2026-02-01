@@ -592,7 +592,8 @@ def ensure_open_zip(
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param mode: The read mode, passed to :func:`zipfile.open`
-    :param zipfile_kwargs: Additional keyword arguments passed to :class:`zipfile.ZipFile`
+    :param zipfile_kwargs: Additional keyword arguments passed to
+        :class:`zipfile.ZipFile`
     :param open_kwargs: Additional keyword arguments passed to :func:`zipfile.open`
 
     :yields: An open file object
@@ -998,7 +999,8 @@ def ensure_yaml(
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
-    :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+    :param yaml_load_kwargs: Keyword arguments to pass through to
+        :func:`yaml.safe_load`.
 
     :returns: A JSON object (list, dict, etc.)
     """
@@ -1153,7 +1155,8 @@ def load_yaml(
     :param subkeys: A sequence of additional strings to join. If none are given, returns
         the directory for this module.
     :param name: The name of the file to open
-    :param yaml_load_kwargs: Keyword arguments to pass through to :func:`yaml.safe_load`.
+    :param yaml_load_kwargs: Keyword arguments to pass through to
+        :func:`yaml.safe_load`.
 
     :returns: A JSON object (list, dict, etc.)
     """

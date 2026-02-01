@@ -129,6 +129,7 @@ def delete_branch(owner: str, repo: str, branch_name: str, **kwargs: Any) -> req
     :param owner: The repository owner
     :param repo: The repository name
     :param branch_name: The branch name or head ref
+
     :returns: A response from the GitHub API after running the (secret) delete endpoint
     """
     # see https://github.com/orgs/community/discussions/24603

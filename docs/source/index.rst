@@ -1,5 +1,6 @@
-PyStow |release| Documentation
-==============================
+################################
+ PyStow |release| Documentation
+################################
 
 If you've ever written the following few lines of code, :mod:`pystow` is for you:
 
@@ -63,8 +64,9 @@ directories automatically get created as well.
     utils
     cli
 
-Indices and Tables
-------------------
+********************
+ Indices and Tables
+********************
 
 - :ref:`genindex`
 - :ref:`modindex`

@@ -1367,13 +1367,16 @@ def get_home(ensure_exists: bool = True) -> Path:
     :returns: A path object representing the pystow home directory, as one of:
 
         1. :data:`PYSTOW_HOME_ENVVAR` environment variable or
-        2. The user data directory defined by :mod:`appdirs` if the
-           :data:`PYSTOW_USE_APPDIRS` environment variable is set to ``true`` or
+        2. The user data directory defined by :mod:`appdirs` or :mod:`platformdirs` if
+           the :data:`PYSTOW_USE_APPDIRS` environment variable is set to ``true`` or
         3. The default directory constructed in the user's home directory plus what's
            returned by :func:`get_name`.
     """
     if use_appdirs():
-        from appdirs import user_data_dir
+        try:
+            from platformdirs import user_data_dir
+        except ImportError:
+            from appdirs import user_data_dir
 
         default = Path(user_data_dir())
     else:
@@ -1397,7 +1400,10 @@ def get_base(key: str, ensure_exists: bool = True) -> Path:
         raise ValueError(f"The module should not have a dot in it: {key}")
     envvar = f"{key.upper()}_HOME"
     if use_appdirs():
-        from appdirs import user_data_dir
+        try:
+            from platformdirs import user_data_dir
+        except ImportError:
+            from appdirs import user_data_dir
 
         default = Path(user_data_dir(appname=key))
     else:
