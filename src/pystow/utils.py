@@ -1879,19 +1879,31 @@ def safe_zipfile_open(
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_csvs(
-    path: str | Path | zipfile.ZipFile, *, progress: bool = ..., return_dicts: Literal[False] = ...
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = ...,
+    return_dicts: Literal[False] = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[Sequence[str]]: ...
 
 
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_csvs(
-    path: str | Path | zipfile.ZipFile, *, progress: bool = ..., return_dicts: Literal[True] = ...
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = ...,
+    return_dicts: Literal[True] = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[dict[str, Any]]: ...
 
 
 def iter_zipped_csvs(
-    path: str | Path | zipfile.ZipFile, *, progress: bool = True, return_dicts: bool = False
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = True,
+    return_dicts: bool = False,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     yield from _iter_archived_csvs(
@@ -1900,6 +1912,7 @@ def iter_zipped_csvs(
         return_dicts=return_dicts,
         iter_files=iter_zipped_files,
         keep=_keep_zip_info_csv,
+        tqdm_kwargs=tqdm_kwargs,
     )
 
 
