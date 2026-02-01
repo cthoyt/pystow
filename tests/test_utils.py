@@ -317,8 +317,12 @@ class TestUtils(unittest.TestCase):
                 zip_file.writestr("test-2.csv", "c1,c2\nv3,v4")
                 # this is a decoy file
                 zip_file.writestr("test-3.xxx", "c1,c2\nv5,v6")
+
             rows = list(iter_zipped_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
+
+            records = list(iter_zipped_csvs(path, progress=False, return_dicts=True))
+            self.assertEqual([{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], records)
 
     def test_zip_csvs_header_mismatch(self) -> None:
         """Test raising an exception when the headers don't match."""
@@ -342,6 +346,9 @@ class TestUtils(unittest.TestCase):
 
             rows = list(iter_tarred_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
+
+            records = list(iter_tarred_csvs(path, progress=False, return_dicts=True))
+            self.assertEqual([{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], records)
 
     def test_tarred_csvs_mismatch(self) -> None:
         """Test reading many CSVs from inside a tar file."""
