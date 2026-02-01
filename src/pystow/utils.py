@@ -1753,12 +1753,14 @@ def safe_tarfile_open(
         yield tar_file
 
 
+# docstr-coverage:excused `overload`
 @overload
 def iter_tarred_csvs(
     path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[False] = ...
 ) -> Iterable[Sequence[str]]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
 def iter_tarred_csvs(
     path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[True] = ...
