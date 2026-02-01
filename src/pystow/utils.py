@@ -1851,6 +1851,20 @@ def safe_zipfile_open(
         yield zip_file
 
 
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile, *, progress: bool = ..., return_dicts: Literal[False] = ...
+) -> Iterable[Sequence[str]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile, *, progress: bool = ..., return_dicts: Literal[True] = ...
+) -> Iterable[dict[str, Any]]: ...
+
+
 def iter_zipped_csvs(
     path: str | Path | zipfile.ZipFile, *, progress: bool = True, return_dicts: bool = False
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
