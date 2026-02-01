@@ -17,12 +17,24 @@ import tempfile
 import typing
 import urllib.error
 import zipfile
-from collections.abc import Collection, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Generator, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path, PurePosixPath
 from subprocess import check_output
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TextIO, TypeAlias, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Literal,
+    NamedTuple,
+    Protocol,
+    TextIO,
+    TypeAlias,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from uuid import uuid4
@@ -58,6 +70,7 @@ __all__ = [
     "DownloadBackend",
     "DownloadError",
     "Hash",
+    "HeaderMismatchError",
     "HexDigestError",
     "HexDigestMismatch",
     "InvalidOperationError",
@@ -83,6 +96,10 @@ __all__ = [
     "get_soup",
     "getenv_path",
     "gunzip",
+    "iter_tarred_csvs",
+    "iter_tarred_files",
+    "iter_zipped_csvs",
+    "iter_zipped_files",
     "mkdir",
     "mock_envvar",
     "mock_home",
@@ -109,6 +126,9 @@ __all__ = [
     "safe_open_dict_writer",
     "safe_open_reader",
     "safe_open_writer",
+    "safe_tarfile_open",
+    "safe_zipfile_open",
+    "tarfile_writestr",
     "write_lzma_csv",
     "write_pickle_gz",
     "write_pydantic_jsonl",
@@ -1635,3 +1655,347 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
     with safe_open(file, operation="read", representation="text") as file:
         for line in file:
             yield model_cls.model_validate_json(line)
+
+
+ArchiveType = TypeVar("ArchiveType", contravariant=True)
+ArchiveInfo = TypeVar("ArchiveInfo", covariant=True)
+Predicate: TypeAlias = Callable[[ArchiveInfo], bool]
+
+
+class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
+    """A protocol for opening files in an archive."""
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | ArchiveType,
+        *,
+        representation: Literal["binary"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[BinaryIO]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def __call__(
+        self,
+        path: str | Path | ArchiveType,
+        *,
+        representation: Literal["text"] = ...,
+        progress: bool = ...,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO]: ...
+
+    def __call__(
+        self,
+        path: str | Path | ArchiveType,
+        *,
+        representation: Representation = ...,
+        progress: bool = True,
+        tqdm_kwargs: Mapping[str, Any] | None = ...,
+        keep: Predicate[ArchiveInfo] | None = ...,
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_tarred_files(
+    path: str | Path | tarfile.TarFile,
+    *,
+    representation: Literal["binary"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[tarfile.TarInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[BinaryIO]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_tarred_files(
+    path: str | Path | tarfile.TarFile,
+    *,
+    representation: Literal["text"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[tarfile.TarInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[TextIO]: ...
+
+
+def iter_tarred_files(
+    path: str | Path | tarfile.TarFile,
+    *,
+    representation: Representation = "text",
+    progress: bool = True,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
+    keep: Predicate[tarfile.TarInfo] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Iterable[TextIO] | Iterable[BinaryIO]:
+    """Iterate over opened files in a tar archive in read mode."""
+    with safe_tarfile_open(path) as tar_file:
+        _tqdm_kwargs = {
+            "desc": f"reading {cast(str, tar_file.name)}",
+            "unit": "file",
+            "unit_scale": True,
+        }
+        if tqdm_kwargs is not None:
+            _tqdm_kwargs.update(tqdm_kwargs)
+        for member in tqdm(tar_file.getmembers(), disable=not progress, **_tqdm_kwargs):
+            if keep is not None and not keep(member):
+                continue
+            file = tar_file.extractfile(member, **(open_kwargs or {}))
+            if file is None:
+                continue
+            if representation == "text":
+                yield io.TextIOWrapper(file, encoding="utf-8")
+            else:
+                yield cast(BinaryIO, file)  # FIXME
+
+
+@contextlib.contextmanager
+def safe_tarfile_open(
+    tar_file: str | Path | tarfile.TarFile,
+) -> Generator[tarfile.TarFile, None, None]:
+    """Open a tar archive safely."""
+    if isinstance(tar_file, str | Path):
+        with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as tar_file:
+            yield tar_file
+    else:
+        yield tar_file
+
+
+ReturnType: TypeAlias = Literal["sequence", "record"]
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["sequence"] = ...,
+) -> Iterable[Sequence[str]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["record"] = ...,
+) -> Iterable[dict[str, Any]]: ...
+
+
+def iter_tarred_csvs(
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = True,
+    return_type: ReturnType = "sequence",
+    tqdm_kwargs: Mapping[str, Any] | None = None,
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
+    """Iterate over the lines from tarred CSV files."""
+    yield from _iter_archived_csvs(
+        path,
+        progress=progress,
+        return_type=return_type,
+        iter_files=iter_tarred_files,
+        keep=_keep_tar_info_csv,
+        tqdm_kwargs=tqdm_kwargs,
+    )
+
+
+def _keep_tar_info_csv(tar_info: tarfile.TarInfo) -> bool:
+    return tar_info.name.endswith(".csv")
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_files(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    representation: Literal["binary"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[typing.BinaryIO]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_files(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    representation: Literal["text"] = ...,
+    progress: bool = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+    keep: Predicate[zipfile.ZipInfo] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[typing.TextIO]: ...
+
+
+def iter_zipped_files(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    representation: Representation = "text",
+    progress: bool = True,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
+    keep: Predicate[zipfile.ZipInfo] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
+    """Iterate over opened files in a zip file in read mode."""
+    with safe_zipfile_open(path) as zip_file:
+        _tqdm_kwargs = {
+            "desc": f"reading {zip_file.filename}",
+            "unit": "file",
+            "unit_scale": True,
+        }
+        if tqdm_kwargs is not None:
+            _tqdm_kwargs.update(tqdm_kwargs)
+        for info in tqdm(zip_file.infolist(), disable=not progress, **_tqdm_kwargs):
+            if keep is not None and not keep(info):
+                continue
+            with open_inner_zipfile(
+                zip_file,
+                info.filename,
+                operation="read",
+                representation=representation,
+                open_kwargs=open_kwargs,
+            ) as file:
+                yield file
+
+
+@contextlib.contextmanager
+def safe_zipfile_open(
+    zip_file: str | Path | zipfile.ZipFile,
+) -> Generator[zipfile.ZipFile, None, None]:
+    """Open a zip archive safely."""
+    if isinstance(zip_file, str | Path):
+        with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as zip_file:
+            yield zip_file
+    else:
+        yield zip_file
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["sequence"] = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[Sequence[str]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["record"] = ...,
+    tqdm_kwargs: Mapping[str, Any] | None = ...,
+) -> Iterable[dict[str, Any]]: ...
+
+
+def iter_zipped_csvs(
+    path: str | Path | zipfile.ZipFile,
+    *,
+    progress: bool = True,
+    return_type: ReturnType = "sequence",
+    tqdm_kwargs: Mapping[str, Any] | None = None,
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
+    """Iterate over the lines from zipped CSV files."""
+    yield from _iter_archived_csvs(
+        path,
+        progress=progress,
+        return_type=return_type,
+        iter_files=iter_zipped_files,
+        keep=_keep_zip_info_csv,
+        tqdm_kwargs=tqdm_kwargs,
+    )
+
+
+def _keep_zip_info_csv(zip_info: zipfile.ZipInfo) -> bool:
+    return zip_info.filename.endswith(".csv")
+
+
+def _iter_archived_csvs(
+    path: str | Path | ArchiveType,
+    *,
+    progress: bool = True,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
+    keep: Predicate[ArchiveInfo] | None = None,
+    return_type: ReturnType = "sequence",
+    iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
+) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
+    """Iterate over the lines from zipped CSV files."""
+    header: Sequence[str] | None = None
+    for file in iter_files(
+        path,
+        representation="text",
+        progress=progress,
+        tqdm_kwargs=tqdm_kwargs,
+        keep=keep,
+    ):
+        reader: csv.DictReader[str] | _csv.Reader
+        match return_type:
+            case "sequence":
+                reader = csv.reader(file)
+            case "record":
+                reader = csv.DictReader(file)
+            case _:
+                raise ValueError(f"unrecognized return type {return_type}")
+        if header is None:
+            header = _get_header(reader)
+        elif (current_header := _get_header(reader)) != header:
+            raise HeaderMismatchError(header, current_header)
+        it = tqdm(
+            reader,
+            disable=not progress,
+            leave=False,
+            desc=f"reading {file.name}",
+            unit="row",
+            unit_scale=True,
+        )
+        yield from it
+
+
+def _get_header(reader: csv.DictReader[str] | _csv.Reader) -> Sequence[str]:
+    if isinstance(reader, csv.DictReader):
+        return cast(Sequence[str], reader.fieldnames)
+    else:
+        return next(reader)
+
+
+class HeaderMismatchError(ValueError):
+    """Raised when the current header in an archive of CSVs is different than the original."""
+
+    def __init__(self, original: Sequence[str], current: Sequence[str]) -> None:
+        """Instantiate the error."""
+        self.original = original
+        self.current = current
+
+    def __str__(self) -> str:
+        return (
+            f"header mismatch. first header was {self.original} "
+            f"and current header is {self.current}"
+        )
+
+
+def tarfile_writestr(tar_file: tarfile.TarFile, filename: str, data: str) -> None:
+    """Write to a tarfile."""
+    # TODO later, combine with other tarfile writing
+    data_bytes = data.encode("utf-8")
+    tar_info = tarfile.TarInfo(name=filename)
+    tar_info.size = len(data_bytes)
+    tar_file.addfile(tar_info, io.BytesIO(data_bytes))
