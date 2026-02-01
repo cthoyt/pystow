@@ -1947,7 +1947,14 @@ def _iter_archived_csvs(
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
     ):
-        reader = csv.DictReader(file) if return_type else csv.reader(file)
+        reader: csv.DictReader[str] | _csv.Reader
+        match return_type:
+            case "sequence":
+                reader = csv.reader(file)
+            case "record":
+                reader = csv.DictReader(file)
+            case _:
+                raise ValueError(f"unrecognized return type {return_type}")
         if header is None:
             header = _get_header(reader)
         elif (current_header := _get_header(reader)) != header:
