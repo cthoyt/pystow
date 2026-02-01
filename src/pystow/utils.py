@@ -1694,6 +1694,7 @@ def iter_tarred_files(
             else:
                 yield cast(BinaryIO, file)  # FIXME
 
+
 @contextlib.contextmanager
 def _safe_open_tar_file(
     tar_file: str | Path | tarfile.TarFile,
@@ -1707,18 +1708,16 @@ def _safe_open_tar_file(
 
 def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
     """Iterate over the lines from tarred files."""
-    path = Path(path).expanduser().resolve()
-    with tarfile.open(path, mode="r") as tar_file:
-        for file in iter_tarred_files(
-            tar_file,
-            representation="text",
-            keep=lambda tar_info: tar_info.name.endswith(".csv"),
-            progress=progress,
-        ):
-            reader = csv.reader(file)
-            _header = next(reader)
-            # TODO logic for checking header consistency?
-            yield from reader
+    for file in iter_tarred_files(
+        path,
+        representation="text",
+        keep=lambda tar_info: tar_info.name.endswith(".csv"),
+        progress=progress,
+    ):
+        reader = csv.reader(file)
+        _header = next(reader)
+        # TODO logic for checking header consistency?
+        yield from reader
 
 
 # docstr-coverage:excused `overload`
@@ -1759,13 +1758,14 @@ def iter_zipped_files(
             if keep is not None and not keep(info):
                 continue
             with open_inner_zipfile(
-                zip_file,
+                zf,
                 info.filename,
                 operation="read",
                 representation=representation,
                 open_kwargs=open_kwargs,
             ) as file:
                 yield file
+
 
 @contextlib.contextmanager
 def _safe_open_zip_file(
@@ -1780,18 +1780,16 @@ def _safe_open_zip_file(
 
 def iter_zipped_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
     """Iterate over the lines from zipped files."""
-    path = Path(path).expanduser().resolve()
-    with zipfile.ZipFile(path, mode="r") as zip_file:
-        for file in iter_zipped_files(
-            zip_file,
-            representation="text",
-            keep=lambda zip_info: zip_info.filename.endswith(".csv"),
-            progress=progress,
-        ):
-            reader = csv.reader(file)
-            _header = next(reader)
-            # TODO logic for checking header consistency?
-            yield from reader
+    for file in iter_zipped_files(
+        path,
+        representation="text",
+        keep=lambda zip_info: zip_info.filename.endswith(".csv"),
+        progress=progress,
+    ):
+        reader = csv.reader(file)
+        _header = next(reader)
+        # TODO logic for checking header consistency?
+        yield from reader
 
 
 def tarfile_writestr(tar_file: tarfile.TarFile, filename: str, data: str) -> None:
