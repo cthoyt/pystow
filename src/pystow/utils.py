@@ -94,10 +94,10 @@ __all__ = [
     "get_soup",
     "getenv_path",
     "gunzip",
+    "iter_tarred_csvs",
     "iter_tarred_files",
-    "iter_tarred_readers",
+    "iter_zipped_csvs",
     "iter_zipped_files",
-    "iter_zipped_readers",
     "mkdir",
     "mock_envvar",
     "mock_home",
@@ -1682,7 +1682,7 @@ def iter_tarred_files(
     keep: Predicate[tarfile.TarInfo] | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    with _safe_open_tar_file(tar_file) as tf:
+    with safe_tarfile_open(tar_file) as tf:
         for member in tqdm(tf.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
             if keep is not None and not keep(member):
                 continue
@@ -1696,9 +1696,10 @@ def iter_tarred_files(
 
 
 @contextlib.contextmanager
-def _safe_open_tar_file(
+def safe_tarfile_open(
     tar_file: str | Path | tarfile.TarFile,
 ) -> Generator[tarfile.TarFile, None, None]:
+    """Open a tar archive safely."""
     if isinstance(tar_file, str | Path):
         with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as tar_file:
             yield tar_file
@@ -1706,8 +1707,9 @@ def _safe_open_tar_file(
         yield tar_file
 
 
-def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
-    """Iterate over the lines from tarred files."""
+def iter_tarred_csvs(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+    """Iterate over the lines from tarred CSV files."""
+    header: Sequence[str] | None = None
     for file in iter_tarred_files(
         path,
         representation="text",
@@ -1715,8 +1717,10 @@ def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[
         progress=progress,
     ):
         reader = csv.reader(file)
-        _header = next(reader)
-        # TODO logic for checking header consistency?
+        if header is None:
+            header = next(reader)
+        elif (current_header := next(reader)) != header:
+            raise HeaderMismatchError(header, current_header)
         yield from reader
 
 
@@ -1753,7 +1757,7 @@ def iter_zipped_files(
     progress: bool = True,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
-    with _safe_open_zip_file(zip_file) as zf:
+    with safe_zipfile_open(zip_file) as zf:
         for info in tqdm(zf.infolist(), disable=not progress):
             if keep is not None and not keep(info):
                 continue
@@ -1768,9 +1772,10 @@ def iter_zipped_files(
 
 
 @contextlib.contextmanager
-def _safe_open_zip_file(
+def safe_zipfile_open(
     zip_file: str | Path | zipfile.ZipFile,
 ) -> Generator[zipfile.ZipFile, None, None]:
+    """Open a zip archive safely."""
     if isinstance(zip_file, str | Path):
         with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as zip_file:
             yield zip_file
@@ -1778,8 +1783,9 @@ def _safe_open_zip_file(
         yield zip_file
 
 
-def iter_zipped_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
-    """Iterate over the lines from zipped files."""
+def iter_zipped_csvs(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
+    """Iterate over the lines from zipped CSV files."""
+    header: Sequence[str] | None = None
     for file in iter_zipped_files(
         path,
         representation="text",
@@ -1787,15 +1793,32 @@ def iter_zipped_readers(path: str | Path, *, progress: bool = True) -> Iterable[
         progress=progress,
     ):
         reader = csv.reader(file)
-        _header = next(reader)
-        # TODO logic for checking header consistency?
+        if header is None:
+            header = next(reader)
+        elif (current_header := next(reader)) != header:
+            raise HeaderMismatchError(header, current_header)
         yield from reader
+
+
+class HeaderMismatchError(ValueError):
+    """Raised when the current header in an archive of CSVs is different than the original."""
+
+    def __init__(self, original: Sequence[str], current: Sequence[str]) -> None:
+        """Instantiate the error."""
+        self.original = original
+        self.current = current
+
+    def __str__(self) -> str:
+        return (
+            f"header mismatch. first header was {self.original} "
+            f"and current header is {self.current}"
+        )
 
 
 def tarfile_writestr(tar_file: tarfile.TarFile, filename: str, data: str) -> None:
     """Write to a tarfile."""
     # TODO later, combine with other tarfile writing
-    d2 = data.encode("utf-8")
-    info2 = tarfile.TarInfo(name=filename)
-    info2.size = len(d2)
-    tar_file.addfile(info2, io.BytesIO(d2))
+    data_bytes = data.encode("utf-8")
+    tar_info = tarfile.TarInfo(name=filename)
+    tar_info.size = len(data_bytes)
+    tar_file.addfile(tar_info, io.BytesIO(data_bytes))

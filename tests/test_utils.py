@@ -26,8 +26,8 @@ from pystow.utils import (
     get_hash_hexdigest,
     get_hexdigests_remote,
     getenv_path,
-    iter_tarred_readers,
-    iter_zipped_readers,
+    iter_tarred_csvs,
+    iter_zipped_csvs,
     mkdir,
     mock_envvar,
     n,
@@ -317,8 +317,18 @@ class TestUtils(unittest.TestCase):
                 zip_file.writestr("test-2.csv", "c1,c2\nv3,v4")
                 # this is a decoy file
                 zip_file.writestr("test-3.xxx", "c1,c2\nv5,v6")
-            rows = list(iter_zipped_readers(path, progress=False))
+            rows = list(iter_zipped_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
+
+    def test_zip_csvs_header_mismatch(self) -> None:
+        """Test raising an exception when the headers don't match."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.zip")
+            with zipfile.ZipFile(path, "w") as zip_file:
+                zip_file.writestr("test-1.csv", "c1,c2\nv1,v2")
+                zip_file.writestr("test-2.csv", "c3,c4\nv3,v4")
+            with self.assertRaises(ValueError):
+                list(iter_zipped_csvs(path, progress=False))
 
     def test_tarred_csvs(self) -> None:
         """Test reading many CSVs from inside a tar file."""
@@ -330,8 +340,18 @@ class TestUtils(unittest.TestCase):
                 # decoy, with wrong extension
                 tarfile_writestr(tar_file, "test-3.xxx", "c1,c2\nv5,v6")
 
-            rows = list(iter_tarred_readers(path, progress=False))
+            rows = list(iter_tarred_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
+
+    def test_tarred_csvs_mismatch(self) -> None:
+        """Test reading many CSVs from inside a tar file."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.tar.gz")
+            with tarfile.open(path, "w") as tar_file:
+                tarfile_writestr(tar_file, "test-1.csv", "c1,c2\nv1,v2")
+                tarfile_writestr(tar_file, "test-2.csv", "c3,c4\nv3,v4")
+            with self.assertRaises(ValueError):
+                list(iter_tarred_csvs(path, progress=False))
 
 
 class TestDownload(unittest.TestCase):
