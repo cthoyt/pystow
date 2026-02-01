@@ -1652,7 +1652,7 @@ def _iterread_pydantic_jsonl(file: str | Path | TextIO, model_cls: type[M]) -> I
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_files(
-    tar: tarfile.TarFile,
+    tar_file: str | Path | tarfile.TarFile,
     *,
     representation: Literal["binary"] = ...,
     progress: bool = ...,
@@ -1664,7 +1664,7 @@ def iter_tarred_files(
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_files(
-    tar: tarfile.TarFile,
+    tar_file: str | Path | tarfile.TarFile,
     *,
     representation: Literal["text"] = ...,
     progress: bool = ...,
@@ -1674,7 +1674,7 @@ def iter_tarred_files(
 
 
 def iter_tarred_files(
-    tar: tarfile.TarFile,
+    tar_file: str | Path | tarfile.TarFile,
     *,
     representation: Representation = "text",
     progress: bool = True,
@@ -1682,16 +1682,27 @@ def iter_tarred_files(
     keep: Predicate[tarfile.TarInfo] | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    for member in tqdm(tar.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
-        if keep is not None and not keep(member):
-            continue
-        file = tar.extractfile(member)
-        if file is None:
-            continue
-        if representation == "text":
-            yield io.TextIOWrapper(file, encoding="utf-8")
-        else:
-            yield cast(BinaryIO, file)  # FIXME
+    with _safe_open_tar_file(tar_file) as tf:
+        for member in tqdm(tf.getmembers(), disable=not progress, **(tqdm_kwargs or {})):
+            if keep is not None and not keep(member):
+                continue
+            file = tf.extractfile(member)
+            if file is None:
+                continue
+            if representation == "text":
+                yield io.TextIOWrapper(file, encoding="utf-8")
+            else:
+                yield cast(BinaryIO, file)  # FIXME
+
+@contextlib.contextmanager
+def _safe_open_tar_file(
+    tar_file: str | Path | tarfile.TarFile,
+) -> Generator[tarfile.TarFile, None, None]:
+    if isinstance(tar_file, str | Path):
+        with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as tar_file:
+            yield tar_file
+    else:
+        yield tar_file
 
 
 def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
@@ -1713,7 +1724,7 @@ def iter_tarred_readers(path: str | Path, *, progress: bool = True) -> Iterable[
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_files(
-    zip_file: zipfile.ZipFile,
+    zip_file: str | Path | zipfile.ZipFile,
     *,
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
@@ -1725,7 +1736,7 @@ def iter_zipped_files(
 # docstr-coverage:excused `overload`
 @overload
 def iter_zipped_files(
-    zip_file: zipfile.ZipFile,
+    zip_file: str | Path | zipfile.ZipFile,
     *,
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
@@ -1735,7 +1746,7 @@ def iter_zipped_files(
 
 
 def iter_zipped_files(
-    zip_file: zipfile.ZipFile,
+    zip_file: str | Path | zipfile.ZipFile,
     *,
     representation: Representation = "text",
     open_kwargs: Mapping[str, Any] | None = None,
@@ -1743,17 +1754,28 @@ def iter_zipped_files(
     progress: bool = True,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
-    for info in tqdm(zip_file.infolist(), disable=not progress):
-        if keep is not None and not keep(info):
-            continue
-        with open_inner_zipfile(
-            zip_file,
-            info.filename,
-            operation="read",
-            representation=representation,
-            open_kwargs=open_kwargs,
-        ) as file:
-            yield file
+    with _safe_open_zip_file(zip_file) as zf:
+        for info in tqdm(zf.infolist(), disable=not progress):
+            if keep is not None and not keep(info):
+                continue
+            with open_inner_zipfile(
+                zip_file,
+                info.filename,
+                operation="read",
+                representation=representation,
+                open_kwargs=open_kwargs,
+            ) as file:
+                yield file
+
+@contextlib.contextmanager
+def _safe_open_zip_file(
+    zip_file: str | Path | zipfile.ZipFile,
+) -> Generator[zipfile.ZipFile, None, None]:
+    if isinstance(zip_file, str | Path):
+        with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as zip_file:
+            yield zip_file
+    else:
+        yield zip_file
 
 
 def iter_zipped_readers(path: str | Path, *, progress: bool = True) -> Iterable[Sequence[str]]:
