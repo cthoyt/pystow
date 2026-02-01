@@ -1771,17 +1771,26 @@ def safe_tarfile_open(
         yield tar_file
 
 
+ReturnType: TypeAlias = Literal["sequence", "record"]
+
+
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_csvs(
-    path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[False] = ...
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["sequence"] = ...,
 ) -> Iterable[Sequence[str]]: ...
 
 
 # docstr-coverage:excused `overload`
 @overload
 def iter_tarred_csvs(
-    path: str | Path | tarfile.TarFile, *, progress: bool = ..., return_dicts: Literal[True] = ...
+    path: str | Path | tarfile.TarFile,
+    *,
+    progress: bool = ...,
+    return_type: Literal["record"] = ...,
 ) -> Iterable[dict[str, Any]]: ...
 
 
@@ -1789,14 +1798,14 @@ def iter_tarred_csvs(
     path: str | Path | tarfile.TarFile,
     *,
     progress: bool = True,
-    return_dicts: bool = False,
+    return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
     yield from _iter_archived_csvs(
         path,
         progress=progress,
-        return_dicts=return_dicts,
+        return_type=return_type,
         iter_files=iter_tarred_files,
         keep=_keep_tar_info_csv,
         tqdm_kwargs=tqdm_kwargs,
@@ -1882,7 +1891,7 @@ def iter_zipped_csvs(
     path: str | Path | zipfile.ZipFile,
     *,
     progress: bool = ...,
-    return_dicts: Literal[False] = ...,
+    return_type: Literal["sequence"] = ...,
     tqdm_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[Sequence[str]]: ...
 
@@ -1893,7 +1902,7 @@ def iter_zipped_csvs(
     path: str | Path | zipfile.ZipFile,
     *,
     progress: bool = ...,
-    return_dicts: Literal[True] = ...,
+    return_type: Literal["record"] = ...,
     tqdm_kwargs: Mapping[str, Any] | None = ...,
 ) -> Iterable[dict[str, Any]]: ...
 
@@ -1902,14 +1911,14 @@ def iter_zipped_csvs(
     path: str | Path | zipfile.ZipFile,
     *,
     progress: bool = True,
-    return_dicts: bool = False,
+    return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     yield from _iter_archived_csvs(
         path,
         progress=progress,
-        return_dicts=return_dicts,
+        return_type=return_type,
         iter_files=iter_zipped_files,
         keep=_keep_zip_info_csv,
         tqdm_kwargs=tqdm_kwargs,
@@ -1926,7 +1935,7 @@ def _iter_archived_csvs(
     progress: bool = True,
     tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[ArchiveInfo] | None = None,
-    return_dicts: bool = False,
+    return_type: ReturnType = "sequence",
     iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
@@ -1938,7 +1947,7 @@ def _iter_archived_csvs(
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
     ):
-        reader = csv.DictReader(file) if return_dicts else csv.reader(file)
+        reader = csv.DictReader(file) if return_type else csv.reader(file)
         if header is None:
             header = _get_header(reader)
         elif (current_header := _get_header(reader)) != header:

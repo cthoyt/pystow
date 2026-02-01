@@ -321,7 +321,7 @@ class TestUtils(unittest.TestCase):
             rows = list(iter_zipped_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
 
-            records = list(iter_zipped_csvs(path, progress=False, return_dicts=True))
+            records = list(iter_zipped_csvs(path, progress=False, return_type="record"))
             self.assertEqual([{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], records)
 
     def test_zip_csvs_header_mismatch(self) -> None:
@@ -347,7 +347,7 @@ class TestUtils(unittest.TestCase):
             rows = list(iter_tarred_csvs(path, progress=False))
             self.assertEqual([["v1", "v2"], ["v3", "v4"]], rows)
 
-            records = list(iter_tarred_csvs(path, progress=False, return_dicts=True))
+            records = list(iter_tarred_csvs(path, progress=False, return_type="record"))
             self.assertEqual([{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], records)
 
     def test_tarred_csvs_mismatch(self) -> None:
