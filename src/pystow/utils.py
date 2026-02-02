@@ -1736,11 +1736,12 @@ def iter_tarred_files(
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
     with safe_tarfile_open(path) as tar_file:
-        _tqdm_kwargs = {
-            "desc": f"reading {cast(str, tar_file.name)}",
+        _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
             "unit_scale": True,
         }
+        if isinstance(tar_file.name, str | Path):
+            _tqdm_kwargs["desc"] = f"reading {Path(tar_file.name).name}"
         if tqdm_kwargs is not None:
             _tqdm_kwargs.update(tqdm_kwargs)
         for member in tqdm(tar_file.getmembers(), disable=not progress, **_tqdm_kwargs):
@@ -1777,6 +1778,7 @@ def iter_tarred_csvs(
     *,
     progress: bool = ...,
     return_type: Literal["sequence"] = ...,
+    max_line_length: int | None = ...,
 ) -> Iterable[Sequence[str]]: ...
 
 
@@ -1787,6 +1789,7 @@ def iter_tarred_csvs(
     *,
     progress: bool = ...,
     return_type: Literal["record"] = ...,
+    max_line_length: int | None = ...,
 ) -> Iterable[dict[str, Any]]: ...
 
 
@@ -1796,6 +1799,7 @@ def iter_tarred_csvs(
     progress: bool = True,
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
+    max_line_length: int | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
     yield from _iter_archived_csvs(
@@ -1805,6 +1809,7 @@ def iter_tarred_csvs(
         iter_files=iter_tarred_files,
         keep=_keep_tar_info_csv,
         tqdm_kwargs=tqdm_kwargs,
+        max_line_length=max_line_length,
     )
 
 
@@ -1889,6 +1894,7 @@ def iter_zipped_csvs(
     progress: bool = ...,
     return_type: Literal["sequence"] = ...,
     tqdm_kwargs: Mapping[str, Any] | None = ...,
+    max_line_length: int | None = ...,
 ) -> Iterable[Sequence[str]]: ...
 
 
@@ -1900,6 +1906,7 @@ def iter_zipped_csvs(
     progress: bool = ...,
     return_type: Literal["record"] = ...,
     tqdm_kwargs: Mapping[str, Any] | None = ...,
+    max_line_length: int | None = ...,
 ) -> Iterable[dict[str, Any]]: ...
 
 
@@ -1909,6 +1916,7 @@ def iter_zipped_csvs(
     progress: bool = True,
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
+    max_line_length: int | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     yield from _iter_archived_csvs(
@@ -1918,6 +1926,7 @@ def iter_zipped_csvs(
         iter_files=iter_zipped_files,
         keep=_keep_zip_info_csv,
         tqdm_kwargs=tqdm_kwargs,
+        max_line_length=max_line_length,
     )
 
 
@@ -1933,6 +1942,7 @@ def _iter_archived_csvs(
     keep: Predicate[ArchiveInfo] | None = None,
     return_type: ReturnType = "sequence",
     iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
+    max_line_length: int | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     header: Sequence[str] | None = None
@@ -1943,27 +1953,43 @@ def _iter_archived_csvs(
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
     ):
+        filename = file.name
+        if max_line_length is not None:
+            # this will break everything if there's an issue in the
+            # header, but we aren't going to consider that case
+            it = _cut_long_lines(file, max_line_length, filename)
+        else:
+            it = file
+
         reader: csv.DictReader[str] | _csv.Reader
         match return_type:
             case "sequence":
-                reader = csv.reader(file)
+                reader = csv.reader(it)
             case "record":
-                reader = csv.DictReader(file)
+                reader = csv.DictReader(it)
             case _:
                 raise ValueError(f"unrecognized return type {return_type}")
         if header is None:
             header = _get_header(reader)
         elif (current_header := _get_header(reader)) != header:
             raise HeaderMismatchError(header, current_header)
-        it = tqdm(
+        rv = tqdm(
             reader,
             disable=not progress,
             leave=False,
-            desc=f"reading {file.name}",
+            desc=f"reading {filename}",
             unit="row",
             unit_scale=True,
         )
-        yield from it
+        yield from rv
+
+
+def _cut_long_lines(it: Iterable[str], max_length: int, name: str) -> Iterable[str]:
+    for i, line in enumerate(it):
+        if len(line) > max_length:
+            tqdm.write(f"[{name}:{i:,}] line of length {len(line):,} is too long: {line[:100]}")
+            continue
+        yield line
 
 
 def _get_header(reader: csv.DictReader[str] | _csv.Reader) -> Sequence[str]:
