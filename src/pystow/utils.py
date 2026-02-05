@@ -1516,16 +1516,21 @@ def safe_open(
         else:
             with open(path, mode=mode) as file:
                 yield file  # type:ignore
-    elif isinstance(path, typing.TextIO):
+    elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
         if representation != "text":
-            raise ValueError
+            raise ValueError(
+                "must specify `text` representation when passing through a text file-like object"
+            )
         yield path
-    elif isinstance(path, typing.BinaryIO):
+    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
         if representation != "binary":
-            raise ValueError
+            raise ValueError(
+                "must specify `binary` representation when passing through "
+                "a binary file-like object"
+            )
         yield path
     else:
-        raise TypeError
+        raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
 
 
 @contextlib.contextmanager

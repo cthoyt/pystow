@@ -43,6 +43,7 @@ from pystow.utils import (
     read_zipfile_csv,
     read_zipfile_rdf,
     read_zipfile_xml,
+    safe_open,
     safe_open_dict_reader,
     safe_open_reader,
     safe_open_writer,
@@ -58,7 +59,9 @@ from pystow.utils import (
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
+TEST_TXT_CONTENT = "this is a test file\n"
 TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
+TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
@@ -98,7 +101,7 @@ class TestUtils(unittest.TestCase):
     def test_file_values(self) -> None:
         """Test encodings."""
         for url, value in [
-            (TEST_TXT, "this is a test file\n"),
+            (TEST_TXT, TEST_TXT_CONTENT),  # `this is a test file\n`
             (TEST_TXT_MD5, "4221d002ceb5d3c9e9137e495ceaa647"),
             (TEST_TXT_VERBOSE_MD5, "MD5(text.txt)=4221d002ceb5d3c9e9137e495ceaa647"),
             (TEST_TXT_WRONG_MD5, "yolo"),
@@ -359,6 +362,40 @@ class TestUtils(unittest.TestCase):
                 tarfile_writestr(tar_file, "test-2.csv", "c3,c4\nv3,v4")
             with self.assertRaises(ValueError):
                 list(iter_tarred_csvs(path, progress=False))
+
+    def test_safe_open(self) -> None:
+        """Test safe open."""
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, representation="nope") as _file:  # type:ignore
+                pass
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, operation="nope") as _file:  # type:ignore
+                pass
+
+        with self.assertRaises(TypeError):
+            with safe_open(5) as _file:  # type:ignore
+                pass
+
+        for path in TEST_TXT, TEST_TXT_GZ:
+            with safe_open(path) as file:
+                self.assertEqual(TEST_TXT_CONTENT, file.read())
+
+            with safe_open(path) as passthrough:
+                with self.assertRaises(ValueError):
+                    with safe_open(passthrough, representation="binary") as _file:
+                        pass
+                with safe_open(passthrough) as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+
+            with safe_open(path, representation="binary") as file:
+                self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+            with safe_open(path, representation="binary") as passthrough:
+                with self.assertRaises(ValueError):
+                    with safe_open(passthrough, representation="text") as _file:
+                        pass
+                with safe_open(passthrough, representation="binary") as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
 
 
 class TestDownload(unittest.TestCase):
