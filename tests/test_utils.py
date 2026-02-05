@@ -396,26 +396,39 @@ class TestUtils(unittest.TestCase):
             with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:
                 pass
 
-        for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], ["utf-8", None]):
-            with safe_open(path, encoding=encoding) as file:
-                self.assertEqual(TEST_TXT_CONTENT, file.read())
-
-            with safe_open(path, encoding=encoding) as passthrough:
-                with self.assertRaises(ValueError):
-                    with safe_open(passthrough, representation="binary") as _file:
-                        pass
-                with safe_open(passthrough) as file:
+        for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], [None, "utf-8"]):
+            with self.subTest(path=path, encoding=encoding):
+                with safe_open(path, encoding=encoding) as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read())
 
-            with safe_open(path, representation="binary") as file:
-                self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+                with safe_open(path, encoding=encoding) as passthrough:
+                    with self.assertRaises(ValueError):
+                        with safe_open(passthrough, representation="binary") as _file:
+                            pass
+                    with safe_open(passthrough) as file:
+                        self.assertEqual(TEST_TXT_CONTENT, file.read())
 
-            with safe_open(path, representation="binary") as passthrough:
-                with self.assertRaises(ValueError):
-                    with safe_open(passthrough, representation="text") as _file:
-                        pass
-                with safe_open(passthrough, representation="binary") as file:
+                with safe_open(path, representation="binary") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+                with safe_open(path, representation="binary") as passthrough:
+                    with self.assertRaises(ValueError):
+                        with safe_open(passthrough, representation="text") as _file:
+                            pass
+                    with safe_open(passthrough, representation="binary") as file:
+                        self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+        for encoding in ["ascii", "utf-16-be", "CP1252"]:
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory).joinpath("test.txt")
+                with safe_open(path, encoding=encoding, operation="write") as file:
+                    file.write(TEST_TXT_CONTENT)
+
+                with safe_open(path, encoding="utf8", operation="read") as file:
+                    self.assertNotEqual(TEST_TXT_CONTENT, file.read())
+
+                with safe_open(path, encoding=encoding, operation="read") as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read())
 
 
 class TestDownload(unittest.TestCase):
