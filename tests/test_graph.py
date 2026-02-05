@@ -4,8 +4,10 @@ import tempfile
 import unittest
 
 from pystow.graph import GraphCachePaths, build_graph_cache
+from tests.constants import skip_on_windows
 
 
+@skip_on_windows
 class TestGraph(unittest.TestCase):
     """Test graph."""
 

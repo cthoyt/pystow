@@ -55,17 +55,13 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
+from tests.constants import skip_on_windows
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
 TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
-
-skip_on_windows = unittest.skipIf(
-    os.name == "nt",
-    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
-)
 
 
 class _Session(requests.sessions.Session):
