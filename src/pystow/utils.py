@@ -1500,6 +1500,7 @@ def safe_open(
     *,
     operation: Operation = "read",
     representation: Representation = "text",
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1509,12 +1510,13 @@ def safe_open(
 
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
+        encoding = _enc(encoding, representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
-            with gzip.open(path, mode=mode) as file:
+            with gzip.open(path, mode=mode, encoding=encoding) as file:
                 yield file  # type:ignore
         else:
-            with open(path, mode=mode) as file:
+            with open(path, mode=mode, encoding=encoding) as file:
                 yield file  # type:ignore
     elif isinstance(path, typing.TextIO):
         if representation != "text":
@@ -1526,6 +1528,17 @@ def safe_open(
         yield path
     else:
         raise TypeError
+
+
+def _enc(encoding: str | None, representation: Representation) -> str | None:
+    if representation == "binary":
+        if encoding is not None:
+            raise ValueError
+        else:
+            return None
+    if encoding is not None:
+        return encoding
+    return "utf-8"
 
 
 @contextlib.contextmanager
