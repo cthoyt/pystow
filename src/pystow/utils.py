@@ -1256,7 +1256,7 @@ def download_from_google(
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
@@ -1327,6 +1327,7 @@ def download_from_s3(
         if clean_on_failure:
             path.unlink(missing_ok=True)
         raise
+
 
 def get_name() -> str:
     """Get the PyStow home directory name.
