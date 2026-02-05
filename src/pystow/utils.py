@@ -538,7 +538,7 @@ def download(
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(
@@ -1273,7 +1273,7 @@ def download_from_google(
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
@@ -1342,16 +1342,8 @@ def download_from_s3(
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
-
-
-def _unlink(path: str | Path) -> None:
-    # python 3.6 does not have pathlib.Path.unlink, smh
-    try:
-        os.remove(path)
-    except OSError:
-        pass  # if the file can't be deleted then no problem
 
 
 def get_name() -> str:
@@ -1535,16 +1527,21 @@ def safe_open(
         else:
             with open(path, mode=mode, encoding=encoding) as file:
                 yield file  # type:ignore
-    elif isinstance(path, typing.TextIO):
+    elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
         if representation != "text":
-            raise ValueError
+            raise ValueError(
+                "must specify `text` representation when passing through a text file-like object"
+            )
         yield path
-    elif isinstance(path, typing.BinaryIO):
+    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
         if representation != "binary":
-            raise ValueError
+            raise ValueError(
+                "must specify `binary` representation when passing through "
+                "a binary file-like object"
+            )
         yield path
     else:
-        raise TypeError
+        raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
 
 
 def _enc(encoding: str | None, representation: Representation) -> str | None:
