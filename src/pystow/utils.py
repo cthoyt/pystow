@@ -1467,6 +1467,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Representation = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -1478,6 +1479,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Representation = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1489,6 +1491,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1500,6 +1503,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 

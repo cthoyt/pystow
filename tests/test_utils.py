@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import itertools as itt
 import os
 import tarfile
 import tempfile
@@ -392,14 +393,14 @@ class TestUtils(unittest.TestCase):
                 pass
 
         with self.assertRaises(ValueError):
-            with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:  # type:ignore
+            with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:
                 pass
 
-        for path in TEST_TXT, TEST_TXT_GZ:
-            with safe_open(path) as file:
+        for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], ["utf-8", None]):
+            with safe_open(path, encoding=encoding) as file:
                 self.assertEqual(TEST_TXT_CONTENT, file.read())
 
-            with safe_open(path) as passthrough:
+            with safe_open(path, encoding=encoding) as passthrough:
                 with self.assertRaises(ValueError):
                     with safe_open(passthrough, representation="binary") as _file:
                         pass
