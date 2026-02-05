@@ -391,6 +391,10 @@ class TestUtils(unittest.TestCase):
             with safe_open(5) as _file:  # type:ignore
                 pass
 
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:  # type:ignore
+                pass
+
         for path in TEST_TXT, TEST_TXT_GZ:
             with safe_open(path) as file:
                 self.assertEqual(TEST_TXT_CONTENT, file.read())
