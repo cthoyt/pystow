@@ -36,6 +36,7 @@ from pystow.utils import (
     open_zip_reader,
     open_zip_writer,
     open_zipfile,
+    read_lzma_csv,
     read_pydantic_jsonl,
     read_tarfile_csv,
     read_tarfile_xml,
@@ -47,6 +48,7 @@ from pystow.utils import (
     safe_open_reader,
     safe_open_writer,
     tarfile_writestr,
+    write_lzma_csv,
     write_pydantic_jsonl,
     write_tarfile_csv,
     write_tarfile_xml,
@@ -281,6 +283,10 @@ class TestUtils(unittest.TestCase):
 
     def test_tar_open(self) -> None:
         """Test writing and reading a tar file."""
+        with self.assertRaises(ValueError):
+            with open_tarfile(..., ..., operation="nope"):  # type:ignore[arg-type]
+                pass
+
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("test.tar.gz")
             inner = "test_inner.tsv"
@@ -359,6 +365,15 @@ class TestUtils(unittest.TestCase):
                 tarfile_writestr(tar_file, "test-2.csv", "c3,c4\nv3,v4")
             with self.assertRaises(ValueError):
                 list(iter_tarred_csvs(path, progress=False))
+
+    def test_lzma(self) -> None:
+        """Test LZMA."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.lzma")
+            df = pd.DataFrame([("v1", "v2"), ("v3", "v4")], columns=["c1", "c2"])
+            write_lzma_csv(df, path)
+            new_df = read_lzma_csv(path)
+            self.assertEqual(new_df.values.tolist(), df.values.tolist())
 
 
 class TestDownload(unittest.TestCase):

@@ -113,6 +113,7 @@ __all__ = [
     "open_zipfile",
     "path_to_sqlite",
     "raise_on_digest_mismatch",
+    "read_lzma_csv",
     "read_pydantic_jsonl",
     "read_rdf",
     "read_tarfile_csv",
@@ -716,7 +717,7 @@ def write_pickle_gz(
     :param path: The path of the file to write to
     :param kwargs: Additional kwargs to pass to :func:`pickle.dump`
     """
-    with gzip.open(path, mode="wb") as file:
+    with safe_open(path, representation="binary", operation="write") as file:
         pickle.dump(obj, file, **kwargs)
 
 
@@ -736,9 +737,26 @@ def write_lzma_csv(
     :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
         :func:`pandas.DataFrame.to_csv`.
     """
-    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with lzma.open(path, "wb") as file:
-        file.write(bytes_io.read())
+        df.to_csv(file, sep=sep, index=index, **kwargs)
+
+
+def read_lzma_csv(
+    path: str | Path,
+    sep: str = "\t",
+    **kwargs: Any,
+) -> pandas.DataFrame:
+    """Read a dataframe from a lzma-compressed file.
+
+    :param path: The path to the resulting LZMA compressed dataframe file
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
+        :func:`pandas.DataFrame.to_csv`.
+    """
+    import pandas as pd
+
+    with lzma.open(path, "rb") as file:
+        return pd.read_csv(file, sep=sep, **kwargs)
 
 
 def write_zipfile_csv(
@@ -759,9 +777,8 @@ def write_zipfile_csv(
     :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
         :func:`pandas.DataFrame.to_csv`.
     """
-    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
-        file.write(bytes_io.read())
+        df.to_csv(file, sep=sep, index=index, **kwargs)
 
 
 def read_zipfile_csv(
