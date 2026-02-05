@@ -810,6 +810,7 @@ def open_zipfile(
     representation: Literal["text"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -824,6 +825,7 @@ def open_zipfile(
     representation: Literal["binary"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -836,6 +838,7 @@ def open_zipfile(
     representation: Representation = "text",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
     mode = _MODE_TO_SIMPLE[operation]
@@ -847,6 +850,7 @@ def open_zipfile(
             operation=operation,
             representation=representation,
             open_kwargs=open_kwargs,
+            encoding=encoding,
         ) as file,
     ):
         yield file
@@ -862,6 +866,7 @@ def open_inner_zipfile(
     operation: Operation = ...,
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -875,6 +880,7 @@ def open_inner_zipfile(
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -886,12 +892,14 @@ def open_inner_zipfile(
     operation: Operation = "read",
     representation: Representation = "text",
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
+    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
-            with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
+            with io.TextIOWrapper(binary_file, encoding=encoding) as text_file:
                 yield text_file
         elif representation == "binary":
             yield cast(typing.BinaryIO, binary_file)
@@ -1523,7 +1531,7 @@ def safe_open(
 
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
-        encoding = _enc(encoding, representation)
+        encoding = _ensure_sensible_default_encoding(encoding, representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
             with gzip.open(path, mode=mode, encoding=encoding) as file:
@@ -1548,7 +1556,12 @@ def safe_open(
         raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
 
 
-def _enc(encoding: str | None, representation: Representation) -> str | None:
+def _ensure_sensible_default_encoding(
+    encoding: str | None, representation: Representation
+) -> str | None:
+    # this function exists because windows doesn't use UTF-8 as a default
+    # encoding for some reason, and that's bonk. So we intercept the encoding
+    # and set it explicitly to UTF-8
     if representation == "binary":
         if encoding is not None:
             raise ValueError
@@ -1702,7 +1715,8 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = ...,
+        encoding: str | None = ...,
     ) -> Iterable[BinaryIO]: ...
 
     # docstr-coverage:excused `overload`
@@ -1715,7 +1729,8 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = ...,
+        encoding: str | None = ...,
     ) -> Iterable[TextIO]: ...
 
     def __call__(
@@ -1727,6 +1742,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
+        encoding: str | None = ...,
     ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
 
@@ -1740,6 +1756,7 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[BinaryIO]: ...
 
 
@@ -1753,6 +1770,7 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[TextIO]: ...
 
 
@@ -1764,8 +1782,10 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[tarfile.TarInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
+    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
@@ -1782,7 +1802,7 @@ def iter_tarred_files(
             if file is None:
                 continue
             if representation == "text":
-                yield io.TextIOWrapper(file, encoding="utf-8")
+                yield io.TextIOWrapper(file, encoding=encoding)
             else:
                 yield cast(BinaryIO, file)  # FIXME
 
@@ -1831,6 +1851,7 @@ def iter_tarred_csvs(
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
     yield from _iter_archived_csvs(
@@ -1841,6 +1862,7 @@ def iter_tarred_csvs(
         keep=_keep_tar_info_csv,
         tqdm_kwargs=tqdm_kwargs,
         max_line_length=max_line_length,
+        encoding=encoding,
     )
 
 
@@ -1858,6 +1880,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[typing.BinaryIO]: ...
 
 
@@ -1871,6 +1894,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[typing.TextIO]: ...
 
 
@@ -1882,6 +1906,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[zipfile.ZipInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
     with safe_zipfile_open(path) as zip_file:
@@ -1901,6 +1926,7 @@ def iter_zipped_files(
                 operation="read",
                 representation=representation,
                 open_kwargs=open_kwargs,
+                encoding=encoding,
             ) as file:
                 yield file
 
@@ -1948,6 +1974,7 @@ def iter_zipped_csvs(
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     yield from _iter_archived_csvs(
@@ -1958,6 +1985,7 @@ def iter_zipped_csvs(
         keep=_keep_zip_info_csv,
         tqdm_kwargs=tqdm_kwargs,
         max_line_length=max_line_length,
+        encoding=encoding,
     )
 
 
@@ -1974,6 +2002,7 @@ def _iter_archived_csvs(
     return_type: ReturnType = "sequence",
     iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     header: Sequence[str] | None = None
@@ -1983,6 +2012,7 @@ def _iter_archived_csvs(
         progress=progress,
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
+        encoding=encoding,
     ):
         filename = file.name
         if max_line_length is not None:
