@@ -267,13 +267,14 @@ class TestUtils(unittest.TestCase):
             with open_zip_writer(path, inner) as writer:
                 writer.writerow(("c1", "c2"))
                 writer.writerow(("v1", "v2"))
+                writer.writerow(("v3", "v4"))
 
             df = read_zipfile_csv(path, inner)
             self.assertEqual(["c1", "c2"], list(df.columns))
+            self.assertEqual(2, len(df.index))
 
             with open_zip_reader(path, inner) as reader:
-                self.assertEqual(["c1", "c2"], next(reader))
-                self.assertEqual(["v1", "v2"], next(reader))
+                self.assertEqual([["c1", "c2"], ["v1", "v2"], ["v3", "v4"]], list(reader))
 
     def test_zip_writer_exc(self) -> None:
         """Test throwing an exception."""
