@@ -23,6 +23,9 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+#: This type alias uses a stub-only constructor, meaning that
+#: hashlib._Hash isn't actually part of the code, but MyPy injects it
+#: so we can do type checking
 Hash: TypeAlias = "hashlib._Hash"
 
 

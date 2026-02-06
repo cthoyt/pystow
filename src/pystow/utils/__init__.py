@@ -146,6 +146,7 @@ __all__ = [
     "safe_tarfile_open",
     "safe_zipfile_open",
     "tarfile_writestr",
+    "use_appdirs",
     "write_lzma_csv",
     "write_pickle_gz",
     "write_pydantic_jsonl",
