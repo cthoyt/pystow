@@ -131,6 +131,7 @@ __all__ = [
     "get_soup",
     "getenv_path",
     "gunzip",
+    "gzip_compress",
     "iter_pydantic_jsonl",
     "iter_tarred_csvs",
     "iter_tarred_files",
@@ -741,14 +742,39 @@ def path_to_sqlite(path: str | Path) -> str:
     return f"sqlite:///{path.as_posix()}"
 
 
-def gunzip(source: str | Path, target: str | Path) -> None:
+def gunzip(source: str | Path, target: str | Path | None = None, *, cleanup: bool = False) -> Path:
     """Unzip a file in the source to the target.
 
     :param source: The path to an input file
     :param target: The path to an output file
+    :param cleanup: Whether to clean the output file
     """
+    source = Path(source).expanduser().resolve()
+    if target is None:
+        raise NotImplementedError
+    else:
+        target = Path(target).expanduser().resolve()
     with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
         shutil.copyfileobj(in_file, out_file)
+    if cleanup:
+        source.unlink()
+    return target
+
+
+def gzip_compress(
+    source: str | Path, *, target: str | Path | None = None, cleanup: bool = False
+) -> Path:
+    """Compress a file, then delete the original."""
+    source = Path(source).expanduser().resolve()
+    if target is None:
+        target = source.with_suffix(source.suffix + ".gz")
+    else:
+        target = Path(target).expanduser().resolve()
+    with open(source, "rb") as in_file, gzip.open(target, "wb") as out_file:
+        shutil.copyfileobj(in_file, out_file)
+    if cleanup:
+        source.unlink()
+    return target
 
 
 @contextlib.contextmanager

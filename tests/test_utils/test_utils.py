@@ -26,6 +26,8 @@ from pystow.utils import (
     get_hash_hexdigest,
     get_hexdigests_remote,
     getenv_path,
+    gunzip,
+    gzip_compress,
     iter_tarred_csvs,
     iter_zipped_csvs,
     mkdir,
@@ -438,6 +440,40 @@ class TestUtils(unittest.TestCase):
                     file.write(TEST_TXT_CONTENT)
                 with safe_open(path, encoding=encoding, operation="read") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
+
+    def test_gzip(self) -> None:
+        """Test gzipping."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+
+            path = directory.joinpath("test.txt")
+            path_gz = directory.joinpath("test.txt.gz")
+            path.write_text(TEST_TXT_CONTENT)
+            self.assertTrue(path.is_file())
+            self.assertFalse(path_gz.is_file())
+
+            gzip_compress(path, cleanup=False)
+            self.assertTrue(path.is_file())
+            self.assertTrue(path_gz.is_file())
+
+            path_gz.unlink()
+
+            gzip_compress(path, cleanup=True)
+            self.assertFalse(path.is_file())
+            self.assertTrue(path_gz.is_file())
+
+            path_new = directory.joinpath("test-new.txt")
+            gunzip(path_gz, path_new, cleanup=False)
+            self.assertTrue(path_gz.is_file())
+            self.assertTrue(path_new.is_file())
+            self.assertEqual(TEST_TXT_CONTENT, path_new.read_text(encoding="utf-8"))
+
+            path_new.unlink()
+
+            gunzip(path_gz, path_new, cleanup=True)
+            self.assertFalse(path_gz.is_file())
+            self.assertTrue(path_new.is_file())
+            self.assertEqual(TEST_TXT_CONTENT, path_new.read_text(encoding="utf-8"))
 
 
 class TestDownload(unittest.TestCase):
