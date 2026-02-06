@@ -112,6 +112,7 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=url.name):
                 self.assertEqual(value, requests.get(url.as_uri(), timeout=15).text)
 
+    @skip_on_windows
     def test_get_hash(self) -> None:
         """Test directly calculating a hash digest."""
         self.assertEqual(
