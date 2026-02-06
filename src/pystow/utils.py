@@ -897,9 +897,10 @@ def open_inner_zipfile(
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
     encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = _ensure_sensible_newline(representation)
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
-            with io.TextIOWrapper(binary_file, encoding=encoding) as text_file:
+            with io.TextIOWrapper(binary_file, encoding=encoding, newline=newline) as text_file:
                 yield text_file
         elif representation == "binary":
             yield cast(typing.BinaryIO, binary_file)
@@ -1532,7 +1533,7 @@ def safe_open(
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
         encoding = _ensure_sensible_default_encoding(encoding, representation)
-        newline = "\n" if representation == "text" else None
+        newline = _ensure_sensible_newline(representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
             with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
@@ -1571,6 +1572,10 @@ def _ensure_sensible_default_encoding(
     if encoding is not None:
         return encoding
     return "utf-8"
+
+
+def _ensure_sensible_newline(representation: Representation) -> str | None:
+    return "\n" if representation != "text" else None
 
 
 @contextlib.contextmanager
@@ -1787,6 +1792,7 @@ def iter_tarred_files(
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
     encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = _ensure_sensible_newline(representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
@@ -1803,7 +1809,7 @@ def iter_tarred_files(
             if file is None:
                 continue
             if representation == "text":
-                yield io.TextIOWrapper(file, encoding=encoding)
+                yield io.TextIOWrapper(file, encoding=encoding, newline=newline)
             else:
                 yield cast(BinaryIO, file)  # FIXME
 
