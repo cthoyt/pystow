@@ -900,7 +900,7 @@ def open_inner_zipfile(
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
     encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-    newline = _ensure_sensible_newline(newline, representation)
+    newline = _ensure_sensible_newline(newline, representation=representation)
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
             with io.TextIOWrapper(binary_file, encoding=encoding, newline=newline) as text_file:
@@ -1539,8 +1539,8 @@ def safe_open(
 
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
-        encoding = _ensure_sensible_default_encoding(encoding, representation)
-        newline = _ensure_sensible_newline(newline, representation)
+        encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
+        newline = _ensure_sensible_newline(newline, representation=representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
             with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
@@ -1566,7 +1566,7 @@ def safe_open(
 
 
 def _ensure_sensible_default_encoding(
-    encoding: str | None, representation: Representation
+    encoding: str | None, *, representation: Representation
 ) -> str | None:
     # this function exists because windows doesn't use UTF-8 as a default
     # encoding for some reason, and that's bonk. So we intercept the encoding
@@ -1576,9 +1576,28 @@ def _ensure_sensible_default_encoding(
             raise ValueError
         else:
             return None
-    if encoding is not None:
-        return encoding
-    return "utf-8"
+    elif representation == "text":
+        if encoding is not None:
+            return encoding
+        return "utf-8"
+    else:
+        raise InvalidRepresentationError(representation)
+
+
+def _ensure_sensible_newline(newline: str | None, *, representation: Representation) -> str | None:
+    # this function exists to override the default way newlines are
+    # automatically interpreted by python on Windows to always use
+    # \n instead of \r\n
+    if representation == "binary":
+        if newline is not None:
+            raise ValueError
+        return None
+    elif representation == "text":
+        if newline is not None:
+            return newline
+        return "\n"
+    else:
+        raise InvalidRepresentationError(representation)
 
 
 def _ensure_sensible_newline(newline: str | None, representation: Representation) -> str | None:
@@ -1806,8 +1825,8 @@ def iter_tarred_files(
     newline: str | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    encoding = _ensure_sensible_default_encoding(encoding, representation)
-    newline = _ensure_sensible_newline(newline, representation)
+    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = _ensure_sensible_newline(newline, representation=representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
