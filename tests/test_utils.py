@@ -381,44 +381,51 @@ class TestUtils(unittest.TestCase):
             new_df = read_lzma_csv(path)
             self.assertEqual(new_df.values.tolist(), df.values.tolist())
 
-    def test_safe_open(self) -> None:
-        """Test safe open."""
+    def test_safe_open_exceptions(self) -> None:
+        """Test exceptions raised by :func:`safe_open`."""
         with self.assertRaises(ValueError):
             with safe_open(TEST_TXT, representation="nope") as _file:  # type:ignore
                 pass
         with self.assertRaises(ValueError):
             with safe_open(TEST_TXT, operation="nope") as _file:  # type:ignore
                 pass
-
         with self.assertRaises(TypeError):
             with safe_open(5) as _file:  # type:ignore
                 pass
-
         with self.assertRaises(ValueError):
             with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:
                 pass
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, representation="binary", newline="") as _file:
+                pass
 
+        with safe_open(TEST_TXT, representation="binary") as passthrough:
+            with self.assertRaises(ValueError):
+                with safe_open(passthrough, representation="text") as _file:
+                    pass
+
+        with safe_open(TEST_TXT, representation="text") as passthrough:
+            with self.assertRaises(ValueError):
+                with safe_open(passthrough, representation="binary") as _file:
+                    pass
+
+    def test_safe_open(self) -> None:
+        """Test safe open."""
         for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], [None, "utf-8"]):
             with self.subTest(path=path, encoding=encoding):
-                with safe_open(path, encoding=encoding) as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read())
-
-                with safe_open(path, encoding=encoding) as passthrough:
-                    with self.assertRaises(ValueError):
-                        with safe_open(passthrough, representation="binary") as _file:
-                            pass
-                    with safe_open(passthrough) as file:
-                        self.assertEqual(TEST_TXT_CONTENT, file.read())
-
                 with safe_open(path, representation="binary") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
 
                 with safe_open(path, representation="binary") as passthrough:
-                    with self.assertRaises(ValueError):
-                        with safe_open(passthrough, representation="text") as _file:
-                            pass
                     with safe_open(passthrough, representation="binary") as file:
                         self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+                with safe_open(path, encoding=encoding, representation="text") as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+
+                with safe_open(path, encoding=encoding, representation="text") as passthrough:
+                    with safe_open(passthrough) as file:
+                        self.assertEqual(TEST_TXT_CONTENT, file.read())
 
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
