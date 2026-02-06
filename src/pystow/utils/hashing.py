@@ -1,3 +1,5 @@
+"""Hashing utilities."""
+
 from __future__ import annotations
 
 import hashlib
@@ -7,6 +9,17 @@ from pathlib import Path
 from typing import NamedTuple, TypeAlias
 
 import requests
+
+__all__ = [
+    "Hash",
+    "HexDigestError",
+    "HexDigestMismatch",
+    "get_hash_hexdigest",
+    "get_hashes",
+    "get_hexdigests_remote",
+    "get_offending_hexdigests",
+    "raise_on_digest_mismatch",
+]
 
 logger = logging.getLogger(__name__)
 
