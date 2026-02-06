@@ -11,9 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from urllib.request import urlretrieve
 
-import botocore.client
 import requests
-from tqdm.asyncio import tqdm
+from tqdm import tqdm
 
 from .hashing import raise_on_digest_mismatch
 
