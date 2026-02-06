@@ -59,7 +59,6 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
-from tests.constants import skip_on_windows
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
@@ -648,7 +647,6 @@ class TestHashing(unittest.TestCase):
             force=True,
         )
 
-    @skip_on_windows
     def test_remote_force(self) -> None:
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check
