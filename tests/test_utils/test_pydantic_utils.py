@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pydantic
 
-from pystow.utils import read_pydantic_jsonl, write_pydantic_jsonl, stream_write_pydantic_jsonl
+from pystow.utils import read_pydantic_jsonl, stream_write_pydantic_jsonl, write_pydantic_jsonl
 
 
 @unittest.skipUnless(importlib.util.find_spec("pydantic"), "pydantic not installed")
