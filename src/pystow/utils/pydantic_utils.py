@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import typing
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 
@@ -38,21 +38,23 @@ def iter_pydantic_jsonl(
     failure_action: ModelValidateFailureAction = "skip",
     encoding: str | None = None,
     newline: str | None = None,
+    tqdm_kwargs: Mapping[str, Any] | None = None,
 ) -> Iterable[BaseModelVar]:
     """Read models to a file as JSONL."""
+    import pydantic
+
+    _tqdm_kwargs = {
+        "desc": "Reading mappings",
+        "leave": False,
+        "unit": "mapping",
+        "unit_scale": True,
+    }
+    if tqdm_kwargs is not None:
+        _tqdm_kwargs.update(tqdm_kwargs)
     with safe_open(
         file, operation="read", representation="text", encoding=encoding, newline=newline
     ) as file:
-        for i, line in enumerate(
-            tqdm(
-                file,
-                desc="Reading mappings",
-                leave=False,
-                unit="mapping",
-                unit_scale=True,
-                disable=not progress,
-            )
-        ):
+        for i, line in enumerate(tqdm(file, disable=not progress, **_tqdm_kwargs)):
             try:
                 yv = model_cls.model_validate_json(line.strip())
             except pydantic.ValidationError:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import itertools as itt
 import os
 import tarfile
@@ -38,7 +37,6 @@ from pystow.utils import (
     open_zip_writer,
     open_zipfile,
     read_lzma_csv,
-    read_pydantic_jsonl,
     read_tarfile_csv,
     read_tarfile_xml,
     read_zip_np,
@@ -51,7 +49,6 @@ from pystow.utils import (
     safe_open_writer,
     tarfile_writestr,
     write_lzma_csv,
-    write_pydantic_jsonl,
     write_tarfile_csv,
     write_tarfile_xml,
     write_zipfile_csv,
@@ -59,14 +56,14 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
+from tests.constants import RESOURCES
 
-HERE = Path(__file__).resolve().parent
-TEST_TXT = HERE.joinpath("resources", "test.txt")
+TEST_TXT = RESOURCES.joinpath("test.txt")
 TEST_TXT_CONTENT = "this is a test file\n"
-TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
-TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
-TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
-TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
+TEST_TXT_MD5 = RESOURCES.joinpath("test.txt.md5")
+TEST_TXT_GZ = RESOURCES.joinpath("test.txt.gz")
+TEST_TXT_VERBOSE_MD5 = RESOURCES.joinpath("test_verbose.txt.md5")
+TEST_TXT_WRONG_MD5 = RESOURCES.joinpath("test_wrong.txt.md5")
 
 
 class _Session(requests.sessions.Session):
@@ -300,23 +297,6 @@ class TestUtils(unittest.TestCase):
             with open_tarfile(path, inner, operation="read") as file:
                 self.assertEqual(b"c1\tc2\n", next(file))
                 self.assertEqual(b"v1\tv2", next(file))
-
-    @unittest.skipUnless(importlib.util.find_spec("pydantic"), "pydantic not installed")
-    def test_pydantic_io(self) -> None:
-        """Test writing Pydantic."""
-        from pydantic import BaseModel
-
-        class Model(BaseModel):
-            """A test model."""
-
-            name: str
-
-        models = [Model(name=f"test {i}") for i in range(3)]
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory).joinpath("data.jsonl")
-            write_pydantic_jsonl(models, path)
-            reconstituted = read_pydantic_jsonl(path, Model)
-            self.assertEqual(models, reconstituted)
 
     def test_zip_csvs(self) -> None:
         """Test reading many CSVs from inside a zip file."""
