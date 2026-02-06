@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import itertools as itt
 import os
 import tarfile
 import tempfile
@@ -36,6 +37,7 @@ from pystow.utils import (
     open_zip_reader,
     open_zip_writer,
     open_zipfile,
+    read_lzma_csv,
     read_pydantic_jsonl,
     read_tarfile_csv,
     read_tarfile_xml,
@@ -43,10 +45,12 @@ from pystow.utils import (
     read_zipfile_csv,
     read_zipfile_rdf,
     read_zipfile_xml,
+    safe_open,
     safe_open_dict_reader,
     safe_open_reader,
     safe_open_writer,
     tarfile_writestr,
+    write_lzma_csv,
     write_pydantic_jsonl,
     write_tarfile_csv,
     write_tarfile_xml,
@@ -59,7 +63,9 @@ from tests.constants import skip_on_windows
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
+TEST_TXT_CONTENT = "this is a test file\n"
 TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
+TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
@@ -94,7 +100,7 @@ class TestUtils(unittest.TestCase):
     def test_file_values(self) -> None:
         """Test encodings."""
         for url, value in [
-            (TEST_TXT, "this is a test file\n"),
+            (TEST_TXT, TEST_TXT_CONTENT),  # `this is a test file\n`
             (TEST_TXT_MD5, "4221d002ceb5d3c9e9137e495ceaa647"),
             (TEST_TXT_VERBOSE_MD5, "MD5(text.txt)=4221d002ceb5d3c9e9137e495ceaa647"),
             (TEST_TXT_WRONG_MD5, "yolo"),
@@ -277,6 +283,10 @@ class TestUtils(unittest.TestCase):
 
     def test_tar_open(self) -> None:
         """Test writing and reading a tar file."""
+        with self.assertRaises(ValueError):
+            with open_tarfile(..., ..., operation="nope"):  # type:ignore[arg-type]
+                pass
+
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("test.tar.gz")
             inner = "test_inner.tsv"
@@ -355,6 +365,64 @@ class TestUtils(unittest.TestCase):
                 tarfile_writestr(tar_file, "test-2.csv", "c3,c4\nv3,v4")
             with self.assertRaises(ValueError):
                 list(iter_tarred_csvs(path, progress=False))
+
+    def test_lzma(self) -> None:
+        """Test LZMA."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.lzma")
+            df = pd.DataFrame([("v1", "v2"), ("v3", "v4")], columns=["c1", "c2"])
+            write_lzma_csv(df, path)
+            new_df = read_lzma_csv(path)
+            self.assertEqual(new_df.values.tolist(), df.values.tolist())
+
+    def test_safe_open(self) -> None:
+        """Test safe open."""
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, representation="nope") as _file:  # type:ignore
+                pass
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, operation="nope") as _file:  # type:ignore
+                pass
+
+        with self.assertRaises(TypeError):
+            with safe_open(5) as _file:  # type:ignore
+                pass
+
+        with self.assertRaises(ValueError):
+            with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:
+                pass
+
+        for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], [None, "utf-8"]):
+            with self.subTest(path=path, encoding=encoding):
+                with safe_open(path, encoding=encoding) as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+
+                with safe_open(path, encoding=encoding) as passthrough:
+                    with self.assertRaises(ValueError):
+                        with safe_open(passthrough, representation="binary") as _file:
+                            pass
+                    with safe_open(passthrough) as file:
+                        self.assertEqual(TEST_TXT_CONTENT, file.read())
+
+                with safe_open(path, representation="binary") as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+                with safe_open(path, representation="binary") as passthrough:
+                    with self.assertRaises(ValueError):
+                        with safe_open(passthrough, representation="text") as _file:
+                            pass
+                    with safe_open(passthrough, representation="binary") as file:
+                        self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+
+    def test_encodings(self) -> None:
+        """Test I/O in different encodings."""
+        for encoding in ["ascii", "utf-16-be", "CP1252"]:
+            with self.subTest(encoding=encoding), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory).joinpath("test.txt")
+                with safe_open(path, encoding=encoding, operation="write") as file:
+                    file.write(TEST_TXT_CONTENT)
+                with safe_open(path, encoding=encoding, operation="read") as file:
+                    self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
 
 
 class TestDownload(unittest.TestCase):

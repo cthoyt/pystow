@@ -113,6 +113,7 @@ __all__ = [
     "open_zipfile",
     "path_to_sqlite",
     "raise_on_digest_mismatch",
+    "read_lzma_csv",
     "read_pydantic_jsonl",
     "read_rdf",
     "read_tarfile_csv",
@@ -537,7 +538,7 @@ def download(
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(
@@ -716,7 +717,7 @@ def write_pickle_gz(
     :param path: The path of the file to write to
     :param kwargs: Additional kwargs to pass to :func:`pickle.dump`
     """
-    with gzip.open(path, mode="wb") as file:
+    with safe_open(path, representation="binary", operation="write") as file:
         pickle.dump(obj, file, **kwargs)
 
 
@@ -736,9 +737,26 @@ def write_lzma_csv(
     :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
         :func:`pandas.DataFrame.to_csv`.
     """
-    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with lzma.open(path, "wb") as file:
-        file.write(bytes_io.read())
+        df.to_csv(file, sep=sep, index=index, **kwargs)
+
+
+def read_lzma_csv(
+    path: str | Path,
+    sep: str = "\t",
+    **kwargs: Any,
+) -> pandas.DataFrame:
+    """Read a dataframe from a lzma-compressed file.
+
+    :param path: The path to the resulting LZMA compressed dataframe file
+    :param sep: The separator in the dataframe. Overrides Pandas default to use a tab.
+    :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
+        :func:`pandas.DataFrame.to_csv`.
+    """
+    import pandas as pd
+
+    with lzma.open(path, "rb") as file:
+        return pd.read_csv(file, sep=sep, **kwargs)
 
 
 def write_zipfile_csv(
@@ -759,9 +777,8 @@ def write_zipfile_csv(
     :param kwargs: Additional kwargs to pass to :func:`get_df_io` and transitively to
         :func:`pandas.DataFrame.to_csv`.
     """
-    bytes_io = get_df_io(df, sep=sep, index=index, **kwargs)
     with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
-        file.write(bytes_io.read())
+        df.to_csv(file, sep=sep, index=index, **kwargs)
 
 
 def read_zipfile_csv(
@@ -793,6 +810,7 @@ def open_zipfile(
     representation: Literal["text"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -807,6 +825,7 @@ def open_zipfile(
     representation: Literal["binary"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -819,6 +838,7 @@ def open_zipfile(
     representation: Representation = "text",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a zipfile."""
     mode = _MODE_TO_SIMPLE[operation]
@@ -830,6 +850,7 @@ def open_zipfile(
             operation=operation,
             representation=representation,
             open_kwargs=open_kwargs,
+            encoding=encoding,
         ) as file,
     ):
         yield file
@@ -845,6 +866,7 @@ def open_inner_zipfile(
     operation: Operation = ...,
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -858,6 +880,7 @@ def open_inner_zipfile(
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -869,12 +892,14 @@ def open_inner_zipfile(
     operation: Operation = "read",
     representation: Representation = "text",
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
+    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
-            with io.TextIOWrapper(binary_file, encoding="utf-8") as text_file:
+            with io.TextIOWrapper(binary_file, encoding=encoding) as text_file:
                 yield text_file
         elif representation == "binary":
             yield cast(typing.BinaryIO, binary_file)
@@ -1256,7 +1281,7 @@ def download_from_google(
                         file.write(chunk)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
 
     raise_on_digest_mismatch(path=path, hexdigests=hexdigests)
@@ -1325,16 +1350,8 @@ def download_from_s3(
         client.download_file(s3_bucket, s3_key, path.as_posix(), **download_file_kwargs)
     except (Exception, KeyboardInterrupt):
         if clean_on_failure:
-            _unlink(path)
+            path.unlink(missing_ok=True)
         raise
-
-
-def _unlink(path: str | Path) -> None:
-    # python 3.6 does not have pathlib.Path.unlink, smh
-    try:
-        os.remove(path)
-    except OSError:
-        pass  # if the file can't be deleted then no problem
 
 
 def get_name() -> str:
@@ -1458,6 +1475,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Representation = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -1469,6 +1487,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Representation = ...,
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1480,6 +1499,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
+    encoding: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1491,6 +1511,7 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
+    encoding: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -1500,6 +1521,7 @@ def safe_open(
     *,
     operation: Operation = "read",
     representation: Representation = "text",
+    encoding: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1509,23 +1531,45 @@ def safe_open(
 
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
+        encoding = _ensure_sensible_default_encoding(encoding, representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
-            with gzip.open(path, mode=mode) as file:
+            with gzip.open(path, mode=mode, encoding=encoding) as file:
                 yield file  # type:ignore
         else:
-            with open(path, mode=mode) as file:
+            with open(path, mode=mode, encoding=encoding) as file:
                 yield file  # type:ignore
-    elif isinstance(path, typing.TextIO):
+    elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
         if representation != "text":
-            raise ValueError
+            raise ValueError(
+                "must specify `text` representation when passing through a text file-like object"
+            )
         yield path
-    elif isinstance(path, typing.BinaryIO):
+    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
         if representation != "binary":
-            raise ValueError
+            raise ValueError(
+                "must specify `binary` representation when passing through "
+                "a binary file-like object"
+            )
         yield path
     else:
-        raise TypeError
+        raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
+
+
+def _ensure_sensible_default_encoding(
+    encoding: str | None, representation: Representation
+) -> str | None:
+    # this function exists because windows doesn't use UTF-8 as a default
+    # encoding for some reason, and that's bonk. So we intercept the encoding
+    # and set it explicitly to UTF-8
+    if representation == "binary":
+        if encoding is not None:
+            raise ValueError
+        else:
+            return None
+    if encoding is not None:
+        return encoding
+    return "utf-8"
 
 
 @contextlib.contextmanager
@@ -1671,7 +1715,8 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = ...,
+        encoding: str | None = ...,
     ) -> Iterable[BinaryIO]: ...
 
     # docstr-coverage:excused `overload`
@@ -1684,7 +1729,8 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
-        open_kwargs: Mapping[str, Any] | None = None,
+        open_kwargs: Mapping[str, Any] | None = ...,
+        encoding: str | None = ...,
     ) -> Iterable[TextIO]: ...
 
     def __call__(
@@ -1696,6 +1742,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         tqdm_kwargs: Mapping[str, Any] | None = ...,
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
+        encoding: str | None = ...,
     ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
 
@@ -1709,6 +1756,7 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[BinaryIO]: ...
 
 
@@ -1722,6 +1770,7 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[TextIO]: ...
 
 
@@ -1733,8 +1782,10 @@ def iter_tarred_files(
     tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[tarfile.TarInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
+    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
@@ -1751,7 +1802,7 @@ def iter_tarred_files(
             if file is None:
                 continue
             if representation == "text":
-                yield io.TextIOWrapper(file, encoding="utf-8")
+                yield io.TextIOWrapper(file, encoding=encoding)
             else:
                 yield cast(BinaryIO, file)  # FIXME
 
@@ -1800,6 +1851,7 @@ def iter_tarred_csvs(
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from tarred CSV files."""
     yield from _iter_archived_csvs(
@@ -1810,6 +1862,7 @@ def iter_tarred_csvs(
         keep=_keep_tar_info_csv,
         tqdm_kwargs=tqdm_kwargs,
         max_line_length=max_line_length,
+        encoding=encoding,
     )
 
 
@@ -1827,6 +1880,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[typing.BinaryIO]: ...
 
 
@@ -1840,6 +1894,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = ...,
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
 ) -> Iterable[typing.TextIO]: ...
 
 
@@ -1851,6 +1906,7 @@ def iter_zipped_files(
     tqdm_kwargs: Mapping[str, Any] | None = None,
     keep: Predicate[zipfile.ZipInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
     with safe_zipfile_open(path) as zip_file:
@@ -1870,6 +1926,7 @@ def iter_zipped_files(
                 operation="read",
                 representation=representation,
                 open_kwargs=open_kwargs,
+                encoding=encoding,
             ) as file:
                 yield file
 
@@ -1917,6 +1974,7 @@ def iter_zipped_csvs(
     return_type: ReturnType = "sequence",
     tqdm_kwargs: Mapping[str, Any] | None = None,
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     yield from _iter_archived_csvs(
@@ -1927,6 +1985,7 @@ def iter_zipped_csvs(
         keep=_keep_zip_info_csv,
         tqdm_kwargs=tqdm_kwargs,
         max_line_length=max_line_length,
+        encoding=encoding,
     )
 
 
@@ -1943,6 +2002,7 @@ def _iter_archived_csvs(
     return_type: ReturnType = "sequence",
     iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
     max_line_length: int | None = None,
+    encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:
     """Iterate over the lines from zipped CSV files."""
     header: Sequence[str] | None = None
@@ -1952,6 +2012,7 @@ def _iter_archived_csvs(
         progress=progress,
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
+        encoding=encoding,
     ):
         filename = file.name
         if max_line_length is not None:
