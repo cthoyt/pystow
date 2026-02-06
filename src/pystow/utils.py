@@ -1575,7 +1575,7 @@ def _ensure_sensible_default_encoding(
 
 
 def _ensure_sensible_newline(representation: Representation) -> str | None:
-    return "\n" if representation != "text" else None
+    return "\n" if representation == "text" else None
 
 
 @contextlib.contextmanager
