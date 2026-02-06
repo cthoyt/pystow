@@ -867,6 +867,7 @@ def open_inner_zipfile(
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -881,6 +882,7 @@ def open_inner_zipfile(
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -893,11 +895,12 @@ def open_inner_zipfile(
     representation: Representation = "text",
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
     encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-    newline = _ensure_sensible_newline(representation)
+    newline = _ensure_sensible_newline(newline, representation)
     with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
         if representation == "text":
             with io.TextIOWrapper(binary_file, encoding=encoding, newline=newline) as text_file:
@@ -1489,6 +1492,7 @@ def safe_open(
     operation: Operation = ...,
     representation: Representation = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1501,6 +1505,7 @@ def safe_open(
     operation: Operation = ...,
     representation: Literal["text"] = "text",
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -1513,6 +1518,7 @@ def safe_open(
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -1523,6 +1529,7 @@ def safe_open(
     operation: Operation = "read",
     representation: Representation = "text",
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -1533,7 +1540,7 @@ def safe_open(
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
         encoding = _ensure_sensible_default_encoding(encoding, representation)
-        newline = _ensure_sensible_newline(representation)
+        newline = _ensure_sensible_newline(newline, representation)
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
             with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
@@ -1574,7 +1581,9 @@ def _ensure_sensible_default_encoding(
     return "utf-8"
 
 
-def _ensure_sensible_newline(representation: Representation) -> str | None:
+def _ensure_sensible_newline(newline: str | None, representation: Representation) -> str | None:
+    if newline is not None:
+        return newline
     return "\n" if representation == "text" else None
 
 
@@ -1611,7 +1620,7 @@ def safe_open_dict_writer(
 
     :yields: A CSV dictionary writer object, constructed from :func:`csv.DictWriter`
     """
-    with safe_open(f, operation="write", representation="text") as file:
+    with safe_open(f, operation="write", representation="text", newline="") as file:
         yield csv.DictWriter(file, fieldnames, delimiter=delimiter, **kwargs)
 
 
@@ -1627,7 +1636,7 @@ def safe_open_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.reader`
     """
-    with safe_open(f, operation="read", representation="text") as file:
+    with safe_open(f, operation="read", representation="text", newline="") as file:
         yield csv.reader(file, delimiter=delimiter, **kwargs)
 
 
@@ -1723,6 +1732,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
         encoding: str | None = ...,
+        newline: str | None = ...,
     ) -> Iterable[BinaryIO]: ...
 
     # docstr-coverage:excused `overload`
@@ -1737,6 +1747,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
         encoding: str | None = ...,
+        newline: str | None = ...,
     ) -> Iterable[TextIO]: ...
 
     def __call__(
@@ -1749,6 +1760,7 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
         keep: Predicate[ArchiveInfo] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
         encoding: str | None = ...,
+        newline: str | None = ...,
     ) -> Iterable[TextIO] | Iterable[BinaryIO]: ...
 
 
@@ -1763,6 +1775,7 @@ def iter_tarred_files(
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Iterable[BinaryIO]: ...
 
 
@@ -1777,6 +1790,7 @@ def iter_tarred_files(
     keep: Predicate[tarfile.TarInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Iterable[TextIO]: ...
 
 
@@ -1789,10 +1803,11 @@ def iter_tarred_files(
     keep: Predicate[tarfile.TarInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-    newline = _ensure_sensible_newline(representation)
+    encoding = _ensure_sensible_default_encoding(encoding, representation)
+    newline = _ensure_sensible_newline(newline, representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
