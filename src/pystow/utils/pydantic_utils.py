@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import typing
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TextIO
+from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
+
+from tqdm import tqdm
 
 from .safe_open import safe_open
 
@@ -15,19 +18,45 @@ if TYPE_CHECKING:
 __all__ = [
     "iter_pydantic_jsonl",
     "read_pydantic_jsonl",
+    "stream_write_pydantic_jsonl",
     "write_pydantic_jsonl",
 ]
 
+logger = logging.getLogger(__name__)
 BaseModelVar = typing.TypeVar("BaseModelVar", bound="pydantic.BaseModel")
+
+FailureAction: TypeAlias = Literal["raise", "skip"]
 
 
 def iter_pydantic_jsonl(
-    file: str | Path | TextIO, model_cls: type[BaseModelVar]
+    file: str | Path | TextIO,
+    model_cls: type[BaseModelVar],
+    *,
+    progress: bool = False,
+    failure_action: FailureAction = "skip",
 ) -> Iterable[BaseModelVar]:
     """Read models to a file as JSONL."""
     with safe_open(file, operation="read", representation="text") as file:
-        for line in file:
-            yield model_cls.model_validate_json(line)
+        for i, line in enumerate(
+            tqdm(
+                file,
+                desc="Reading mappings",
+                leave=False,
+                unit="mapping",
+                unit_scale=True,
+                disable=not progress,
+            )
+        ):
+            try:
+                yv = model_cls.model_validate_json(line.strip())
+            except pydantic.ValidationError:
+                if failure_action == "raise":
+                    raise
+                else:
+                    logger.debug("[line:%d] failed to parse JSON", i)
+                    continue
+            else:
+                yield yv
 
 
 def read_pydantic_jsonl(
@@ -47,3 +76,16 @@ def write_pydantic_jsonl(
     with safe_open(file, operation="write", representation="text") as file:
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
+
+
+def stream_write_pydantic_jsonl(
+    models: Iterable[BaseModelVar], file: str | Path | TextIO, **kwargs: Any
+) -> Generator[BaseModelVar, None, None]:
+    """Write models to a file as JSONL and yield them."""
+    kwargs.setdefault("exclude_none", True)
+    kwargs.setdefault("exclude_unset", True)
+    kwargs.setdefault("exclude_defaults", True)
+    with safe_open(file, operation="write", representation="text") as file:
+        for model in models:
+            file.write(model.model_dump_json(**kwargs) + "\n")
+            yield model

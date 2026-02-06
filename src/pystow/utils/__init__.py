@@ -79,7 +79,7 @@ from .io_typing import (
     ensure_sensible_newline,
     get_mode_pair,
 )
-from .pydantic_utils import iter_pydantic_jsonl, read_pydantic_jsonl, write_pydantic_jsonl
+from .pydantic_utils import iter_pydantic_jsonl, read_pydantic_jsonl, write_pydantic_jsonl, stream_write_pydantic_jsonl
 from .safe_open import open_inner_zipfile, safe_open
 from ..constants import README_TEXT, TimeoutHint
 
@@ -102,6 +102,7 @@ __all__ = [
     "HexDigestError",
     "HexDigestMismatch",
     "InvalidOperationError",
+    "stream_write_pydantic_jsonl",
     "InvalidRepresentationError",
     "Operation",
     "Representation",
