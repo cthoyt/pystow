@@ -63,14 +63,24 @@ from .hashing import (
     get_offending_hexdigests,
     raise_on_digest_mismatch,
 )
+from .io_typing import (
+    _MODE_TO_SIMPLE,
+    MODE_MAP,
+    OPERATION_VALUES,
+    REPRESENTATION_VALUES,
+    REVERSE_MODE_MAP,
+    Operation,
+    Reader,
+    Representation,
+    Writer,
+    get_mode_pair,
+)
 from ..constants import (
     README_TEXT,
     TimeoutHint,
 )
 
 if TYPE_CHECKING:
-    import _csv
-
     import bs4
     import lxml.etree
     import numpy.typing
@@ -159,77 +169,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
-#: This type alias uses a stub-only constructor, meaning that
-#: hashlib._Hash isn't actually part of the code, but MyPy injects it
-#: so we can do type checking
-
-Reader: TypeAlias = "_csv._reader"
-Writer: TypeAlias = "_csv._writer"
-
-#: A human-readable flag for how to open a file.
-Operation: TypeAlias = Literal["read", "write"]
-OPERATION_VALUES: set[str] = set(typing.get_args(Operation))
-
-#: A human-readable flag for how to open a file.
-Representation: TypeAlias = Literal["text", "binary"]
-REPRESENTATION_VALUES: set[str] = set(typing.get_args(Representation))
-
-#: Characters for "unqualified" modes, which might be interpreted
-#: differently by different functions
-UnqualifiedMode: TypeAlias = Literal["r", "w"]
-
-#: Characters for "qualified" modes, which are absolute (as opposed to
-#: :data:`UnqualifiedMode`, which is context-dependent)
-QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
-
-ModePair: TypeAlias = tuple[Operation, Representation]
-
-_MODE_TO_SIMPLE: Mapping[Operation, UnqualifiedMode] = {
-    "read": "r",
-    "write": "w",
-}
-
-#: A mapping between operation/representation pairs and qualified modes
-MODE_MAP: dict[ModePair, QualifiedMode] = {
-    ("read", "text"): "rt",
-    ("read", "binary"): "rb",
-    ("write", "text"): "wt",
-    ("write", "binary"): "wb",
-}
-
-#: A mapping between qualified modes and operation/representation pairs
-REVERSE_MODE_MAP: dict[QualifiedMode, ModePair] = {
-    "rt": ("read", "text"),
-    "rb": ("read", "binary"),
-    "wt": ("write", "text"),
-    "wb": ("write", "binary"),
-}
-
-UNQUALIFIED_TEXT_MAP: dict[UnqualifiedMode, ModePair] = {
-    "r": ("read", "text"),
-    "w": ("write", "text"),
-}
-UNQUALIFIED_BINARY_MAP: dict[UnqualifiedMode, ModePair] = {
-    "r": ("read", "binary"),
-    "w": ("write", "binary"),
-}
-
-
-def get_mode_pair(
-    mode: UnqualifiedMode | QualifiedMode, interpretation: Representation
-) -> ModePair:
-    """Get the mode pair."""
-    match mode:
-        case "rt" | "wt" | "rb" | "wb":
-            return REVERSE_MODE_MAP[mode]
-        case "r" | "w" if interpretation == "text":
-            return UNQUALIFIED_TEXT_MAP[mode]
-        case "r" | "w" if interpretation == "binary":
-            return UNQUALIFIED_BINARY_MAP[mode]
-        case _:
-            raise ValueError(f"invalid mode: {mode}")
 
 
 #: Backwards compatible name
@@ -1474,7 +1413,7 @@ def _iter_archived_csvs(
         else:
             it = file
 
-        reader: csv.DictReader[str] | _csv.Reader
+        reader: csv.DictReader[str] | Reader
         match return_type:
             case "sequence":
                 reader = csv.reader(it)
@@ -1505,7 +1444,7 @@ def _cut_long_lines(it: Iterable[str], max_length: int, name: str) -> Iterable[s
         yield line
 
 
-def _get_header(reader: csv.DictReader[str] | _csv.Reader) -> Sequence[str]:
+def _get_header(reader: csv.DictReader[str] | Reader) -> Sequence[str]:
     if isinstance(reader, csv.DictReader):
         return cast(Sequence[str], reader.fieldnames)
     else:
