@@ -1903,6 +1903,7 @@ def iter_zipped_files(
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Iterable[typing.BinaryIO]: ...
 
 
@@ -1917,6 +1918,7 @@ def iter_zipped_files(
     keep: Predicate[zipfile.ZipInfo] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Iterable[typing.TextIO]: ...
 
 
@@ -1929,6 +1931,7 @@ def iter_zipped_files(
     keep: Predicate[zipfile.ZipInfo] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Iterable[typing.TextIO] | Iterable[typing.BinaryIO]:
     """Iterate over opened files in a zip file in read mode."""
     with safe_zipfile_open(path) as zip_file:
@@ -1949,6 +1952,7 @@ def iter_zipped_files(
                 representation=representation,
                 open_kwargs=open_kwargs,
                 encoding=encoding,
+                newline=newline,
             ) as file:
                 yield file
 
@@ -2035,6 +2039,7 @@ def _iter_archived_csvs(
         tqdm_kwargs=tqdm_kwargs,
         keep=keep,
         encoding=encoding,
+        newline="",
     ):
         filename = file.name
         if max_line_length is not None:
