@@ -418,11 +418,19 @@ class TestUtils(unittest.TestCase):
         for path in [TEST_TXT, TEST_TXT_GZ]:
             with self.subTest(path=path):
                 with safe_open(path, representation="binary") as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+                    self.assertEqual(
+                        TEST_TXT_CONTENT,
+                        file.read().decode("utf-8"),
+                        msg=f"failed to read bytes from {path}",
+                    )
 
                 with safe_open(path, representation="binary") as passthrough:
                     with safe_open(passthrough, representation="binary") as file:
-                        self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+                        self.assertEqual(
+                            TEST_TXT_CONTENT,
+                            file.read().decode("utf-8"),
+                            msg=f"failed to read bytes from {path} in a passthrough scenario",
+                        )
 
     def test_safe_open_text(self) -> None:
         """Test safe open in text mode."""
@@ -433,13 +441,19 @@ class TestUtils(unittest.TestCase):
                 with safe_open(
                     path, encoding=encoding, representation="text", newline=newline
                 ) as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+                    self.assertEqual(
+                        TEST_TXT_CONTENT, file.read(), msg=f"failed to read text from {path}"
+                    )
 
                 with safe_open(
                     path, encoding=encoding, representation="text", newline=newline
                 ) as passthrough:
                     with safe_open(passthrough) as file:
-                        self.assertEqual(TEST_TXT_CONTENT, file.read())
+                        self.assertEqual(
+                            TEST_TXT_CONTENT,
+                            file.read(),
+                            msg=f"failed to read text from {path} in a passthrough scenario",
+                        )
 
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
