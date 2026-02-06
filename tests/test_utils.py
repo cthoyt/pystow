@@ -114,7 +114,9 @@ class TestUtils(unittest.TestCase):
 
     def test_get_hash(self) -> None:
         """Test directly calculating a hash digest."""
-        self.assertEqual(TEST_TXT_MD5.read_text(), get_hash_hexdigest(TEST_TXT, "md5"))
+        self.assertEqual(
+            TEST_TXT_MD5.read_text(encoding="utf-8"), get_hash_hexdigest(TEST_TXT, "md5")
+        )
 
     def test_mkdir(self) -> None:
         """Test for ensuring a directory."""
