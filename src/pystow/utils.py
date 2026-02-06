@@ -1600,12 +1600,6 @@ def _ensure_sensible_newline(newline: str | None, *, representation: Representat
         raise InvalidRepresentationError(representation)
 
 
-def _ensure_sensible_newline(newline: str | None, representation: Representation) -> str | None:
-    if newline is not None:
-        return newline
-    return "\n" if representation == "text" else None
-
-
 @contextlib.contextmanager
 def safe_open_writer(
     f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
