@@ -79,7 +79,13 @@ from .io_typing import (
     ensure_sensible_newline,
     get_mode_pair,
 )
-from .pydantic_utils import iter_pydantic_jsonl, read_pydantic_jsonl, write_pydantic_jsonl
+from .pydantic_utils import (
+    ModelValidateFailureAction,
+    iter_pydantic_jsonl,
+    read_pydantic_jsonl,
+    stream_write_pydantic_jsonl,
+    write_pydantic_jsonl,
+)
 from .safe_open import open_inner_zipfile, safe_open
 from ..constants import README_TEXT, TimeoutHint
 
@@ -103,6 +109,7 @@ __all__ = [
     "HexDigestMismatch",
     "InvalidOperationError",
     "InvalidRepresentationError",
+    "ModelValidateFailureAction",
     "Operation",
     "Representation",
     "UnexpectedDirectory",
@@ -158,6 +165,7 @@ __all__ = [
     "safe_open_writer",
     "safe_tarfile_open",
     "safe_zipfile_open",
+    "stream_write_pydantic_jsonl",
     "tarfile_writestr",
     "use_appdirs",
     "write_lzma_csv",
