@@ -1532,12 +1532,13 @@ def safe_open(
     if isinstance(path, (str, Path)):
         mode = MODE_MAP[operation, representation]
         encoding = _ensure_sensible_default_encoding(encoding, representation)
+        newline = "" if representation == "text" else None
         path = Path(path).expanduser().resolve()
         if path.suffix.endswith(".gz"):
-            with gzip.open(path, mode=mode, encoding=encoding) as file:
+            with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
                 yield file  # type:ignore
         else:
-            with open(path, mode=mode, encoding=encoding) as file:
+            with open(path, mode=mode, encoding=encoding, newline=newline) as file:
                 yield file  # type:ignore
     elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
         if representation != "text":
