@@ -59,7 +59,6 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
-from tests.constants import skip_on_windows
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
@@ -68,6 +67,11 @@ TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
 TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
+
+skip_on_windows = unittest.skipIf(
+    os.name == "nt",
+    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
+)
 
 
 class _Session(requests.sessions.Session):
@@ -110,9 +114,7 @@ class TestUtils(unittest.TestCase):
 
     def test_get_hash(self) -> None:
         """Test directly calculating a hash digest."""
-        self.assertEqual(
-            TEST_TXT_MD5.read_text(encoding="utf-8"), get_hash_hexdigest(TEST_TXT, "md5")
-        )
+        self.assertEqual(TEST_TXT_MD5.read_text(), get_hash_hexdigest(TEST_TXT, "md5"))
 
     def test_mkdir(self) -> None:
         """Test for ensuring a directory."""
@@ -409,10 +411,10 @@ class TestUtils(unittest.TestCase):
                 with safe_open(passthrough, representation="binary") as _file:
                     pass
 
-    def test_safe_open(self) -> None:
-        """Test safe open."""
-        for path, encoding in itt.product([TEST_TXT, TEST_TXT_GZ], [None, "utf-8"]):
-            with self.subTest(path=path, encoding=encoding):
+    def test_safe_open_binary(self) -> None:
+        """Test safe open in binary mode."""
+        for path in [TEST_TXT, TEST_TXT_GZ]:
+            with self.subTest(path=path):
                 with safe_open(path, representation="binary") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
 
@@ -420,10 +422,20 @@ class TestUtils(unittest.TestCase):
                     with safe_open(passthrough, representation="binary") as file:
                         self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
 
-                with safe_open(path, encoding=encoding, representation="text") as file:
+    def test_safe_open_text(self) -> None:
+        """Test safe open in text mode."""
+        for path, encoding, newline in itt.product(
+            [TEST_TXT, TEST_TXT_GZ], [None, "utf-8"], [None, "\n"]
+        ):
+            with self.subTest(path=path, encoding=encoding, newline=newline):
+                with safe_open(
+                    path, encoding=encoding, representation="text", newline=newline
+                ) as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read())
 
-                with safe_open(path, encoding=encoding, representation="text") as passthrough:
+                with safe_open(
+                    path, encoding=encoding, representation="text", newline=newline
+                ) as passthrough:
                     with safe_open(passthrough) as file:
                         self.assertEqual(TEST_TXT_CONTENT, file.read())
 
