@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     import pydantic
 
 __all__ = [
+    "ModelValidateFailureAction",
     "iter_pydantic_jsonl",
     "read_pydantic_jsonl",
     "stream_write_pydantic_jsonl",
@@ -25,7 +26,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 BaseModelVar = typing.TypeVar("BaseModelVar", bound="pydantic.BaseModel")
 
-FailureAction: TypeAlias = Literal["raise", "skip"]
+#: The action to take on model validation failure
+ModelValidateFailureAction: TypeAlias = Literal["raise", "skip"]
 
 
 def iter_pydantic_jsonl(
@@ -33,10 +35,14 @@ def iter_pydantic_jsonl(
     model_cls: type[BaseModelVar],
     *,
     progress: bool = False,
-    failure_action: FailureAction = "skip",
+    failure_action: ModelValidateFailureAction = "skip",
+    encoding: str | None = None,
+    newline: str | None = None,
 ) -> Iterable[BaseModelVar]:
     """Read models to a file as JSONL."""
-    with safe_open(file, operation="read", representation="text") as file:
+    with safe_open(
+        file, operation="read", representation="text", encoding=encoding, newline=newline
+    ) as file:
         for i, line in enumerate(
             tqdm(
                 file,
@@ -60,10 +66,10 @@ def iter_pydantic_jsonl(
 
 
 def read_pydantic_jsonl(
-    file: str | Path | TextIO, model_cls: type[BaseModelVar]
+    file: str | Path | TextIO, model_cls: type[BaseModelVar], **kwargs: Any
 ) -> list[BaseModelVar]:
     """Read models to a file as JSONL."""
-    return list(iter_pydantic_jsonl(file, model_cls))
+    return list(iter_pydantic_jsonl(file, model_cls, **kwargs))
 
 
 def write_pydantic_jsonl(
