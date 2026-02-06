@@ -1,5 +1,7 @@
 """Typing for I/O."""
 
+from __future__ import annotations
+
 import typing
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal, TypeAlias
@@ -13,10 +15,14 @@ __all__ = [
     "REPRESENTATION_VALUES",
     "REVERSE_MODE_MAP",
     "_MODE_TO_SIMPLE",
+    "InvalidOperationError",
+    "InvalidRepresentationError",
     "Operation",
     "Reader",
     "Representation",
     "Writer",
+    "ensure_sensible_default_encoding",
+    "ensure_sensible_newline",
     "get_mode_pair",
 ]
 
@@ -85,3 +91,67 @@ def get_mode_pair(
             return UNQUALIFIED_BINARY_MAP[mode]
         case _:
             raise ValueError(f"invalid mode: {mode}")
+
+
+class InvalidRepresentationError(ValueError):
+    """Raised when passing an invalid representation."""
+
+    def __init__(self, representation: str) -> None:
+        """Instantiate the exception."""
+        self.representation = representation
+
+    def __str__(self) -> str:
+        """Create a string for the exception."""
+        return (
+            f"Invalid representation: {self.representation}. "
+            f"Should be one of {REPRESENTATION_VALUES}."
+        )
+
+
+class InvalidOperationError(ValueError):
+    """Raised when passing an invalid operation."""
+
+    def __init__(self, operation: str) -> None:
+        """Instantiate the exception."""
+        self.operation = operation
+
+    def __str__(self) -> str:
+        """Create a string for the exception."""
+        return f"Invalid operation: {self.operation}. Should be one of {OPERATION_VALUES}."
+
+
+def ensure_sensible_default_encoding(
+    encoding: str | None, *, representation: Representation
+) -> str | None:
+    """Get a sensible default encoding."""
+    # this function exists because windows doesn't use UTF-8 as a default
+    # encoding for some reason, and that's bonk. So we intercept the encoding
+    # and set it explicitly to UTF-8
+    if representation == "binary":
+        if encoding is not None:
+            raise ValueError
+        else:
+            return None
+    elif representation == "text":
+        if encoding is not None:
+            return encoding
+        return "utf-8"
+    else:
+        raise InvalidRepresentationError(representation)
+
+
+def ensure_sensible_newline(newline: str | None, *, representation: Representation) -> str | None:
+    """Get a sensible default newline."""
+    # this function exists to override the default way newlines are
+    # automatically interpreted by python on Windows to always use
+    # \n instead of \r\n
+    if representation == "binary":
+        if newline is not None:
+            raise ValueError
+        return None
+    elif representation == "text":
+        if newline is not None:
+            return newline
+        return "\n"
+    else:
+        raise InvalidRepresentationError(representation)

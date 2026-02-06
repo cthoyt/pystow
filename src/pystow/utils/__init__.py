@@ -69,16 +69,18 @@ from .io_typing import (
     OPERATION_VALUES,
     REPRESENTATION_VALUES,
     REVERSE_MODE_MAP,
+    InvalidOperationError,
+    InvalidRepresentationError,
     Operation,
     Reader,
     Representation,
     Writer,
+    ensure_sensible_default_encoding,
+    ensure_sensible_newline,
     get_mode_pair,
 )
-from ..constants import (
-    README_TEXT,
-    TimeoutHint,
-)
+from .safe_open import open_inner_zipfile, safe_open
+from ..constants import README_TEXT, TimeoutHint
 
 if TYPE_CHECKING:
     import bs4
@@ -399,61 +401,6 @@ def open_zipfile(
         yield file
 
 
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def open_inner_zipfile(
-    zip_file: zipfile.ZipFile,
-    inner_path: str,
-    *,
-    operation: Operation = ...,
-    representation: Literal["text"] = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[typing.TextIO, None, None]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def open_inner_zipfile(
-    zip_file: zipfile.ZipFile,
-    inner_path: str,
-    *,
-    operation: Operation = ...,
-    representation: Literal["binary"] = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[typing.BinaryIO, None, None]: ...
-
-
-@contextlib.contextmanager
-def open_inner_zipfile(
-    zip_file: zipfile.ZipFile,
-    inner_path: str,
-    *,
-    operation: Operation = "read",
-    representation: Representation = "text",
-    open_kwargs: Mapping[str, Any] | None = None,
-    encoding: str | None = None,
-    newline: str | None = None,
-) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
-    """Open a file inside an already opened zip archive."""
-    mode = _MODE_TO_SIMPLE[operation]
-    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-    newline = _ensure_sensible_newline(newline, representation=representation)
-    with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
-        if representation == "text":
-            with io.TextIOWrapper(binary_file, encoding=encoding, newline=newline) as text_file:
-                yield text_file
-        elif representation == "binary":
-            yield cast(typing.BinaryIO, binary_file)
-        else:
-            raise InvalidRepresentationError(representation)
-
-
 @contextlib.contextmanager
 def open_tarfile(
     path: str | Path,
@@ -484,33 +431,6 @@ def open_tarfile(
             tar_file.addfile(tarinfo, file)
     else:
         raise InvalidOperationError(operation)
-
-
-class InvalidRepresentationError(ValueError):
-    """Raised when passing an invalid representation."""
-
-    def __init__(self, representation: str) -> None:
-        """Instantiate the exception."""
-        self.representation = representation
-
-    def __str__(self) -> str:
-        """Create a string for the exception."""
-        return (
-            f"Invalid representation: {self.representation}. "
-            f"Should be one of {REPRESENTATION_VALUES}."
-        )
-
-
-class InvalidOperationError(ValueError):
-    """Raised when passing an invalid operation."""
-
-    def __init__(self, operation: str) -> None:
-        """Instantiate the exception."""
-        self.operation = operation
-
-    def __str__(self) -> str:
-        """Create a string for the exception."""
-        return f"Invalid operation: {self.operation}. Should be one of {OPERATION_VALUES}."
 
 
 @contextlib.contextmanager
@@ -822,135 +742,6 @@ def gunzip(source: str | Path, target: str | Path) -> None:
         shutil.copyfileobj(in_file, out_file)
 
 
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: typing.BinaryIO,
-    *,
-    operation: Operation = ...,
-    representation: Representation = ...,
-    encoding: str | None = ...,
-) -> Generator[typing.BinaryIO, None, None]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: typing.TextIO,
-    *,
-    operation: Operation = ...,
-    representation: Representation = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[typing.TextIO, None, None]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: str | Path,
-    *,
-    operation: Operation = ...,
-    representation: Literal["text"] = "text",
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[typing.TextIO, None, None]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: str | Path,
-    *,
-    operation: Operation = ...,
-    representation: Literal["binary"] = "binary",
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[typing.BinaryIO, None, None]: ...
-
-
-@contextlib.contextmanager
-def safe_open(
-    path: str | Path | typing.TextIO | typing.BinaryIO,
-    *,
-    operation: Operation = "read",
-    representation: Representation = "text",
-    encoding: str | None = None,
-    newline: str | None = None,
-) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
-    """Safely open a file for reading or writing text."""
-    if operation not in OPERATION_VALUES:
-        raise InvalidOperationError(operation)
-    if representation not in REPRESENTATION_VALUES:
-        raise InvalidRepresentationError(representation)
-
-    if isinstance(path, (str, Path)):
-        mode = MODE_MAP[operation, representation]
-        encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-        newline = _ensure_sensible_newline(newline, representation=representation)
-        path = Path(path).expanduser().resolve()
-        if path.suffix.endswith(".gz"):
-            with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                yield file  # type:ignore
-        else:
-            with open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                yield file  # type:ignore
-    elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
-        if representation != "text":
-            raise ValueError(
-                "must specify `text` representation when passing through a text file-like object"
-            )
-        yield path
-    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
-        if representation != "binary":
-            raise ValueError(
-                "must specify `binary` representation when passing through "
-                "a binary file-like object"
-            )
-        yield path
-    else:
-        raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
-
-
-def _ensure_sensible_default_encoding(
-    encoding: str | None, *, representation: Representation
-) -> str | None:
-    # this function exists because windows doesn't use UTF-8 as a default
-    # encoding for some reason, and that's bonk. So we intercept the encoding
-    # and set it explicitly to UTF-8
-    if representation == "binary":
-        if encoding is not None:
-            raise ValueError
-        else:
-            return None
-    elif representation == "text":
-        if encoding is not None:
-            return encoding
-        return "utf-8"
-    else:
-        raise InvalidRepresentationError(representation)
-
-
-def _ensure_sensible_newline(newline: str | None, *, representation: Representation) -> str | None:
-    # this function exists to override the default way newlines are
-    # automatically interpreted by python on Windows to always use
-    # \n instead of \r\n
-    if representation == "binary":
-        if newline is not None:
-            raise ValueError
-        return None
-    elif representation == "text":
-        if newline is not None:
-            return newline
-        return "\n"
-    else:
-        raise InvalidRepresentationError(representation)
-
-
 @contextlib.contextmanager
 def safe_open_writer(
     f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
@@ -1170,8 +961,8 @@ def iter_tarred_files(
     newline: str | None = None,
 ) -> Iterable[TextIO] | Iterable[BinaryIO]:
     """Iterate over opened files in a tar archive in read mode."""
-    encoding = _ensure_sensible_default_encoding(encoding, representation=representation)
-    newline = _ensure_sensible_newline(newline, representation=representation)
+    encoding = ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = ensure_sensible_newline(newline, representation=representation)
     with safe_tarfile_open(path) as tar_file:
         _tqdm_kwargs: dict[str, Any] = {
             "unit": "file",
