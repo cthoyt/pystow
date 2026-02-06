@@ -59,6 +59,7 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
+from tests.constants import skip_on_windows
 
 HERE = Path(__file__).resolve().parent
 TEST_TXT = HERE.joinpath("resources", "test.txt")
@@ -67,11 +68,6 @@ TEST_TXT_MD5 = HERE.joinpath("resources", "test.txt.md5")
 TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
-
-skip_on_windows = unittest.skipIf(
-    os.name == "nt",
-    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
-)
 
 
 class _Session(requests.sessions.Session):
@@ -100,7 +96,6 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=name, url=url):
                 self.assertEqual(name, name_from_url(url))
 
-    @skip_on_windows
     def test_file_values(self) -> None:
         """Test encodings."""
         for url, value in [
@@ -112,7 +107,6 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=url.name):
                 self.assertEqual(value, requests.get(url.as_uri(), timeout=15).text)
 
-    @skip_on_windows
     def test_get_hash(self) -> None:
         """Test directly calculating a hash digest."""
         self.assertEqual(
@@ -544,7 +538,6 @@ class TestHashing(unittest.TestCase):
             },
         )
 
-    @skip_on_windows
     def test_hash_remote_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
@@ -558,7 +551,6 @@ class TestHashing(unittest.TestCase):
         )
         self.assertTrue(self.path.exists())
 
-    @skip_on_windows
     def test_hash_remote_verbose_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
