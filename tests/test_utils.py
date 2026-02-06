@@ -68,11 +68,6 @@ TEST_TXT_GZ = HERE.joinpath("resources", "test.txt.gz")
 TEST_TXT_VERBOSE_MD5 = HERE.joinpath("resources", "test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = HERE.joinpath("resources", "test_wrong.txt.md5")
 
-skip_on_windows = unittest.skipIf(
-    os.name == "nt",
-    reason="Funny stuff happens in requests with a file adapter on windows that adds line breaks",
-)
-
 
 class _Session(requests.sessions.Session):
     """A mock session."""
@@ -100,7 +95,6 @@ class TestUtils(unittest.TestCase):
             with self.subTest(name=name, url=url):
                 self.assertEqual(name, name_from_url(url))
 
-    @skip_on_windows
     def test_file_values(self) -> None:
         """Test encodings."""
         for url, value in [
@@ -114,7 +108,9 @@ class TestUtils(unittest.TestCase):
 
     def test_get_hash(self) -> None:
         """Test directly calculating a hash digest."""
-        self.assertEqual(TEST_TXT_MD5.read_text(), get_hash_hexdigest(TEST_TXT, "md5"))
+        self.assertEqual(
+            TEST_TXT_MD5.read_text(encoding="utf-8"), get_hash_hexdigest(TEST_TXT, "md5")
+        )
 
     def test_mkdir(self) -> None:
         """Test for ensuring a directory."""
@@ -416,11 +412,19 @@ class TestUtils(unittest.TestCase):
         for path in [TEST_TXT, TEST_TXT_GZ]:
             with self.subTest(path=path):
                 with safe_open(path, representation="binary") as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+                    self.assertEqual(
+                        TEST_TXT_CONTENT,
+                        file.read().decode("utf-8"),
+                        msg=f"failed to read bytes from {path}",
+                    )
 
                 with safe_open(path, representation="binary") as passthrough:
                     with safe_open(passthrough, representation="binary") as file:
-                        self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
+                        self.assertEqual(
+                            TEST_TXT_CONTENT,
+                            file.read().decode("utf-8"),
+                            msg=f"failed to read bytes from {path} in a passthrough scenario",
+                        )
 
     def test_safe_open_text(self) -> None:
         """Test safe open in text mode."""
@@ -431,13 +435,19 @@ class TestUtils(unittest.TestCase):
                 with safe_open(
                     path, encoding=encoding, representation="text", newline=newline
                 ) as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+                    self.assertEqual(
+                        TEST_TXT_CONTENT, file.read(), msg=f"failed to read text from {path}"
+                    )
 
                 with safe_open(
                     path, encoding=encoding, representation="text", newline=newline
                 ) as passthrough:
                     with safe_open(passthrough) as file:
-                        self.assertEqual(TEST_TXT_CONTENT, file.read())
+                        self.assertEqual(
+                            TEST_TXT_CONTENT,
+                            file.read(),
+                            msg=f"failed to read text from {path} in a passthrough scenario",
+                        )
 
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
@@ -527,7 +537,6 @@ class TestHashing(unittest.TestCase):
             },
         )
 
-    @skip_on_windows
     def test_hash_remote_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
@@ -541,7 +550,6 @@ class TestHashing(unittest.TestCase):
         )
         self.assertTrue(self.path.exists())
 
-    @skip_on_windows
     def test_hash_remote_verbose_success(self) -> None:
         """Test checking actually works."""
         self.assertFalse(self.path.exists())
@@ -639,7 +647,6 @@ class TestHashing(unittest.TestCase):
             force=True,
         )
 
-    @skip_on_windows
     def test_remote_force(self) -> None:
         """Test overwriting wrong file."""
         # now if force=True it should not bother with the hash check

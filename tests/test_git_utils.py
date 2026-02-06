@@ -9,8 +9,10 @@ from pystow.git import (
     has_local_branch,
     is_likely_default_branch,
 )
+from tests.constants import skip_on_windows
 
 
+@skip_on_windows
 class TestGitUtils(unittest.TestCase):
     """Test git utilities."""
 

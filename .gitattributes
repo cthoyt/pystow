@@ -1,0 +1,3 @@
+# Preserve LF line endings for test resources
+tests/resources/*.txt text eol=lf
+tests/resources/*.gz binary
