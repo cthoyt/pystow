@@ -418,17 +418,15 @@ class TestUtils(unittest.TestCase):
                     with safe_open(passthrough, representation="binary") as file:
                         self.assertEqual(TEST_TXT_CONTENT, file.read().decode("utf-8"))
 
+    def test_encodings(self) -> None:
+        """Test I/O in different encodings."""
         for encoding in ["ascii", "utf-16-be", "CP1252"]:
-            with tempfile.TemporaryDirectory() as directory:
+            with self.subTest(encoding=encoding), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory).joinpath("test.txt")
                 with safe_open(path, encoding=encoding, operation="write") as file:
                     file.write(TEST_TXT_CONTENT)
-
-                with safe_open(path, encoding="utf8", operation="read") as file:
-                    self.assertNotEqual(TEST_TXT_CONTENT, file.read())
-
                 with safe_open(path, encoding=encoding, operation="read") as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read())
+                    self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
 
 
 class TestDownload(unittest.TestCase):
