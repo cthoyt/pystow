@@ -1585,6 +1585,9 @@ def _ensure_sensible_default_encoding(
 
 
 def _ensure_sensible_newline(newline: str | None, *, representation: Representation) -> str | None:
+    # this function exists to override the default way newlines are
+    # automatically interpreted by python on Windows to always use
+    # \n instead of \r\n
     if representation == "binary":
         if newline is not None:
             raise ValueError
