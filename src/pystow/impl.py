@@ -276,12 +276,19 @@ class Module:
         """
         if name is None:
             name = name_from_url(url)
-        path = self.join(*subkeys, name=name, version=version, ensure_exists=True)
+        path, version = self.join(
+            *subkeys, name=name, version=version, ensure_exists=True, return_version=True
+        )
+        _download_kwargs: dict[str, Any] = {}
+        if version:
+            _download_kwargs["desc"] = (f"Downloading {path.name} v{version}",)
+        if download_kwargs:
+            _download_kwargs.update(download_kwargs)
         utils.download(
             url=url,
             path=path,
             force=force,
-            **(download_kwargs or {}),
+            **_download_kwargs,
         )
         return path
 
