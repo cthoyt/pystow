@@ -107,13 +107,46 @@ class Module:
         base = self.join(*subkeys, ensure_exists=False)
         return Module(base=base, ensure_exists=ensure_exists)
 
+    # docstr-coverage:excused `overload`
+    @overload
+    def join(
+        self,
+        *subkeys: str,
+        name: str | None = ...,
+        ensure_exists: bool = ...,
+        version: VersionHint = ...,
+        return_version: Literal[True],
+    ) -> tuple[Path, str | None]: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def join(
+        self,
+        *subkeys: str,
+        name: str | None = ...,
+        ensure_exists: bool = ...,
+        version: VersionHint = ...,
+        return_version: Literal[False],
+    ) -> Path: ...
+
+    # docstr-coverage:excused `overload`
+    @overload
+    def join(
+        self,
+        *subkeys: str,
+        name: str | None = ...,
+        ensure_exists: bool = ...,
+        version: VersionHint = ...,
+    ) -> Path: ...  # When return_version is omitted (defaults to False)
+
     def join(
         self,
         *subkeys: str,
         name: str | None = None,
         ensure_exists: bool = True,
         version: VersionHint = None,
-    ) -> Path:
+        return_version: bool = False,
+    ) -> Path | tuple[Path, str | None]:
         """Get a subdirectory of the current module.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
@@ -143,25 +176,38 @@ class Module:
                 module = pystow.module("rhea")
                 path = module.join(name="rhea.rdf.gz", version=get_rhea_version)
 
+        :param return_version: If true, returns the processed version
 
         :returns: The path of the directory or subdirectory for the given module.
         """
-        rv = self.base
-
-        # if the version is given as a no-argument callable,
-        # then it should be called and a version is returned
-        if callable(version):
-            version = version()
-        if version:
-            self._raise_for_invalid_version(version)
-            subkeys = (version, *subkeys)
-
+        rv: Path = self.base
+        if mod_version := self._resolve_version(version):
+            subkeys = (mod_version, *subkeys)
         if subkeys:
             rv = rv.joinpath(*subkeys)
             mkdir(rv, ensure_exists=ensure_exists)
         if name:
             rv = rv.joinpath(name)
+        if return_version:
+            return rv, mod_version
         return rv
+
+    @classmethod
+    def _resolve_version(cls, version: VersionHint) -> str | None:
+        match version:
+            case None:
+                return None
+            case str():
+                cls._raise_for_invalid_version(version)
+                return version
+            case _:
+                # if the version is given as a no-argument callable,
+                # then it should be called and a version is returned
+                rv: str | None = version()
+                if rv is None:
+                    return None
+                cls._raise_for_invalid_version(rv)
+                return rv
 
     @staticmethod
     def _raise_for_invalid_version(version: str) -> None:
