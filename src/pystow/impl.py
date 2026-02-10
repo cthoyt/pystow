@@ -282,8 +282,12 @@ class Module:
         _download_kwargs: dict[str, Any] = {}
         if version:
             _download_kwargs["desc"] = f"Downloading {path.name} v{version}"
-        if download_kwargs:
-            _download_kwargs.update(download_kwargs)
+        download_kwargs = dict(download_kwargs or {})
+        if version:
+            if "tqdm_kwargs" not in download_kwargs:
+                download_kwargs["tqdm_kwargs"] = {}
+            if "desc" not in download_kwargs["tqdm_kwargs"]:
+                download_kwargs["tqdm_kwargs"]["desc"] = f"Downloading {path.name} v{version}"
         utils.download(
             url=url,
             path=path,
