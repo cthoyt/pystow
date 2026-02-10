@@ -281,7 +281,7 @@ class Module:
         )
         _download_kwargs: dict[str, Any] = {}
         if version:
-            _download_kwargs["desc"] = (f"Downloading {path.name} v{version}",)
+            _download_kwargs["desc"] = f"Downloading {path.name} v{version}"
         if download_kwargs:
             _download_kwargs.update(download_kwargs)
         utils.download(
