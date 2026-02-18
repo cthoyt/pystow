@@ -118,8 +118,8 @@ def iter_pydantic_tsv(
     """Read models from a TSV file, iteratively."""
     with safe_open_dict_reader(path) as reader:
         if process is not None:
-            records = (process(record) for record in reader)
+            for record in reader:
+                yield model.model_validate(process(record))
         else:
-            records = reader
-        for record in records:
-            yield model.model_validate(record)
+            for record in reader:
+                yield model.model_validate(record)

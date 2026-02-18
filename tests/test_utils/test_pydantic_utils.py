@@ -11,6 +11,7 @@ from typing import Any
 from pystow.utils import (
     read_pydantic_jsonl,
     read_pydantic_tsv,
+    safe_open_writer,
     stream_write_pydantic_jsonl,
     write_pydantic_jsonl,
 )
@@ -88,19 +89,19 @@ class TestPydanticUtils(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("data.tsv")
-            with path.open("w") as file:
-                print("name", "date", sep="\t", file=file)
-                print("1", "2025-01-01", sep="\t", file=file)
-                print("2", "2025-01-02", sep="\t", file=file)
-                print("3", "2025-01-03", sep="\t", file=file)
+            with safe_open_writer(path) as writer:
+                writer.writerow(("name", "date"))
+                writer.writerow(("1", "2025-01-01"))
+                writer.writerow(("2", "2025-01-02"))
+                writer.writerow(("3", "2025-01-03"))
 
             self.assertEqual(
                 [
-                    Model(name="1", date="2025-01-01"),
-                    Model(name="2", date="2025-01-02"),
-                    Model(name="3", date="2025-01-03"),
+                    Model(name="1", date=datetime.date.fromisoformat("2025-01-01")),
+                    Model(name="2", date=datetime.date.fromisoformat("2025-01-02")),
+                    Model(name="3", date=datetime.date.fromisoformat("2025-01-03")),
                 ],
-                list(read_pydantic_tsv(path, Model)),
+                read_pydantic_tsv(path, Model),
             )
 
     def test_read_tsv_with_processing(self) -> None:
@@ -123,17 +124,17 @@ class TestPydanticUtils(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("data.tsv")
-            with path.open("w") as file:
-                print("name", "date", sep="\t", file=file)
-                print("1", "2025", sep="\t", file=file)
-                print("2", "2025-01-02", sep="\t", file=file)
-                print("3", "2025-01-03", sep="\t", file=file)
+            with safe_open_writer(path) as writer:
+                writer.writerow(("name", "date"))
+                writer.writerow(("1", "2025"))
+                writer.writerow(("2", "2025-01-02"))
+                writer.writerow(("3", "2025-01-03"))
 
             self.assertEqual(
                 [
-                    Model(name="1", date="2025-01-01"),
-                    Model(name="2", date="2025-01-02"),
-                    Model(name="3", date="2025-01-03"),
+                    Model(name="1", date=datetime.date.fromisoformat("2025-01-01")),
+                    Model(name="2", date=datetime.date.fromisoformat("2025-01-02")),
+                    Model(name="3", date=datetime.date.fromisoformat("2025-01-03")),
                 ],
-                list(read_pydantic_tsv(path, Model, process=_process)),
+                read_pydantic_tsv(path, Model, process=_process),
             )
