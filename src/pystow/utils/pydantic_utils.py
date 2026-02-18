@@ -104,22 +104,36 @@ def stream_write_pydantic_jsonl(
 def read_pydantic_tsv(
     path: str | Path | TextIO,
     model: type[BaseModelVar],
+    *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    failure_action: ModelValidateFailureAction = "skip",
 ) -> list[BaseModelVar]:
     """Read models from a TSV file."""
-    return list(iter_pydantic_tsv(path, model, process=process))
+    return list(iter_pydantic_tsv(path, model, process=process, failure_action=failure_action))
 
 
 def iter_pydantic_tsv(
     path: str | Path | TextIO,
-    model: type[BaseModelVar],
+    model_cls: type[BaseModelVar],
+    *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    failure_action: ModelValidateFailureAction = "skip",
 ) -> Generator[BaseModelVar, None, None]:
     """Read models from a TSV file, iteratively."""
     with safe_open_dict_reader(path) as reader:
-        if process is not None:
-            for record in reader:
-                yield model.model_validate(process(record))
+        records: Iterable[dict[str, Any]]
+        if process is None:
+            records = iter(reader)
         else:
-            for record in reader:
-                yield model.model_validate(record)
+            records = (process(record) for record in reader)
+        for record in records:
+            try:
+                yv = model_cls.model_validate(record)
+            except pydantic.ValidationError:
+                if failure_action == "raise":
+                    raise
+                else:
+                    logger.debug("[line:%d] failed to parse row", record)
+                    continue
+            else:
+                yield yv
