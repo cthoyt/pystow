@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import logging
 import typing
-from collections.abc import Generator, Iterable, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 
 from tqdm import tqdm
 
-from .safe_open import safe_open
+from .safe_open import safe_open, safe_open_dict_reader
 
 if TYPE_CHECKING:
     import pydantic
@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 __all__ = [
     "ModelValidateFailureAction",
     "iter_pydantic_jsonl",
+    "iter_pydantic_tsv",
     "read_pydantic_jsonl",
+    "read_pydantic_tsv",
     "stream_write_pydantic_jsonl",
     "write_pydantic_jsonl",
 ]
@@ -70,7 +72,7 @@ def iter_pydantic_jsonl(
 def read_pydantic_jsonl(
     file: str | Path | TextIO, model_cls: type[BaseModelVar], **kwargs: Any
 ) -> list[BaseModelVar]:
-    """Read models to a file as JSONL."""
+    """Read models from a file as JSONL."""
     return list(iter_pydantic_jsonl(file, model_cls, **kwargs))
 
 
@@ -97,3 +99,41 @@ def stream_write_pydantic_jsonl(
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
             yield model
+
+
+def read_pydantic_tsv(
+    path: str | Path | TextIO,
+    model: type[BaseModelVar],
+    *,
+    process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    failure_action: ModelValidateFailureAction = "skip",
+) -> list[BaseModelVar]:
+    """Read models from a TSV file."""
+    return list(iter_pydantic_tsv(path, model, process=process, failure_action=failure_action))
+
+
+def iter_pydantic_tsv(
+    path: str | Path | TextIO,
+    model_cls: type[BaseModelVar],
+    *,
+    process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    failure_action: ModelValidateFailureAction = "skip",
+) -> Generator[BaseModelVar, None, None]:
+    """Read models from a TSV file, iteratively."""
+    with safe_open_dict_reader(path) as reader:
+        records: Iterable[dict[str, Any]]
+        if process is None:
+            records = iter(reader)
+        else:
+            records = (process(record) for record in reader)
+        for record in records:
+            try:
+                yv = model_cls.model_validate(record)
+            except pydantic.ValidationError:
+                if failure_action == "raise":
+                    raise
+                else:
+                    logger.debug("[line:%d] failed to parse row", record)
+                    continue
+            else:
+                yield yv
