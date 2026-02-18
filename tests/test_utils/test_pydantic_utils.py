@@ -116,7 +116,7 @@ class TestPydanticUtils(unittest.TestCase):
 
         def _process(record: dict[str, Any]) -> dict[str, Any]:
             date_value = record.pop("date")
-            if len(record) == 4:
+            if len(date_value) == 4:
                 record["date"] = f"{date_value}-01-01"
             else:
                 record["date"] = date_value
