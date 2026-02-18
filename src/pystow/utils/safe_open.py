@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import contextlib
+import csv
 import gzip
 import io
 import typing
 import zipfile
 from collections.abc import Generator, Mapping
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, TextIO, cast
 
 from .io_typing import (
     _MODE_TO_SIMPLE,
@@ -27,6 +28,7 @@ from .io_typing import (
 __all__ = [
     "open_inner_zipfile",
     "safe_open",
+    "safe_open_dict_reader",
 ]
 
 
@@ -177,3 +179,19 @@ def open_inner_zipfile(
             yield cast(typing.BinaryIO, binary_file)
         else:
             raise InvalidRepresentationError(representation)
+
+
+@contextlib.contextmanager
+def safe_open_dict_reader(
+    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
+) -> Generator[csv.DictReader[str], None, None]:
+    """Open a CSV dictionary reader, wrapping :func:`csv.DictReader`.
+
+    :param f: A path to a file, or an already open text-based IO object
+    :param delimiter: The delimiter for writing to CSV
+    :param kwargs: Keyword arguments to pass to :func:`csv.DictReader`
+
+    :yields: A CSV reader object, constructed from :func:`csv.DictReader`
+    """
+    with safe_open(f, operation="read", representation="text") as file:
+        yield csv.DictReader(file, delimiter=delimiter, **kwargs)

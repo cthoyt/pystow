@@ -82,11 +82,13 @@ from .io_typing import (
 from .pydantic_utils import (
     ModelValidateFailureAction,
     iter_pydantic_jsonl,
+    iter_pydantic_tsv,
     read_pydantic_jsonl,
+    read_pydantic_tsv,
     stream_write_pydantic_jsonl,
     write_pydantic_jsonl,
 )
-from .safe_open import open_inner_zipfile, safe_open
+from .safe_open import open_inner_zipfile, safe_open, safe_open_dict_reader
 from ..constants import README_TEXT, TimeoutHint
 
 if TYPE_CHECKING:
@@ -133,6 +135,7 @@ __all__ = [
     "gunzip",
     "gzip_compress",
     "iter_pydantic_jsonl",
+    "iter_pydantic_tsv",
     "iter_tarred_csvs",
     "iter_tarred_files",
     "iter_zipped_csvs",
@@ -152,6 +155,7 @@ __all__ = [
     "raise_on_digest_mismatch",
     "read_lzma_csv",
     "read_pydantic_jsonl",
+    "read_pydantic_tsv",
     "read_rdf",
     "read_tarfile_csv",
     "read_tarfile_xml",
@@ -828,22 +832,6 @@ def safe_open_reader(
     """
     with safe_open(f, operation="read", representation="text", newline="") as file:
         yield csv.reader(file, delimiter=delimiter, **kwargs)
-
-
-@contextlib.contextmanager
-def safe_open_dict_reader(
-    f: str | Path | TextIO, *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[csv.DictReader[str], None, None]:
-    """Open a CSV dictionary reader, wrapping :func:`csv.DictReader`.
-
-    :param f: A path to a file, or an already open text-based IO object
-    :param delimiter: The delimiter for writing to CSV
-    :param kwargs: Keyword arguments to pass to :func:`csv.DictReader`
-
-    :yields: A CSV reader object, constructed from :func:`csv.DictReader`
-    """
-    with safe_open(f, operation="read", representation="text") as file:
-        yield csv.DictReader(file, delimiter=delimiter, **kwargs)
 
 
 def get_soup(
