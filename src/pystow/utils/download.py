@@ -8,13 +8,15 @@ import urllib.error
 from collections.abc import Mapping
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict
 from urllib.request import urlretrieve
 
 import requests
 from tqdm import tqdm
+from typing_extensions import NotRequired, Unpack
 
 from .hashing import raise_on_digest_mismatch
+from ..constants import TimeoutHint
 
 if TYPE_CHECKING:
     import botocore.client
@@ -58,7 +60,19 @@ class TqdmReportHook(tqdm):  # type:ignore
         self.update(blocks * block_size - self.n)  # will also set self.n = b * bsize
 
 
-def download(
+class RequestKwargs(TypedDict):
+    """Keyword arguments for :func:`requests.get`."""
+
+    auth: NotRequired[tuple[str, str]]
+    timeout: NotRequired[TimeoutHint]
+    allow_redirects: NotRequired[bool]
+    proxies: NotRequired[dict[str, str]]
+    verify: NotRequired[bool]
+    stream: NotRequired[bool]
+    cert: NotRequired[str | tuple[str, str]]
+
+
+def download(  # noqa:C901
     url: str,
     path: str | Path,
     force: bool = True,
@@ -69,7 +83,8 @@ def download(
     hexdigests_strict: bool = False,
     progress_bar: bool = True,
     tqdm_kwargs: Mapping[str, Any] | None = None,
-    **kwargs: Any,
+    _version: str | None = None,
+    **kwargs: Unpack[RequestKwargs],
 ) -> None:
     """Download a file from a given URL.
 
@@ -83,14 +98,15 @@ def download(
         pairs.
     :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
         with expected hexdigest) pairs.
-    :param hexdigests_strict: Set this to false to stop automatically checking for the
+    :param hexdigests_strict: Set this to ``False`` to stop automatically checking for the
         `algorithm(filename)=hash` format
     :param progress_bar: Set to true to show a progress bar while downloading
     :param tqdm_kwargs: Override the default arguments passed to :class:`tadm.tqdm` when
         progress_bar is True.
-    :param kwargs: The keyword arguments to pass to :func:`urllib.request.urlretrieve`
-        or to `requests.get` depending on the backend chosen. If using 'requests'
-        backend, `stream` is set to True by default.
+    :param kwargs: If using :func:`urllib.request.urlretrieve`, there are no keyword
+        arguments available. If using ``requests`` as a backend, passes these
+        to :func:`requests.get`. If using ``requests`` as a backend, ``stream`` is
+        set to True by default.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during
         download
@@ -113,13 +129,17 @@ def download(
         logger.debug("did not re-download %s from %s", path, url)
         return
 
+    desc = f"Downloading {path.name}"
+    if _version:
+        desc += f" (v{_version})"
+
     _tqdm_kwargs = {
         "unit": "B",
         "unit_scale": True,
         "unit_divisor": 1024,
         "miniters": 1,
         "disable": not progress_bar,
-        "desc": f"Downloading {path.name}",
+        "desc": desc,
         "leave": False,
     }
     if tqdm_kwargs:
@@ -128,9 +148,13 @@ def download(
     try:
         if backend == "urllib":
             logger.info("downloading with urllib from %s to %s", url, path)
+            if kwargs:
+                logger.warning(
+                    "no kwargs should be supplied when using urllib, skipping: %s", kwargs
+                )
             with TqdmReportHook(**_tqdm_kwargs) as t:
                 try:
-                    urlretrieve(url, path, reporthook=t.update_to, **kwargs)  # noqa:S310
+                    urlretrieve(url, path, reporthook=t.update_to)  # noqa:S310
                 except urllib.error.URLError as e:
                     raise DownloadError(backend, url, path, e) from e
         elif backend == "requests":

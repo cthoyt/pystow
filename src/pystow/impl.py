@@ -279,20 +279,12 @@ class Module:
         path, version = self.join(
             *subkeys, name=name, version=version, ensure_exists=True, return_version=True
         )
-        _download_kwargs: dict[str, Any] = {}
-        if version:
-            _download_kwargs["desc"] = f"Downloading {path.name} v{version}"
-        download_kwargs = dict(download_kwargs or {})
-        if version:
-            if "tqdm_kwargs" not in download_kwargs:
-                download_kwargs["tqdm_kwargs"] = {}
-            if "desc" not in download_kwargs["tqdm_kwargs"]:
-                download_kwargs["tqdm_kwargs"]["desc"] = f"Downloading {path.name} v{version}"
         utils.download(
             url=url,
             path=path,
             force=force,
-            **_download_kwargs,
+            _version=version,
+            **(download_kwargs or {}),
         )
         return path
 
