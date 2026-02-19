@@ -8,11 +8,12 @@ import urllib.error
 from collections.abc import Mapping
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypeAlias, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict
 from urllib.request import urlretrieve
 
 import requests
 from tqdm import tqdm
+from typing_extensions import NotRequired, Unpack
 
 from .hashing import raise_on_digest_mismatch
 from ..constants import TimeoutHint
