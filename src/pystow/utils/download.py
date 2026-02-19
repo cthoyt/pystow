@@ -82,6 +82,7 @@ def download(  # noqa:C901
     hexdigests_strict: bool = False,
     progress_bar: bool = True,
     tqdm_kwargs: Mapping[str, Any] | None = None,
+    _version: str | None = None,
     **kwargs: Unpack[RequestKwargs],
 ) -> None:
     """Download a file from a given URL.
@@ -127,13 +128,17 @@ def download(  # noqa:C901
         logger.debug("did not re-download %s from %s", path, url)
         return
 
+    desc = f"Downloading {path.name}"
+    if _version:
+        desc += f" (v{_version})"
+
     _tqdm_kwargs = {
         "unit": "B",
         "unit_scale": True,
         "unit_divisor": 1024,
         "miniters": 1,
         "disable": not progress_bar,
-        "desc": f"Downloading {path.name}",
+        "desc": desc,
         "leave": False,
     }
     if tqdm_kwargs:
