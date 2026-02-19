@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     import numpy.typing
     import pandas as pd
     import rdflib
+    import sentence_transformers
 
 __all__ = [
     "dump_df",
@@ -59,6 +60,7 @@ __all__ = [
     "ensure_yaml",
     "ensure_zip_df",
     "ensure_zip_np",
+    "get_sentence_transformer",
     "join",
     "joinpath_sqlite",
     "load_df",
@@ -2007,3 +2009,25 @@ def ensure_nltk(resource: str = "stopwords") -> tuple[Path, bool]:
     # if the package was downloaded
 
     return directory, result
+
+
+def get_sentence_transformer(
+    name: str | None = None, **kwargs: Any
+) -> sentence_transformers.SentenceTransformer:
+    """Get a sentence transformer.
+
+    :param name: The name of the sentence transformer model on HuggingFace
+    :param kwargs: Keyword arguments to pass to
+        :class:`sentence_transformers.SentenceTransformer`.
+
+    :returns: An instantiated sentence transformer object, which has a
+        :meth:`sentence_transformers.SentenceTransformer.encode` function
+    """
+    from sentence_transformers import SentenceTransformer
+
+    if name is None:
+        name = "all-MiniLM-L6-v2"
+
+    directory = join("sentence-transformers", name)
+    model = SentenceTransformer(name, cache_folder=directory.as_posix(), **kwargs)
+    return model
