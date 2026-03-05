@@ -40,6 +40,7 @@ from .utils import (
     read_zip_np,
     read_zipfile_csv,
 )
+from .utils.download import RequestKwargs
 
 if TYPE_CHECKING:
     import botocore.client
@@ -236,7 +237,7 @@ class Module:
         name: str | None = None,
         version: VersionHint = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
     ) -> Path:
         """Ensure a file is downloaded.
 
@@ -295,7 +296,7 @@ class Module:
         name: str | None = None,
         version: VersionHint = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
         beautiful_soup_kwargs: Mapping[str, Any] | None = None,
@@ -381,7 +382,7 @@ class Module:
         name: str | None = None,
         directory: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         extract_kwargs: Mapping[str, Any] | None = None,
     ) -> Path:
         """Ensure a tar file is downloaded and unarchived.
@@ -426,7 +427,7 @@ class Module:
         name: str | None = None,
         force: bool = False,
         autoclean: bool = True,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
     ) -> Path:
         """Ensure a tar.gz file is downloaded and unarchived.
 
@@ -473,7 +474,7 @@ class Module:
         name: str | None,
         version: VersionHint = ...,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal["r", "rt", "w", "wt"] = ...,
         open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[StringIO, None, None]: ...
@@ -488,7 +489,7 @@ class Module:
         name: str | None,
         version: VersionHint = ...,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal["rb", "wb"] = ...,
         open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[BytesIO, None, None]: ...
@@ -501,7 +502,7 @@ class Module:
         name: str | None = None,
         version: VersionHint = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[StringIO | BytesIO, None, None]:
@@ -679,7 +680,7 @@ class Module:
         url: str,
         name: str | None,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal["r", "w", "rt", "wt"] = "rt",
         open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
@@ -693,7 +694,7 @@ class Module:
         url: str,
         name: str | None,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal["rb", "wb"] = ...,
         open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[lzma.LZMAFile, None, None]: ...
@@ -705,7 +706,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
@@ -743,7 +744,7 @@ class Module:
         inner_path: str,
         name: str | None = ...,
         force: bool = ...,
-        download_kwargs: Mapping[str, Any] | None = ...,
+        download_kwargs: RequestKwargs | None = ...,
         mode: Literal["rt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.TextIO, None, None]: ...
@@ -758,7 +759,7 @@ class Module:
         inner_path: str,
         name: str | None = ...,
         force: bool = ...,
-        download_kwargs: Mapping[str, Any] | None = ...,
+        download_kwargs: RequestKwargs | None = ...,
         mode: Literal["r", "rb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.IO[bytes], None, None]: ...
@@ -771,7 +772,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rb", "rt"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
@@ -818,7 +819,7 @@ class Module:
         inner_path: str,
         name: str | None = ...,
         force: bool = ...,
-        download_kwargs: Mapping[str, Any] | None = ...,
+        download_kwargs: RequestKwargs | None = ...,
         mode: Literal["r", "rb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.BinaryIO, None, None]: ...
@@ -833,7 +834,7 @@ class Module:
         inner_path: str,
         name: str | None = ...,
         force: bool = ...,
-        download_kwargs: Mapping[str, Any] | None = ...,
+        download_kwargs: RequestKwargs | None = ...,
         mode: Literal["rt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
     ) -> Generator[typing.TextIO, None, None]: ...
@@ -846,7 +847,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rb", "rt"] = "r",
         zipfile_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
@@ -898,7 +899,7 @@ class Module:
         url: str,
         name: str | None,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal["r", "w", "rt", "wt"] = ...,
         open_kwargs: Mapping[str, Any] | None,
     ) -> Generator[StringIO, None, None]: ...
@@ -912,7 +913,7 @@ class Module:
         url: str,
         name: str | None,
         force: bool,
-        download_kwargs: Mapping[str, Any] | None,
+        download_kwargs: RequestKwargs | None,
         mode: Literal[
             "rb",
             "wb",
@@ -927,7 +928,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[StringIO | BytesIO, None, None]:
@@ -962,7 +963,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["rb"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[bz2.BZ2File, None, None]:
@@ -996,7 +997,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         read_csv_kwargs: Mapping[str, Any] | None = None,
     ) -> pd.DataFrame:
         """Download a CSV and open as a dataframe with :mod:`pandas`.
@@ -1078,7 +1079,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
         json_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
@@ -1114,7 +1115,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
         json_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
@@ -1150,7 +1151,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
         yaml_load_kwargs: Mapping[str, Any] | None = None,
     ) -> JSON:
@@ -1258,7 +1259,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["rb"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
         pickle_load_kwargs: Mapping[str, Any] | None = None,
@@ -1356,7 +1357,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         mode: Literal["rb"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
         pickle_load_kwargs: Mapping[str, Any] | None = None,
@@ -1425,7 +1426,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         read_excel_kwargs: Mapping[str, Any] | None = None,
     ) -> pd.DataFrame:
         """Download an excel file and open as a dataframe with :mod:`pandas`.
@@ -1458,7 +1459,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         read_csv_kwargs: Mapping[str, Any] | None = None,
     ) -> pd.DataFrame:
         """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
@@ -1496,7 +1497,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         parse_kwargs: Mapping[str, Any] | None = None,
     ) -> lxml.etree.ElementTree:
         """Download an XML file and open it with :mod:`lxml`.
@@ -1583,7 +1584,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         parse_kwargs: Mapping[str, Any] | None = None,
     ) -> lxml.etree.ElementTree:
         """Download a tar file and open an inner file as an XML with :mod:`lxml`.
@@ -1620,7 +1621,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         read_csv_kwargs: Mapping[str, Any] | None = None,
     ) -> pd.DataFrame:
         """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
@@ -1654,7 +1655,7 @@ class Module:
         inner_path: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         load_kwargs: Mapping[str, Any] | None = None,
     ) -> numpy.typing.ArrayLike:
         """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
@@ -1685,7 +1686,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
         precache: bool = True,
         parse_kwargs: Mapping[str, Any] | None = None,
     ) -> rdflib.Graph:
@@ -1848,7 +1849,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database.
 
@@ -1882,7 +1883,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
-        download_kwargs: Mapping[str, Any] | None = None,
+        download_kwargs: RequestKwargs | None = None,
     ) -> Generator[sqlite3.Connection, None, None]:
         """Ensure and connect to a SQLite database that's gzipped.
 
