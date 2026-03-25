@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict
 from urllib.request import urlretrieve
 
-import requests
 from tqdm import tqdm
 from typing_extensions import NotRequired, Unpack
 
@@ -20,6 +19,8 @@ from ..constants import TimeoutHint
 
 if TYPE_CHECKING:
     import botocore.client
+    import requests
+    import requests.exceptions
 
 __all__ = [
     "DownloadBackend",
@@ -158,6 +159,9 @@ def download(  # noqa:C901
                 except urllib.error.URLError as e:
                     raise DownloadError(backend, url, path, e) from e
         elif backend == "requests":
+            import requests
+            import requests.exceptions
+
             kwargs.setdefault("stream", True)
             try:
                 # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
@@ -266,6 +270,8 @@ def download_from_google(
     :raises KeyboardInterrupt: If a keyboard interrupt is thrown during download
     :raises UnexpectedDirectory: If a directory is given for the ``path`` argument
     """
+    import requests
+
     path = Path(path).resolve()
 
     if path.is_dir():

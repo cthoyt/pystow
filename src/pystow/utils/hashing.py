@@ -7,8 +7,7 @@ import logging
 from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
 from typing import NamedTuple, TypeAlias
-
-import requests
+from urllib.request import urlopen
 
 __all__ = [
     "Hash",
@@ -43,7 +42,8 @@ def get_hexdigests_remote(
     """
     rv = {}
     for key, url in (hexdigests_remote or {}).items():
-        text = requests.get(url, timeout=15).text
+        with urlopen(url) as response:  # noqa:S310
+            text = response.read().decode("utf-8")
         if not hexdigests_strict and "=" in text:
             text = text.rsplit("=", 1)[-1].strip()
         rv[key] = text
