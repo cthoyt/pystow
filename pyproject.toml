@@ -20,7 +20,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Framework :: Pytest",
     "Framework :: tox",
@@ -44,14 +43,10 @@ keywords = [
 
 # License Information.
 # See PEP-639 at https://peps.python.org/pep-0639/#add-license-files-key
-license-files = [
-    "LICENSE",
-]
+license = { file = "LICENSE" }
 
 requires-python = ">=3.10"
 dependencies = [
-    "click",
-    "requests",
     "tqdm",
     "typing-extensions",
 ]
@@ -60,7 +55,7 @@ dependencies = [
 tests = [
     "pytest",
     "coverage[toml]",
-    "requests_file",
+    "requests-file",
 ]
 typing = [
     "mypy",
@@ -69,39 +64,24 @@ typing = [
     "types-ratelimit",
     "types-PyYAML",
 ]
-
-[project.optional-dependencies]
-tests = [
-    "pytest",
-    "coverage[toml]",
-    "requests_file",
-]
 docs = [
     "sphinx>=8",
     "sphinx-rtd-theme>=3.0",
-    "sphinx-click", 
-    "sphinx_automodapi",
+    "sphinx-click",
+    "sphinx-automodapi",
 ]
-rdf = [
-    "rdflib",
-]
-xml = [
-    "lxml",
-]
-pandas = [
-    "pandas",
-]
-aws = [
-    "boto3",
-]
-ratelimit = [
-    "ratelimit",
-]
-bs4 = [
-    "bs4",
-]
+
+[project.optional-dependencies]
+rdf = ["rdflib"]
+xml = ["lxml"]
+pandas = ["pandas"]
+aws = ["boto3"]
+ratelimit = ["ratelimit", "requests"]
+bs4 = ["bs4"]
 yaml = ["pyyaml"]
 pydantic = ["pydantic"]
+cli = ["click"]
+requests = ["requests"]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
 # and also https://packaging.python.org/en/latest/specifications/well-known-project-urls/

@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
-# flake8: noqa
-# type: ignore
-
 """Command line interface for PyStow."""
 
 from __future__ import annotations
 
 import os
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from pathlib import Path
 
 import click
 
@@ -20,7 +17,7 @@ def main() -> None:
 @main.command()
 @click.argument("keys", nargs=-1)
 @click.option("--name")
-def join(keys: Sequence[str], name: Optional[str]):
+def join(keys: Sequence[str], name: str | None) -> None:
     """List a directory."""
     from . import api
 
@@ -29,7 +26,7 @@ def join(keys: Sequence[str], name: Optional[str]):
 
 @main.command()
 @click.argument("keys", nargs=-1)
-def ls(keys: Sequence[str]):
+def ls(keys: Sequence[str]) -> None:
     """List a directory."""
     from . import api
 
@@ -42,7 +39,7 @@ def ls(keys: Sequence[str]):
 @click.option("--url", required=True)
 @click.option("--name")
 @click.option("--force", is_flag=True)
-def ensure(keys: Sequence[str], url: str, name: Optional[str], force: bool):
+def ensure(keys: Sequence[str], url: str, name: str | None, force: bool) -> None:
     """Ensure a file is downloaded."""
     from . import api
 
@@ -50,7 +47,7 @@ def ensure(keys: Sequence[str], url: str, name: Optional[str], force: bool):
     _ls(path.parent)
 
 
-def _ls(directory):
+def _ls(directory: Path) -> None:
     command = f"ls -al {directory}"
     click.secho(f"[pystow] {command}", fg="cyan", bold=True)
     os.system(command)  # noqa:S605
@@ -60,7 +57,7 @@ def _ls(directory):
 @click.argument("module")
 @click.argument("key")
 @click.argument("value")
-def set_config(module: str, key: str, value: str):
+def set_config(module: str, key: str, value: str) -> None:
     """Set a configuration value."""
     from .config_api import write_config
 

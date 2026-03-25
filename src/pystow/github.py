@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from functools import partial
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
-import requests
 from ratelimit import rate_limited
 from tqdm import tqdm
 
 from .config_api import get_config
 from .constants import TimeoutHint
+
+if TYPE_CHECKING:
+    import requests
 
 __all__ = [
     "MAXIMUM_SEARCH_PAGE_SIZE",
@@ -81,6 +83,8 @@ def _request_github(
     **kwargs: Any,
 ) -> requests.Response:
     """Make a POST request to the GitHub API."""
+    import requests
+
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
     headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
