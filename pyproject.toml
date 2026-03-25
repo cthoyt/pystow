@@ -43,9 +43,7 @@ keywords = [
 
 # License Information.
 # See PEP-639 at https://peps.python.org/pep-0639/#add-license-files-key
-license-files = [
-    "LICENSE",
-]
+license = { file = "LICENSE" }
 
 requires-python = ">=3.10"
 dependencies = [
