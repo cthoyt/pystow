@@ -11,7 +11,7 @@ import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
 from pathlib import Path
-from typing import Any, Literal, TextIO, cast
+from typing import Any, BinaryIO, Literal, TextIO, cast, overload
 
 from .io_typing import (
     _MODE_TO_SIMPLE,
@@ -207,7 +207,27 @@ def is_url(s: str | Path | TextIO | Any) -> bool:
     return False
 
 
-def open_url(path_or_url: str) -> Generator[TextIO, None, None]:
+# docstr-coverage:excused `overload`
+@overload
+def open_url(
+    url: str, *, representation: Literal["text"] = ...
+) -> Generator[TextIO, None, None]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+def open_url(
+    url: str, *, representation: Literal["binary"] = ...
+) -> Generator[BinaryIO, None, None]: ...
+
+
+def open_url(
+    url: str, *, representation: Representation = "text"
+) -> Generator[TextIO, None, None] | Generator[BinaryIO, None, None]:
     """Get a file-like object from a URL."""
-    with urllib.request.urlopen(path_or_url) as response:  # noqa:S310
-        yield io.TextIOWrapper(response, encoding="utf-8")
+    with urllib.request.urlopen(url) as response:  # noqa:S310
+        match representation:
+            case "text":
+                yield io.TextIOWrapper(response, encoding="utf-8")
+            case "binary":
+                yield io.BytesIO(response)
