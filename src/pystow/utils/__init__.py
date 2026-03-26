@@ -88,7 +88,7 @@ from .pydantic_utils import (
     stream_write_pydantic_jsonl,
     write_pydantic_jsonl,
 )
-from .safe_open import open_inner_zipfile, safe_open, safe_open_dict_reader
+from .safe_open import is_url, open_inner_zipfile, open_url, safe_open, safe_open_dict_reader
 from ..constants import README_TEXT, TimeoutHint
 
 if TYPE_CHECKING:
@@ -134,6 +134,7 @@ __all__ = [
     "getenv_path",
     "gunzip",
     "gzip_compress",
+    "is_url",
     "iter_pydantic_jsonl",
     "iter_pydantic_tsv",
     "iter_tarred_csvs",
@@ -148,6 +149,7 @@ __all__ = [
     "name_from_url",
     "open_inner_zipfile",
     "open_tarfile",
+    "open_url",
     "open_zip_reader",
     "open_zip_writer",
     "open_zipfile",
