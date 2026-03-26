@@ -391,6 +391,11 @@ class TestUtils(unittest.TestCase):
                 with safe_open(passthrough, representation="binary") as _file:
                     pass
 
+        url = "https://zenodo.org/records/15504009/files/startup.sh"
+        with self.assertRaises(ValueError):
+            with safe_open(url, operation="write") as _file:
+                pass
+
     def test_safe_open_binary(self) -> None:
         """Test safe open in binary mode."""
         for path in [TEST_TXT, TEST_TXT_GZ]:
@@ -409,6 +414,13 @@ class TestUtils(unittest.TestCase):
                             file.read().decode("utf-8"),
                             msg=f"failed to read bytes from {path} in a passthrough scenario",
                         )
+
+    def test_safe_open_url_binary(self) -> None:
+        """Test safe open in URL mode."""
+        with safe_open(
+            "https://zenodo.org/records/15504009/files/startup.sh", representation="binary"
+        ) as file:
+            self.assertIn("sleep 5", file.read().decode("utf-8"))
 
     def test_safe_open_text(self) -> None:
         """Test safe open in text mode."""
@@ -432,6 +444,13 @@ class TestUtils(unittest.TestCase):
                             file.read(),
                             msg=f"failed to read text from {path} in a passthrough scenario",
                         )
+
+    def test_safe_open_url_text(self) -> None:
+        """Test safe open in URL mode."""
+        with safe_open(
+            "https://zenodo.org/records/15504009/files/startup.sh", representation="text"
+        ) as file:
+            self.assertIn("sleep 5", file.read())
 
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
