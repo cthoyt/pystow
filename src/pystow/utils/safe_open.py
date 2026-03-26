@@ -7,6 +7,7 @@ import csv
 import gzip
 import io
 import typing
+import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
 from pathlib import Path
@@ -26,7 +27,9 @@ from .io_typing import (
 )
 
 __all__ = [
+    "is_url",
     "open_inner_zipfile",
+    "open_url",
     "safe_open",
     "safe_open_dict_reader",
 ]
@@ -195,3 +198,16 @@ def safe_open_dict_reader(
     """
     with safe_open(f, operation="read", representation="text") as file:
         yield csv.DictReader(file, delimiter=delimiter, **kwargs)
+
+
+def is_url(s: str | Path | TextIO | Any) -> bool:
+    """Check if the object is a URL."""
+    if isinstance(s, str) and (s.startswith("http://") or s.startswith("https://")):
+        return True
+    return False
+
+
+def open_url(path_or_url: str) -> Generator[TextIO, None, None]:
+    """Get a file-like object from a URL."""
+    with urllib.request.urlopen(path_or_url) as response:  # noqa:S310
+        yield io.TextIOWrapper(response, encoding="utf-8")
