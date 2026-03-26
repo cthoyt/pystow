@@ -28,6 +28,7 @@ from pystow.utils import (
     getenv_path,
     gunzip,
     gzip_compress,
+    is_url,
     iter_tarred_csvs,
     iter_zipped_csvs,
     mkdir,
@@ -35,6 +36,7 @@ from pystow.utils import (
     n,
     name_from_url,
     open_tarfile,
+    open_url,
     open_zip_reader,
     open_zip_writer,
     open_zipfile,
@@ -474,6 +476,27 @@ class TestUtils(unittest.TestCase):
             self.assertFalse(path_gz.is_file())
             self.assertTrue(path_new.is_file())
             self.assertEqual(TEST_TXT_CONTENT, path_new.read_text(encoding="utf-8"))
+
+    def test_is_url(self) -> None:
+        """Test checking URL."""
+        self.assertTrue(is_url("https://zenodo.org/records/15504009/files/startup.sh?download=1"))
+        self.assertTrue(is_url("https://zenodo.org/records/15504009/files/startup.sh"))
+        self.assertTrue(is_url("http://zenodo.org/records/15504009/files/startup.sh"))
+        self.assertFalse(is_url("ftp://zenodo.org/records/15504009/files/startup.sh"))
+        self.assertFalse(is_url("nope"))
+        self.assertFalse(is_url(Path().cwd()))
+
+    def test_open_url(self) -> None:
+        """Test opening a URL."""
+        with open_url(
+            "https://zenodo.org/records/15504009/files/startup.sh", representation="text"
+        ) as file:
+            self.assertIn("sleep 5", file.read())
+
+        with open_url(
+            "https://zenodo.org/records/15504009/files/startup.sh", representation="binary"
+        ) as file:
+            self.assertIn("sleep 5", file.read().decode("utf-8"))
 
 
 class TestDownload(unittest.TestCase):

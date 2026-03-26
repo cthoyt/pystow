@@ -209,6 +209,7 @@ def is_url(s: str | Path | TextIO | Any) -> bool:
 
 # docstr-coverage:excused `overload`
 @overload
+@contextlib.contextmanager
 def open_url(
     url: str, *, representation: Literal["text"] = ...
 ) -> Generator[TextIO, None, None]: ...
@@ -216,11 +217,13 @@ def open_url(
 
 # docstr-coverage:excused `overload`
 @overload
+@contextlib.contextmanager
 def open_url(
     url: str, *, representation: Literal["binary"] = ...
 ) -> Generator[BinaryIO, None, None]: ...
 
 
+@contextlib.contextmanager
 def open_url(
     url: str, *, representation: Representation = "text"
 ) -> Generator[TextIO, None, None] | Generator[BinaryIO, None, None]:
@@ -230,4 +233,4 @@ def open_url(
             case "text":
                 yield io.TextIOWrapper(response, encoding="utf-8")
             case "binary":
-                yield io.BytesIO(response)
+                yield io.BufferedReader(response)
