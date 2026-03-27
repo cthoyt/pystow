@@ -43,7 +43,8 @@ keywords = [
 
 # License Information.
 # See PEP-639 at https://peps.python.org/pep-0639/#add-license-files-key
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 
 requires-python = ">=3.10"
 dependencies = [
@@ -116,7 +117,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 filterwarnings = [
-  "ignore::pyparsing.exceptions.PyparsingDeprecationWarning"
+    "ignore::pyparsing.exceptions.PyparsingDeprecationWarning"
 ]
 
 # Coverage, see https://coverage.readthedocs.io/en/latest/config.html
