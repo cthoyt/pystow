@@ -49,6 +49,7 @@ from pystow.utils import (
     read_zipfile_xml,
     safe_open,
     safe_open_dict_reader,
+    safe_open_json,
     safe_open_reader,
     safe_open_writer,
     tarfile_writestr,
@@ -516,6 +517,13 @@ class TestUtils(unittest.TestCase):
             "https://zenodo.org/records/15504009/files/startup.sh", representation="binary"
         ) as file:
             self.assertIn("sleep 5", file.read().decode("utf-8"))
+
+    def test_get_json(self) -> None:
+        """Test getting JSON."""
+        url = "https://zenodo.org/records/15826754/files/configuration.json?download=1"
+        x = safe_open_json(url)
+        self.assertIsInstance(x, dict)
+        self.assertIn("name", x)
 
 
 class TestDownload(unittest.TestCase):

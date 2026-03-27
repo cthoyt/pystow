@@ -6,6 +6,7 @@ import contextlib
 import csv
 import gzip
 import io
+import json
 import typing
 import urllib.request
 import zipfile
@@ -32,6 +33,7 @@ __all__ = [
     "open_url",
     "safe_open",
     "safe_open_dict_reader",
+    "safe_open_json",
 ]
 
 
@@ -137,6 +139,12 @@ def safe_open(  # noqa:C901
         yield path
     else:
         raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
+
+
+def safe_open_json(path_or_url: str) -> Any:
+    """Safely open a file and parse as JSON."""
+    with safe_open(path_or_url, representation="text", operation="read") as file:
+        return json.load(file)
 
 
 # docstr-coverage:excused `overload`

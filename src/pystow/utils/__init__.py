@@ -32,7 +32,6 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import uuid4
 
-import requests
 from tqdm.auto import tqdm
 
 from .download import (
@@ -88,7 +87,14 @@ from .pydantic_utils import (
     stream_write_pydantic_jsonl,
     write_pydantic_jsonl,
 )
-from .safe_open import is_url, open_inner_zipfile, open_url, safe_open, safe_open_dict_reader
+from .safe_open import (
+    is_url,
+    open_inner_zipfile,
+    open_url,
+    safe_open,
+    safe_open_dict_reader,
+    safe_open_json,
+)
 from ..constants import README_TEXT, TimeoutHint
 
 if TYPE_CHECKING:
@@ -168,6 +174,7 @@ __all__ = [
     "safe_open",
     "safe_open_dict_reader",
     "safe_open_dict_writer",
+    "safe_open_json",
     "safe_open_reader",
     "safe_open_writer",
     "safe_tarfile_open",
@@ -707,8 +714,8 @@ def get_commit(org: str, repo: str, provider: str = "git") -> str:
         lines = (line.strip().split("\t") for line in output.decode("utf8").splitlines())
         rv = next(line[0] for line in lines if line[1] == "HEAD")
     elif provider == "github":
-        res = requests.get(f"https://api.github.com/repos/{org}/{repo}/branches/master", timeout=15)
-        res_json = res.json()
+        url = f"https://api.github.com/repos/{org}/{repo}/branches/master"
+        res_json = safe_open_json(url)
         rv = res_json["commit"]["sha"]
     else:
         raise ValueError(f"invalid implementation: {provider}")
@@ -855,6 +862,7 @@ def get_soup(
 
     :returns: A BeautifulSoup object
     """
+    import requests
     from bs4 import BeautifulSoup
 
     headers = {}
