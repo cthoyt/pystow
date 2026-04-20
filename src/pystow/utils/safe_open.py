@@ -14,8 +14,6 @@ from collections.abc import Generator, Mapping
 from pathlib import Path
 from typing import Any, BinaryIO, Literal, TextIO, TypeGuard, cast, overload
 
-import yaml
-
 from .io_typing import (
     _MODE_TO_SIMPLE,
     MODE_MAP,
@@ -164,6 +162,8 @@ def safe_open_yaml(
     newline: str | None = None,
 ) -> Any:
     """Safely open a file and parse as YAML."""
+    import yaml
+
     with safe_open(
         path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
     ) as file:
