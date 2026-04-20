@@ -252,7 +252,7 @@ class TestJoin(unittest.TestCase):
 
         with self.mock_directory(), self.mock_download():
             with self.subTest(type="tsv"):
-                df = pystow.ensure_csv("test", url=TSV_URL)
+                df = pystow.ensure_csv("test", url=TSV_URL, download_kwargs={"backend": "urllib"})
                 self.assertEqual(3, len(df.columns))
 
                 df2 = pystow.load_df("test", name=TSV_NAME)
