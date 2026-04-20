@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 
 from tqdm import tqdm
 
-from .safe_open import safe_open, safe_open_dict_reader
+from .safe_open import safe_open, safe_open_dict_reader, safe_open_json, safe_open_yaml
 
 if TYPE_CHECKING:
     import pydantic
@@ -19,8 +19,10 @@ __all__ = [
     "ModelValidateFailureAction",
     "iter_pydantic_jsonl",
     "iter_pydantic_tsv",
+    "read_pydantic_json",
     "read_pydantic_jsonl",
     "read_pydantic_tsv",
+    "read_pydantic_yaml",
     "stream_write_pydantic_jsonl",
     "write_pydantic_jsonl",
 ]
@@ -137,3 +139,25 @@ def iter_pydantic_tsv(
                     continue
             else:
                 yield yv
+
+
+def read_pydantic_json(
+    path_or_url: str | Path | TextIO,
+    model_cls: type[BaseModelVar],
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> BaseModelVar:
+    """Read a JSON file into a model."""
+    return model_cls.model_validate(safe_open_json(path_or_url, encoding=encoding, newline=newline))
+
+
+def read_pydantic_yaml(
+    path_or_url: str | Path | TextIO,
+    model_cls: type[BaseModelVar],
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> BaseModelVar:
+    """Read a YAML file into a model."""
+    return model_cls.model_validate(safe_open_yaml(path_or_url, encoding=encoding, newline=newline))

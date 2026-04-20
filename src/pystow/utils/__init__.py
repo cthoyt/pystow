@@ -82,8 +82,10 @@ from .pydantic_utils import (
     ModelValidateFailureAction,
     iter_pydantic_jsonl,
     iter_pydantic_tsv,
+    read_pydantic_json,
     read_pydantic_jsonl,
     read_pydantic_tsv,
+    read_pydantic_yaml,
     stream_write_pydantic_jsonl,
     write_pydantic_jsonl,
 )
@@ -94,6 +96,7 @@ from .safe_open import (
     safe_open,
     safe_open_dict_reader,
     safe_open_json,
+    safe_open_yaml,
 )
 from ..constants import README_TEXT, TimeoutHint
 
@@ -162,8 +165,10 @@ __all__ = [
     "path_to_sqlite",
     "raise_on_digest_mismatch",
     "read_lzma_csv",
+    "read_pydantic_json",
     "read_pydantic_jsonl",
     "read_pydantic_tsv",
+    "read_pydantic_yaml",
     "read_rdf",
     "read_tarfile_csv",
     "read_tarfile_xml",
@@ -177,6 +182,7 @@ __all__ = [
     "safe_open_json",
     "safe_open_reader",
     "safe_open_writer",
+    "safe_open_yaml",
     "safe_tarfile_open",
     "safe_zipfile_open",
     "stream_write_pydantic_jsonl",
