@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 
 from .constants import JSON, Provider
 from .impl import Module, VersionHint
-from .utils.download import RequestKwargs
+from .utils.download import DownloadKwargs
 
 if TYPE_CHECKING:
     import bs4
@@ -258,7 +258,7 @@ def ensure(
     name: str | None = None,
     version: VersionHint = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
 ) -> Path:
     """Ensure a file is downloaded.
 
@@ -311,7 +311,7 @@ def ensure_soup(
     name: str | None = None,
     version: VersionHint = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     beautiful_soup_kwargs: Mapping[str, Any] | None = None,
 ) -> bs4.BeautifulSoup:
     """Ensure a webpage is downloaded and parsed with :mod:`BeautifulSoup`.
@@ -384,7 +384,7 @@ def ensure_untar(
     name: str | None = None,
     directory: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     extract_kwargs: Mapping[str, Any] | None = None,
 ) -> Path:
     """Ensure a file is downloaded and untarred.
@@ -428,7 +428,7 @@ def ensure_gunzip(
     name: str | None = None,
     force: bool = False,
     autoclean: bool = True,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
 ) -> Path:
     """Ensure a file is downloaded and gunzipped.
 
@@ -468,7 +468,7 @@ def ensure_open(
     url: str,
     name: str | None,
     force: bool,
-    download_kwargs: RequestKwargs | None,
+    download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "rt", "w", "wt"] = ...,
     open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[StringIO, None, None]: ...
@@ -483,7 +483,7 @@ def ensure_open(
     url: str,
     name: str | None,
     force: bool,
-    download_kwargs: RequestKwargs | None,
+    download_kwargs: DownloadKwargs | None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[BytesIO, None, None]: ...
@@ -496,7 +496,7 @@ def ensure_open(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[StringIO | BytesIO, None, None]:
@@ -542,7 +542,7 @@ def ensure_open_zip(
     inner_path: str,
     name: str | None = ...,
     force: bool = ...,
-    download_kwargs: RequestKwargs | None = ...,
+    download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["r", "w", "rb", "wb"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
@@ -559,7 +559,7 @@ def ensure_open_zip(
     inner_path: str,
     name: str | None = ...,
     force: bool = ...,
-    download_kwargs: RequestKwargs | None = ...,
+    download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["rt", "wt"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
@@ -574,7 +574,7 @@ def ensure_open_zip(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "w", "rb", "wb"] | Literal["rt", "wt"] = "r",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
@@ -629,7 +629,7 @@ def ensure_open_lzma(
     url: str,
     name: str | None,
     force: bool,
-    download_kwargs: RequestKwargs | None,
+    download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "w", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
@@ -644,7 +644,7 @@ def ensure_open_lzma(
     url: str,
     name: str | None,
     force: bool,
-    download_kwargs: RequestKwargs | None,
+    download_kwargs: DownloadKwargs | None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[lzma.LZMAFile, None, None]: ...
@@ -657,7 +657,7 @@ def ensure_open_lzma(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
@@ -703,7 +703,7 @@ def ensure_open_tarfile(
     inner_path: str,
     name: str | None = ...,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = ...,
+    download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["rt"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
@@ -719,7 +719,7 @@ def ensure_open_tarfile(
     inner_path: str,
     name: str | None = ...,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = ...,
+    download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["r", "rb"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
 ) -> Generator[typing.IO[bytes], None, None]: ...
@@ -733,7 +733,7 @@ def ensure_open_tarfile(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "rt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
@@ -780,7 +780,7 @@ def ensure_open_gz(
     url: str,
     name: str | None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None,
+    download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "w", "rt", "wt"] = ...,
     open_kwargs: Mapping[str, Any] | None,
 ) -> Generator[StringIO, None, None]: ...
@@ -795,7 +795,7 @@ def ensure_open_gz(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[BytesIO, None, None]: ...
@@ -808,7 +808,7 @@ def ensure_open_gz(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[StringIO | BytesIO, None, None]:
@@ -851,7 +851,7 @@ def ensure_open_bz2(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[bz2.BZ2File, None, None]:
@@ -893,7 +893,7 @@ def ensure_csv(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     read_csv_kwargs: Mapping[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Download a CSV and open as a dataframe with :mod:`pandas`.
@@ -985,7 +985,7 @@ def ensure_yaml(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     yaml_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
@@ -1058,7 +1058,7 @@ def ensure_json(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     json_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
@@ -1105,7 +1105,7 @@ def ensure_json_bz2(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     json_load_kwargs: Mapping[str, Any] | None = None,
 ) -> JSON:
@@ -1217,7 +1217,7 @@ def ensure_pickle(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
     pickle_load_kwargs: Mapping[str, Any] | None = None,
@@ -1320,7 +1320,7 @@ def ensure_pickle_gz(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
     pickle_load_kwargs: Mapping[str, Any] | None = None,
@@ -1392,7 +1392,7 @@ def ensure_xml(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     parse_kwargs: Mapping[str, Any] | None = None,
 ) -> lxml.etree.ElementTree:
     """Download an XML file and open it with :mod:`lxml`.
@@ -1491,10 +1491,10 @@ def ensure_excel(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     read_excel_kwargs: Mapping[str, Any] | None = None,
 ) -> pd.DataFrame:
-    """Download an excel file and open as a dataframe with :mod:`pandas`.
+    """Download an Excel file and open as a dataframe with :mod:`pandas`.
 
     :param key: The module name
     :param subkeys: A sequence of additional strings to join. If none are given, returns
@@ -1529,7 +1529,7 @@ def ensure_tar_df(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     read_csv_kwargs: Mapping[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Download a tar file and open an inner file as a dataframe with :mod:`pandas`.
@@ -1574,7 +1574,7 @@ def ensure_tar_xml(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     parse_kwargs: Mapping[str, Any] | None = None,
 ) -> lxml.etree.ElementTree:
     """Download a tar file and open an inner file as an XML with :mod:`lxml`.
@@ -1618,7 +1618,7 @@ def ensure_zip_df(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     read_csv_kwargs: Mapping[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Download a zip file and open an inner file as a dataframe with :mod:`pandas`.
@@ -1658,7 +1658,7 @@ def ensure_zip_np(
     inner_path: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     load_kwargs: Mapping[str, Any] | None = None,
 ) -> numpy.typing.ArrayLike:
     """Download a zip file and open an inner file as an array-like with :mod:`numpy`.
@@ -1697,7 +1697,7 @@ def ensure_rdf(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
     precache: bool = True,
     parse_kwargs: Mapping[str, Any] | None = None,
 ) -> rdflib.Graph:
@@ -1909,7 +1909,7 @@ def ensure_open_sqlite(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
 ) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a SQLite database.
 
@@ -1954,7 +1954,7 @@ def ensure_open_sqlite_gz(
     url: str,
     name: str | None = None,
     force: bool = False,
-    download_kwargs: RequestKwargs | None = None,
+    download_kwargs: DownloadKwargs | None = None,
 ) -> Generator[sqlite3.Connection, None, None]:
     """Ensure and connect to a gzipped SQLite database.
 

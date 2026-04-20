@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 __all__ = [
     "DownloadBackend",
     "DownloadError",
+    "DownloadKwargs",
+    "RequestKwargs",
     "UnexpectedDirectoryError",
     "download",
     "download_from_google",
@@ -73,9 +75,24 @@ class RequestKwargs(TypedDict):
     cert: NotRequired[str | tuple[str, str]]
 
 
+class DownloadKwargs(RequestKwargs):
+    """Keyword arguments for :func:`download`."""
+
+    # note: `force` is intentionally omitted here because
+    # it is passed through from other signature components
+
+    clean_on_failure: NotRequired[bool]
+    backend: NotRequired[DownloadBackend]
+    hexdigests: NotRequired[Mapping[str, str] | None]
+    hexdigests_strict: NotRequired[bool]
+    progress_bar: NotRequired[bool]
+    tqdm_kwargs: NotRequired[Mapping[str, Any] | None]
+
+
 def download(  # noqa:C901
     url: str,
     path: str | Path,
+    *,
     force: bool = True,
     clean_on_failure: bool = True,
     backend: DownloadBackend = "urllib",
