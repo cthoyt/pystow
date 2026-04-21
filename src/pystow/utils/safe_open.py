@@ -34,6 +34,7 @@ __all__ = [
     "safe_open",
     "safe_open_dict_reader",
     "safe_open_json",
+    "safe_open_yaml",
 ]
 
 
@@ -141,10 +142,32 @@ def safe_open(  # noqa:C901
         raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
 
 
-def safe_open_json(path_or_url: str) -> Any:
+def safe_open_json(
+    path_or_url: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Any:
     """Safely open a file and parse as JSON."""
-    with safe_open(path_or_url, representation="text", operation="read") as file:
+    with safe_open(
+        path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
+    ) as file:
         return json.load(file)
+
+
+def safe_open_yaml(
+    path_or_url: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Any:
+    """Safely open a file and parse as YAML."""
+    import yaml
+
+    with safe_open(
+        path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
+    ) as file:
+        return yaml.safe_load(file)
 
 
 # docstr-coverage:excused `overload`
