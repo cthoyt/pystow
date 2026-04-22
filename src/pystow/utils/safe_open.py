@@ -35,6 +35,8 @@ __all__ = [
     "safe_open_dict_reader",
     "safe_open_json",
     "safe_open_yaml",
+    "write_json",
+    "write_yaml",
 ]
 
 
@@ -168,6 +170,38 @@ def safe_open_yaml(
         path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
     ) as file:
         return yaml.safe_load(file)
+
+
+def write_yaml(
+    data: Any,
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+    **kwargs: Any,
+) -> Any:
+    """Write YAML to a file."""
+    import yaml
+
+    with safe_open(
+        path, representation="text", operation="write", encoding=encoding, newline=newline
+    ) as file:
+        yaml.safe_dump(data, file, **kwargs)
+
+
+def write_json(
+    data: Any,
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+    **kwargs: Any,
+) -> Any:
+    """Write JSON to a file."""
+    with safe_open(
+        path, representation="text", operation="write", encoding=encoding, newline=newline
+    ) as file:
+        json.dump(data, file, **kwargs)
 
 
 # docstr-coverage:excused `overload`
