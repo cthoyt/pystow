@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 from tqdm import tqdm
 
 from .safe_open import (
-    safe_open,
+    _open_read_text,
+    _open_write_text,
     safe_open_dict_reader,
     safe_open_json,
     safe_open_yaml,
@@ -65,9 +66,7 @@ def iter_pydantic_jsonl(
     }
     if tqdm_kwargs is not None:
         _tqdm_kwargs.update(tqdm_kwargs)
-    with safe_open(
-        file, operation="read", representation="text", encoding=encoding, newline=newline
-    ) as file:
+    with _open_read_text(file, encoding=encoding, newline=newline) as file:
         for i, line in enumerate(tqdm(file, disable=not progress, **_tqdm_kwargs)):
             try:
                 yv = model_cls.model_validate_json(line.strip())
@@ -95,7 +94,7 @@ def write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with safe_open(file, operation="write", representation="text") as file:
+    with _open_write_text(file) as file:
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
 
@@ -107,7 +106,7 @@ def stream_write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with safe_open(file, operation="write", representation="text") as file:
+    with _open_write_text(file) as file:
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
             yield model
@@ -209,6 +208,6 @@ def write_pydantic_json(
     encoding: str | None = None,
     newline: str | None = None,
 ) -> None:
-    """Write a model to a YAML file."""
+    """Write a model to a JSON file."""
     data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
     write_json(data, path, encoding=encoding, newline=newline)
