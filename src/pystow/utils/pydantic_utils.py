@@ -10,7 +10,15 @@ from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 
 from tqdm import tqdm
 
-from .safe_open import safe_open, safe_open_dict_reader, safe_open_json, safe_open_yaml
+from .safe_open import (
+    _open_read_text,
+    _open_write_text,
+    safe_open_dict_reader,
+    safe_open_json,
+    safe_open_yaml,
+    write_json,
+    write_yaml,
+)
 
 if TYPE_CHECKING:
     import pydantic
@@ -19,12 +27,15 @@ __all__ = [
     "ModelValidateFailureAction",
     "iter_pydantic_jsonl",
     "iter_pydantic_tsv",
+    "model_dump_yaml",
     "read_pydantic_json",
     "read_pydantic_jsonl",
     "read_pydantic_tsv",
     "read_pydantic_yaml",
     "stream_write_pydantic_jsonl",
+    "write_pydantic_json",
     "write_pydantic_jsonl",
+    "write_pydantic_yaml",
 ]
 
 logger = logging.getLogger(__name__)
@@ -55,9 +66,7 @@ def iter_pydantic_jsonl(
     }
     if tqdm_kwargs is not None:
         _tqdm_kwargs.update(tqdm_kwargs)
-    with safe_open(
-        file, operation="read", representation="text", encoding=encoding, newline=newline
-    ) as file:
+    with _open_read_text(file, encoding=encoding, newline=newline) as file:
         for i, line in enumerate(tqdm(file, disable=not progress, **_tqdm_kwargs)):
             try:
                 yv = model_cls.model_validate_json(line.strip())
@@ -85,7 +94,7 @@ def write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with safe_open(file, operation="write", representation="text") as file:
+    with _open_write_text(file) as file:
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
 
@@ -97,7 +106,7 @@ def stream_write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with safe_open(file, operation="write", representation="text") as file:
+    with _open_write_text(file) as file:
         for model in models:
             file.write(model.model_dump_json(**kwargs) + "\n")
             yield model
@@ -161,3 +170,44 @@ def read_pydantic_yaml(
 ) -> BaseModelVar:
     """Read a YAML file into a model."""
     return model_cls.model_validate(safe_open_yaml(path_or_url, encoding=encoding, newline=newline))
+
+
+def model_dump_yaml(
+    model: pydantic.BaseModel,
+    *,
+    exclude_none: bool = False,
+    exclude_unset: bool = False,
+) -> str:
+    """Dump the model as YAML string."""
+    import yaml
+
+    data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
+    return yaml.safe_dump(data)
+
+
+def write_pydantic_yaml(
+    model: pydantic.BaseModel,
+    path: str | Path | TextIO,
+    *,
+    exclude_none: bool = False,
+    exclude_unset: bool = False,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> None:
+    """Write a model to a YAML file."""
+    data = model_dump_yaml(model, exclude_none=exclude_none, exclude_unset=exclude_unset)
+    write_yaml(data, path, encoding=encoding, newline=newline)
+
+
+def write_pydantic_json(
+    model: pydantic.BaseModel,
+    path: str | Path | TextIO,
+    *,
+    exclude_none: bool = False,
+    exclude_unset: bool = False,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> None:
+    """Write a model to a JSON file."""
+    data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
+    write_json(data, path, encoding=encoding, newline=newline)

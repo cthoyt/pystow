@@ -82,12 +82,15 @@ from .pydantic_utils import (
     ModelValidateFailureAction,
     iter_pydantic_jsonl,
     iter_pydantic_tsv,
+    model_dump_yaml,
     read_pydantic_json,
     read_pydantic_jsonl,
     read_pydantic_tsv,
     read_pydantic_yaml,
     stream_write_pydantic_jsonl,
+    write_pydantic_json,
     write_pydantic_jsonl,
+    write_pydantic_yaml,
 )
 from .safe_open import (
     is_url,
@@ -97,6 +100,8 @@ from .safe_open import (
     safe_open_dict_reader,
     safe_open_json,
     safe_open_yaml,
+    write_json,
+    write_yaml,
 )
 from ..constants import README_TEXT, TimeoutHint
 
@@ -153,6 +158,7 @@ __all__ = [
     "mkdir",
     "mock_envvar",
     "mock_home",
+    "model_dump_yaml",
     "n",
     "name_from_s3_key",
     "name_from_url",
@@ -188,11 +194,15 @@ __all__ = [
     "stream_write_pydantic_jsonl",
     "tarfile_writestr",
     "use_appdirs",
+    "write_json",
     "write_lzma_csv",
     "write_pickle_gz",
+    "write_pydantic_json",
     "write_pydantic_jsonl",
+    "write_pydantic_yaml",
     "write_tarfile_csv",
     "write_tarfile_xml",
+    "write_yaml",
     "write_zipfile_csv",
     "write_zipfile_np",
     "write_zipfile_rdf",

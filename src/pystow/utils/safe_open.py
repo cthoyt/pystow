@@ -35,6 +35,8 @@ __all__ = [
     "safe_open_dict_reader",
     "safe_open_json",
     "safe_open_yaml",
+    "write_json",
+    "write_yaml",
 ]
 
 
@@ -142,6 +144,30 @@ def safe_open(  # noqa:C901
         raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
 
 
+@contextlib.contextmanager
+def _open_read_text(
+    path: str | Path | TextIO,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[typing.TextIO, None, None]:
+    with safe_open(
+        path, representation="text", operation="read", encoding=encoding, newline=newline
+    ) as file:
+        yield file
+
+
+@contextlib.contextmanager
+def _open_write_text(
+    path: str | Path | TextIO,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[typing.TextIO, None, None]:
+    with safe_open(
+        path, representation="text", operation="write", encoding=encoding, newline=newline
+    ) as file:
+        yield file
+
+
 def safe_open_json(
     path_or_url: str | Path | TextIO,
     *,
@@ -149,9 +175,7 @@ def safe_open_json(
     newline: str | None = None,
 ) -> Any:
     """Safely open a file and parse as JSON."""
-    with safe_open(
-        path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
-    ) as file:
+    with _open_read_text(path_or_url, encoding=encoding, newline=newline) as file:
         return json.load(file)
 
 
@@ -164,10 +188,36 @@ def safe_open_yaml(
     """Safely open a file and parse as YAML."""
     import yaml
 
-    with safe_open(
-        path_or_url, representation="text", operation="read", encoding=encoding, newline=newline
-    ) as file:
+    with _open_read_text(path_or_url, encoding=encoding, newline=newline) as file:
         return yaml.safe_load(file)
+
+
+def write_yaml(
+    data: Any,
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+    **kwargs: Any,
+) -> Any:
+    """Write YAML to a file."""
+    import yaml
+
+    with _open_write_text(path, encoding=encoding, newline=newline) as file:
+        yaml.safe_dump(data, file, **kwargs)
+
+
+def write_json(
+    data: Any,
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+    **kwargs: Any,
+) -> Any:
+    """Write JSON to a file."""
+    with _open_write_text(path, encoding=encoding, newline=newline) as file:
+        json.dump(data, file, **kwargs)
 
 
 # docstr-coverage:excused `overload`
@@ -237,7 +287,7 @@ def safe_open_dict_reader(
 
     :yields: A CSV reader object, constructed from :func:`csv.DictReader`
     """
-    with safe_open(f, operation="read", representation="text") as file:
+    with _open_read_text(f) as file:
         yield csv.DictReader(file, delimiter=delimiter, **kwargs)
 
 
