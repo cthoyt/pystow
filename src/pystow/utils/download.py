@@ -73,6 +73,7 @@ class RequestKwargs(TypedDict):
     verify: NotRequired[bool]
     stream: NotRequired[bool]
     cert: NotRequired[str | tuple[str, str]]
+    params: NotRequired[dict[str, Any]]
 
 
 class DownloadKwargs(RequestKwargs):
