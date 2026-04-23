@@ -74,6 +74,7 @@ class RequestKwargs(TypedDict):
     stream: NotRequired[bool]
     cert: NotRequired[str | tuple[str, str]]
     params: NotRequired[dict[str, Any]]
+    headers: NotRequired[Mapping[str, str | bytes | None] | None]
 
 
 class DownloadKwargs(RequestKwargs):
@@ -83,8 +84,9 @@ class DownloadKwargs(RequestKwargs):
     # it is passed through from other signature components
 
     clean_on_failure: NotRequired[bool]
-    backend: NotRequired[DownloadBackend]
+    backend: NotRequired[DownloadBackend | None]
     hexdigests: NotRequired[Mapping[str, str] | None]
+    hexdigests_remote: NotRequired[Mapping[str, str] | None]
     hexdigests_strict: NotRequired[bool]
     progress_bar: NotRequired[bool]
     tqdm_kwargs: NotRequired[Mapping[str, Any] | None]
@@ -96,7 +98,7 @@ def download(  # noqa:C901
     *,
     force: bool = True,
     clean_on_failure: bool = True,
-    backend: DownloadBackend = "urllib",
+    backend: DownloadBackend | None = None,
     hexdigests: Mapping[str, str] | None = None,
     hexdigests_remote: Mapping[str, str] | None = None,
     hexdigests_strict: bool = False,
@@ -147,6 +149,9 @@ def download(  # noqa:C901
         )
         logger.debug("did not re-download %s from %s", path, url)
         return
+
+    if backend is None:
+        backend = "urllib"
 
     desc = f"Downloading {path.name}"
     if _version:
