@@ -119,15 +119,15 @@ def download(  # noqa:C901
         pairs.
     :param hexdigests_remote: The expected hexdigests as (algorithm_name, url to file
         with expected hexdigest) pairs.
-    :param hexdigests_strict: Set this to ``False`` to stop automatically checking for the
-        `algorithm(filename)=hash` format
+    :param hexdigests_strict: Set this to ``False`` to stop automatically checking for
+        the `algorithm(filename)=hash` format
     :param progress_bar: Set to true to show a progress bar while downloading
     :param tqdm_kwargs: Override the default arguments passed to :class:`tadm.tqdm` when
         progress_bar is True.
     :param kwargs: If using :func:`urllib.request.urlretrieve`, there are no keyword
-        arguments available. If using ``requests`` as a backend, passes these
-        to :func:`requests.get`. If using ``requests`` as a backend, ``stream`` is
-        set to True by default.
+        arguments available. If using ``requests`` as a backend, passes these to
+        :func:`requests.get`. If using ``requests`` as a backend, ``stream`` is set to
+        True by default.
 
     :raises Exception: Thrown if an error besides a keyboard interrupt is thrown during
         download

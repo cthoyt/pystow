@@ -997,6 +997,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
+        version: VersionHint = None,
         download_kwargs: DownloadKwargs | None = None,
         read_csv_kwargs: Mapping[str, Any] | None = None,
     ) -> pd.DataFrame:
@@ -1009,6 +1010,8 @@ class Module:
             Also useful for URLs that don't have proper filenames with extensions.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
         :param read_csv_kwargs: Keyword arguments to pass through to
@@ -1019,7 +1022,12 @@ class Module:
         import pandas as pd
 
         path = self.ensure(
-            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            version=version,
+            download_kwargs=download_kwargs,
         )
         return pd.read_csv(path, **_clean_csv_kwargs(read_csv_kwargs))
 
