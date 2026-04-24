@@ -16,6 +16,7 @@ from typing_extensions import NotRequired, Unpack
 
 from .hashing import raise_on_digest_mismatch
 from ..constants import TimeoutHint
+from ..version import VERSION
 
 if TYPE_CHECKING:
     import botocore.client
@@ -74,7 +75,7 @@ class RequestKwargs(TypedDict):
     stream: NotRequired[bool]
     cert: NotRequired[str | tuple[str, str]]
     params: NotRequired[dict[str, Any]]
-    headers: NotRequired[Mapping[str, str | bytes | None] | None]
+    headers: NotRequired[dict[str, str | bytes | None] | None]
 
 
 class DownloadKwargs(RequestKwargs):
@@ -90,6 +91,9 @@ class DownloadKwargs(RequestKwargs):
     hexdigests_strict: NotRequired[bool]
     progress_bar: NotRequired[bool]
     tqdm_kwargs: NotRequired[Mapping[str, Any] | None]
+
+
+DEFAULT_AGENT = f"pystow v{VERSION}"
 
 
 def download(  # noqa:C901
@@ -180,12 +184,18 @@ def download(  # noqa:C901
                 try:
                     urlretrieve(url, path, reporthook=t.update_to)  # noqa:S310
                 except urllib.error.URLError as e:
+                    logger.info("download failed %s to %s", url, e)
                     raise DownloadError(backend, url, path, e) from e
         elif backend == "requests":
             import requests
             import requests.exceptions
 
             kwargs.setdefault("stream", True)
+            if "headers" not in kwargs or kwargs["headers"] is None:
+                kwargs["headers"] = {}
+            # ignore the type error because we make sure it's a dict above
+            kwargs["headers"].setdefault("User-Agent", DEFAULT_AGENT)  # type:ignore[union-attr]
+
             try:
                 # see https://requests.readthedocs.io/en/master/user/quickstart/#raw-response-content
                 # pattern from https://stackoverflow.com/a/39217788/5775947
