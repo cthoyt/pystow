@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Concatenate, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable
 
     X = TypeVar("X")
+    P = ParamSpec("P")
+
 
 __all__ = [
     "reyield",
@@ -21,7 +23,12 @@ class Sentinel:
 _SENTINEL = Sentinel()
 
 
-def reyield(func: Callable[[Iterable[X]], None], elements: Iterable[X]) -> Generator[X, None, None]:
+def reyield(
+    func: Callable[Concatenate[Iterable[X], P], None],
+    elements: Iterable[X],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> Generator[X, None, None]:
     """Make a function that consumes an iterable yield its elements.
 
     :param func: A function that consumes an iterable, and does not return anything
@@ -50,14 +57,16 @@ def reyield(func: Callable[[Iterable[X]], None], elements: Iterable[X]) -> Gener
     """
     from contextlib import closing
 
-    with closing(_help_reiter(func)) as generator:
+    with closing(_help_reiter(func, *args, **kwargs)) as generator:
         next(generator)  # prime the coroutine
         for element in elements:
             generator.send(element)
             yield element
 
 
-def _help_reiter(func: Callable[[Iterable[X]], None]) -> Generator[None, X, None]:
+def _help_reiter(
+    func: Callable[Concatenate[Iterable[X], P], None], *args: P.args, **kwargs: P.kwargs
+) -> Generator[None, X, None]:
     """Modify the function."""
     import threading
     from queue import Queue
@@ -77,7 +86,9 @@ def _help_reiter(func: Callable[[Iterable[X]], None]) -> Generator[None, X, None
             yield item_
 
     # Run the consumer in a background thread, fed by the generator that wraps the queue
-    thread = threading.Thread(target=func, args=(_iterable_from_queue(),), daemon=True)
+    thread = threading.Thread(
+        target=func, args=(_iterable_from_queue(), *args), kwargs=kwargs, daemon=True
+    )
     thread.start()
 
     # now, we invert the generator pattern - this function
