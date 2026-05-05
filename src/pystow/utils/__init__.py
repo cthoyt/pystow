@@ -78,6 +78,7 @@ from .io_typing import (
     ensure_sensible_newline,
     get_mode_pair,
 )
+from .iter import reyield
 from .pydantic_utils import (
     ModelValidateFailureAction,
     iter_pydantic_jsonl,
@@ -182,6 +183,7 @@ __all__ = [
     "read_zipfile_csv",
     "read_zipfile_rdf",
     "read_zipfile_xml",
+    "reyield",
     "safe_open",
     "safe_open_dict_reader",
     "safe_open_dict_writer",
