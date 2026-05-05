@@ -25,6 +25,7 @@ def reyield(func: Callable[[Iterable[X]], None], elements: Iterable[X]) -> Gener
     """Make a function that consumes an iterable yield its elements.
 
     :param func: A function that consumes an iterable, and does not return anything
+    :param elements: An iterable
 
     :returns: A generator that injects the elements of the iterable one at a time before
         yielding them.
