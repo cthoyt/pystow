@@ -65,20 +65,32 @@ def _help_reiter(func: Callable[[Iterable[X]], None]) -> Generator[None, X, None
 
     def _iterable_from_queue() -> Generator[X, None, None]:
         while True:
-            item_ = queue.get()
+            # queue.get() blocks indefinitely (because timeout is None)
+            # until the queue receives something
+            item_ = queue.get(block=True, timeout=None)
+
+            # if the queue receives a sentinel value, then we break out of the
+            # while loop, which will cause the generator to raise a GeneratorExit
             if isinstance(item_, Sentinel):
                 break
             yield item_
 
-    # Run the consumer in a background thread, fed by the queue
+    # Run the consumer in a background thread, fed by the generator that wraps the queue
     thread = threading.Thread(target=func, args=(_iterable_from_queue(),), daemon=True)
     thread.start()
 
+    # now, we invert the generator pattern - this function
+    # will return a generator that you can .send(item) to,
+    # and the yield statement waits for the value and sticks
+    # it in item
     try:
         while True:
             item: X = yield  # pause, wait for .send(item)
             queue.put(item)
     except GeneratorExit:
+        # this happens when the outer generator ends, which means
+        # it's time to send the queue a "final" value and block
+        # on finishing the thread to clean up
         pass
     finally:
         queue.put(_SENTINEL)  # signal the consumer that we're done
