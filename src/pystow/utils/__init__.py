@@ -166,6 +166,7 @@ __all__ = [
     "open_inner_zipfile",
     "open_tarfile",
     "open_url",
+    "open_zip_dict_reader",
     "open_zip_reader",
     "open_zip_writer",
     "open_zipfile",
@@ -489,6 +490,23 @@ def open_zip_reader(
     """
     with open_zipfile(path, inner_path, representation="text") as file:
         yield csv.reader(file, delimiter=delimiter, **kwargs)
+
+
+@contextlib.contextmanager
+def open_zip_dict_reader(
+    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+) -> Generator[csv.DictReader[str], None, None]:
+    """Read an inner CSV file from a zip archive.
+
+    :param path: The path to the zip archive
+    :param inner_path: The path inside the zip archive to the CSV
+    :param delimiter: The separator in the CSV. Defaults to tab.
+    :param kwargs: Additional kwargs to pass to :class:`csv.DictReader`.
+
+    :returns: A dictionary reader over the file
+    """
+    with open_zipfile(path, inner_path, representation="text") as file:
+        yield csv.DictReader(file, delimiter=delimiter, **kwargs)
 
 
 @contextlib.contextmanager
