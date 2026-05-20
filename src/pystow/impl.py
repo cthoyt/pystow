@@ -928,6 +928,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
+        version: VersionHint = None,
         download_kwargs: DownloadKwargs | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
@@ -941,6 +942,8 @@ class Module:
             Also useful for URLs that don't have proper filenames with extensions.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`gzip.open`
@@ -949,7 +952,12 @@ class Module:
         :yields: An open file object
         """
         path = self.ensure(
-            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            version=version,
+            download_kwargs=download_kwargs,
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
@@ -963,6 +971,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
+        version: VersionHint = None,
         download_kwargs: DownloadKwargs | None = None,
         mode: Literal["rb"] = "rb",
         open_kwargs: Mapping[str, Any] | None = None,
@@ -976,6 +985,8 @@ class Module:
             Also useful for URLs that don't have proper filenames with extensions.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
         :param mode: The read mode, passed to :func:`bz2.open`
@@ -984,7 +995,12 @@ class Module:
         :yields: An open file object
         """
         path = self.ensure(
-            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+            *subkeys,
+            url=url,
+            name=name,
+            force=force,
+            version=version,
+            download_kwargs=download_kwargs,
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
@@ -1087,6 +1103,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
+        version: VersionHint = None,
         download_kwargs: DownloadKwargs | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
         json_load_kwargs: Mapping[str, Any] | None = None,
@@ -1100,6 +1117,8 @@ class Module:
             Also useful for URLs that don't have proper filenames with extensions.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
         :param open_kwargs: Additional keyword arguments passed to :func:`open`
@@ -1112,6 +1131,7 @@ class Module:
             url=url,
             name=name,
             force=force,
+            version=version,
             download_kwargs=download_kwargs,
             open_kwargs=open_kwargs,
         ) as file:
@@ -1123,6 +1143,7 @@ class Module:
         url: str,
         name: str | None = None,
         force: bool = False,
+        version: VersionHint = None,
         download_kwargs: DownloadKwargs | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
         json_load_kwargs: Mapping[str, Any] | None = None,
@@ -1136,6 +1157,8 @@ class Module:
             Also useful for URLs that don't have proper filenames with extensions.
         :param force: Should the download be done again, even if the path already
             exists? Defaults to false.
+        :param version: The optional version, or no-argument callable that returns an
+            optional version. This is prepended before the subkeys.
         :param download_kwargs: Keyword arguments to pass through to
             :func:`pystow.utils.download`.
         :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
@@ -1148,6 +1171,7 @@ class Module:
             url=url,
             name=name,
             force=force,
+            version=version,
             download_kwargs=download_kwargs,
             open_kwargs=open_kwargs,
         ) as file:

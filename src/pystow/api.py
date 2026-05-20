@@ -1058,6 +1058,7 @@ def ensure_json(
     url: str,
     name: str | None = None,
     force: bool = False,
+    version: VersionHint = None,
     download_kwargs: DownloadKwargs | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     json_load_kwargs: Mapping[str, Any] | None = None,
@@ -1072,6 +1073,8 @@ def ensure_json(
         useful for URLs that don't have proper filenames with extensions.
     :param force: Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param version: The optional version, or no-argument callable that returns an
+        optional version. This is prepended before the subkeys.
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param open_kwargs: Additional keyword arguments passed to :func:`open`
@@ -1093,6 +1096,7 @@ def ensure_json(
         url=url,
         name=name,
         force=force,
+        version=version,
         download_kwargs=download_kwargs,
         open_kwargs=open_kwargs,
         json_load_kwargs=json_load_kwargs,
@@ -1105,6 +1109,7 @@ def ensure_json_bz2(
     url: str,
     name: str | None = None,
     force: bool = False,
+    version: VersionHint = None,
     download_kwargs: DownloadKwargs | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     json_load_kwargs: Mapping[str, Any] | None = None,
@@ -1119,6 +1124,8 @@ def ensure_json_bz2(
         useful for URLs that don't have proper filenames with extensions.
     :param force: Should the download be done again, even if the path already exists?
         Defaults to false.
+    :param version: The optional version, or no-argument callable that returns an
+        optional version. This is prepended before the subkeys.
     :param download_kwargs: Keyword arguments to pass through to
         :func:`pystow.utils.download`.
     :param open_kwargs: Additional keyword arguments passed to :func:`bz2.open`
@@ -1140,6 +1147,7 @@ def ensure_json_bz2(
         url=url,
         name=name,
         force=force,
+        version=version,
         download_kwargs=download_kwargs,
         open_kwargs=open_kwargs,
         json_load_kwargs=json_load_kwargs,
