@@ -177,12 +177,15 @@ def model_dump_yaml(
     *,
     exclude_none: bool = False,
     exclude_unset: bool = False,
+    exclude: set[str] | None = None,
 ) -> str:
     """Dump the model as YAML string."""
     import yaml
 
-    data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
-    return yaml.safe_dump(data)
+    data = model.model_dump(
+        mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset, exclude=exclude
+    )
+    return yaml.safe_dump(data, allow_unicode=True)
 
 
 def write_pydantic_yaml(
