@@ -49,6 +49,7 @@ def safe_open(
     operation: Operation = ...,
     representation: Representation = ...,
     encoding: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -62,6 +63,7 @@ def safe_open(
     representation: Representation = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -75,6 +77,7 @@ def safe_open(
     representation: Literal["text"] = "text",
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[typing.TextIO, None, None]: ...
 
 
@@ -88,6 +91,7 @@ def safe_open(
     representation: Literal["binary"] = "binary",
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[typing.BinaryIO, None, None]: ...
 
 
@@ -99,6 +103,7 @@ def safe_open(  # noqa:C901
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -114,7 +119,11 @@ def safe_open(  # noqa:C901
             if operation != "read":
                 raise ValueError('can only use operation="read" with URLs')
             with open_url(
-                path, representation=representation, encoding=encoding, newline=newline
+                path,
+                representation=representation,
+                encoding=encoding,
+                newline=newline,
+                timeout=timeout,
             ) as file:
                 yield file
         else:
@@ -307,6 +316,7 @@ def open_url(
     representation: Literal["text"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | float | None = ...,
 ) -> Generator[TextIO, None, None]: ...
 
 
@@ -319,6 +329,7 @@ def open_url(
     representation: Literal["binary"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | float | None = ...,
 ) -> Generator[BinaryIO, None, None]: ...
 
 
@@ -329,9 +340,13 @@ def open_url(
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | float | None = None,
 ) -> Generator[TextIO, None, None] | Generator[BinaryIO, None, None]:
     """Get a file-like object from a URL."""
-    with urllib.request.urlopen(url) as response:  # noqa:S310
+    kk: dict[str, Any] = {}
+    if timeout is not None:
+        kk["timeout"] = timeout
+    with urllib.request.urlopen(url, **kk) as response:  # noqa:S310
         match representation:
             case "text":
                 yield io.TextIOWrapper(response, encoding=encoding, newline=newline)
