@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import bz2
 import contextlib
 import csv
 import gzip
 import io
 import json
+import lzma
 import typing
 import urllib.request
 import zipfile
@@ -122,6 +124,12 @@ def safe_open(  # noqa:C901
             path = Path(path).expanduser().resolve()
             if path.suffix.endswith(".gz"):
                 with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
+            elif path.suffix.endswith(".bz2"):
+                with bz2.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
+            elif path.suffix.endswith(".xz"):
+                with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
             else:
                 with open(path, mode=mode, encoding=encoding, newline=newline) as file:
