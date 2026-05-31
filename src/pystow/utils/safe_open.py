@@ -200,10 +200,10 @@ def safe_write_text(
     *,
     encoding: str | None = None,
     newline: str | None = None,
-) -> None:
+) -> int:
     """Write text to a file."""
     with _open_write_text(path, encoding=encoding, newline=newline) as file:
-        file.write(s)
+        return file.write(s)
 
 
 def safe_read_text(
