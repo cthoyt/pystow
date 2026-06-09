@@ -43,6 +43,8 @@ __all__ = [
     "safe_open_dict_reader",
     "safe_open_json",
     "safe_open_yaml",
+    "safe_read_text",
+    "safe_write_text",
     "write_json",
     "write_yaml",
 ]
@@ -210,6 +212,29 @@ def safe_open_yaml(
 
     with _open_read_text(path_or_url, encoding=encoding, newline=newline) as file:
         return yaml.safe_load(file)
+
+
+def safe_write_text(
+    s: str,
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> int:
+    """Write text to a file."""
+    with _open_write_text(path, encoding=encoding, newline=newline) as file:
+        return file.write(s)
+
+
+def safe_read_text(
+    path: str | Path | TextIO,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> str:
+    """Read text from a file."""
+    with _open_read_text(path, encoding=encoding, newline=newline) as file:
+        return file.read()
 
 
 def write_yaml(

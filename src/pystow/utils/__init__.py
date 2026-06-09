@@ -101,6 +101,8 @@ from .safe_open import (
     safe_open_dict_reader,
     safe_open_json,
     safe_open_yaml,
+    safe_read_text,
+    safe_write_text,
     write_json,
     write_yaml,
 )
@@ -192,7 +194,9 @@ __all__ = [
     "safe_open_reader",
     "safe_open_writer",
     "safe_open_yaml",
+    "safe_read_text",
     "safe_tarfile_open",
+    "safe_write_text",
     "safe_zipfile_open",
     "stream_write_pydantic_jsonl",
     "tarfile_writestr",

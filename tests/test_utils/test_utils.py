@@ -52,6 +52,8 @@ from pystow.utils import (
     safe_open_json,
     safe_open_reader,
     safe_open_writer,
+    safe_read_text,
+    safe_write_text,
     tarfile_writestr,
     write_lzma_csv,
     write_tarfile_csv,
@@ -465,6 +467,15 @@ class TestUtils(unittest.TestCase):
                     file.write(TEST_TXT_CONTENT)
                 with safe_open(path, encoding=encoding, operation="read") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
+
+    def test_safe_write(self) -> None:
+        """Test safe write."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.txt")
+            safe_write_text(TEST_TXT_CONTENT, path)
+            self.assertEqual(TEST_TXT_CONTENT, safe_read_text(path))
+            with path.open() as file:
+                self.assertEqual(TEST_TXT_CONTENT, file.read())
 
     def test_gzip(self) -> None:
         """Test gzipping."""
