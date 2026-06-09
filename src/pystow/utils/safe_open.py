@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import bz2
 import contextlib
 import csv
 import gzip
 import io
 import json
+import lzma
+import sys
 import typing
 import urllib.request
 import zipfile
@@ -26,6 +29,11 @@ from .io_typing import (
     ensure_sensible_default_encoding,
     ensure_sensible_newline,
 )
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    from backports import zstd
 
 __all__ = [
     "is_url",
@@ -125,6 +133,15 @@ def safe_open(  # noqa:C901
             if path.suffix.endswith(".gz"):
                 with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
+            elif path.suffix.endswith(".bz2"):
+                with bz2.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
+            elif path.suffix.endswith(".xz"):
+                with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
+            elif path.suffix.endswith(".zst"):
+                with zstd.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
             else:
                 with open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
@@ -135,7 +152,10 @@ def safe_open(  # noqa:C901
                 "must specify `text` representation when passing through a text file-like object"
             )
         yield path
-    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
+
+    # io.BufferedIOBase covers the LZMA, BZ2, Gzip, and ZSTD file types
+    # as well as io.BufferedReader
+    elif isinstance(path, typing.BinaryIO | io.BufferedIOBase):
         if representation != "binary":
             raise ValueError(
                 "must specify `binary` representation when passing through "

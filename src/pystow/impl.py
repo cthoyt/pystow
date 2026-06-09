@@ -11,6 +11,7 @@ import lzma
 import os
 import pickle
 import sqlite3
+import sys
 import tarfile
 import typing
 from collections.abc import Callable, Generator, Mapping, Sequence
@@ -41,6 +42,11 @@ from .utils import (
     read_zipfile_csv,
 )
 from .utils.download import DownloadKwargs
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    from backports import zstd
 
 if TYPE_CHECKING:
     import botocore.client
@@ -732,6 +738,41 @@ class Module:
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
         with lzma.open(path, **open_kwargs) as file:
+            yield file
+
+    @contextmanager
+    def ensure_open_zstd(
+        self,
+        *subkeys: str,
+        url: str,
+        name: str | None = None,
+        force: bool = False,
+        download_kwargs: DownloadKwargs | None = None,
+        mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
+        open_kwargs: Mapping[str, Any] | None = None,
+    ) -> Generator[zstd.ZstdFile, None, None]:
+        """Ensure a zSTD-compressed file is downloaded and open a file inside it.
+
+        :param subkeys: A sequence of additional strings to join. If none are given,
+            returns the directory for this module.
+        :param url: The URL to download.
+        :param name: Overrides the name of the file at the end of the URL, if given.
+            Also useful for URLs that don't have proper filenames with extensions.
+        :param force: Should the download be done again, even if the path already
+            exists? Defaults to false.
+        :param download_kwargs: Keyword arguments to pass through to
+            :func:`pystow.utils.download`.
+        :param mode: The read mode, passed to :func:`zstd.open`
+        :param open_kwargs: Additional keyword arguments passed to :func:`zstd.open`
+
+        :yields: An open file object
+        """
+        path = self.ensure(
+            *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
+        )
+        open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
+        open_kwargs.setdefault("mode", mode)
+        with zstd.open(path, **open_kwargs) as file:
             yield file
 
     # docstr-coverage:excused `overload`
