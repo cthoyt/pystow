@@ -67,8 +67,12 @@ TEST_TXT = RESOURCES.joinpath("test.txt")
 TEST_TXT_CONTENT = "this is a test file\n"
 TEST_TXT_MD5 = RESOURCES.joinpath("test.txt.md5")
 TEST_TXT_GZ = RESOURCES.joinpath("test.txt.gz")
+TEST_TXT_LZMA = RESOURCES.joinpath("test.txt.xz")
+TEST_TXT_ZSTD = RESOURCES.joinpath("test.txt.zst")
 TEST_TXT_VERBOSE_MD5 = RESOURCES.joinpath("test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = RESOURCES.joinpath("test_wrong.txt.md5")
+
+TEST_PATHS = [TEST_TXT, TEST_TXT_GZ, TEST_TXT_LZMA, TEST_TXT_ZSTD]
 
 
 class _Session(requests.sessions.Session):
@@ -399,7 +403,7 @@ class TestUtils(unittest.TestCase):
 
     def test_safe_open_binary(self) -> None:
         """Test safe open in binary mode."""
-        for path in [TEST_TXT, TEST_TXT_GZ]:
+        for path in TEST_PATHS:
             with self.subTest(path=path):
                 with safe_open(path, representation="binary") as file:
                     self.assertEqual(
@@ -425,9 +429,7 @@ class TestUtils(unittest.TestCase):
 
     def test_safe_open_text(self) -> None:
         """Test safe open in text mode."""
-        for path, encoding, newline in itt.product(
-            [TEST_TXT, TEST_TXT_GZ], [None, "utf-8"], [None, "\n"]
-        ):
+        for path, encoding, newline in itt.product(TEST_PATHS, [None, "utf-8"], [None, "\n"]):
             with self.subTest(path=path, encoding=encoding, newline=newline):
                 with safe_open(
                     path, encoding=encoding, representation="text", newline=newline
