@@ -9,6 +9,7 @@ import gzip
 import io
 import json
 import lzma
+import sys
 import typing
 import urllib.request
 import zipfile
@@ -28,6 +29,11 @@ from .io_typing import (
     ensure_sensible_default_encoding,
     ensure_sensible_newline,
 )
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    from backports import zstd
 
 __all__ = [
     "is_url",
@@ -130,6 +136,9 @@ def safe_open(  # noqa:C901
                     yield file  # type:ignore
             elif path.suffix.endswith(".xz"):
                 with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                    yield file  # type:ignore
+            elif path.suffix.endswith(".zst"):
+                with zstd.open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
             else:
                 with open(path, mode=mode, encoding=encoding, newline=newline) as file:

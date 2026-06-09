@@ -6,6 +6,7 @@ import bz2
 import io
 import lzma
 import sqlite3
+import sys
 import typing
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
@@ -17,6 +18,11 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 from .constants import JSON, Provider
 from .impl import Module, VersionHint
 from .utils.download import DownloadKwargs
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:
+    from backports import zstd
 
 if TYPE_CHECKING:
     import bs4
@@ -50,6 +56,7 @@ __all__ = [
     "ensure_open_sqlite_gz",
     "ensure_open_tarfile",
     "ensure_open_zip",
+    "ensure_open_zstd",
     "ensure_pickle",
     "ensure_pickle_gz",
     "ensure_rdf",
@@ -682,6 +689,49 @@ def ensure_open_lzma(
     """
     _module = Module.from_key(key, ensure_exists=True)
     with _module.ensure_open_lzma(
+        *subkeys,
+        url=url,
+        name=name,
+        force=force,
+        download_kwargs=download_kwargs,
+        mode=mode,
+        open_kwargs=open_kwargs,
+    ) as yv:
+        yield yv
+
+
+@contextmanager
+def ensure_open_zstd(
+    key: str,
+    *subkeys: str,
+    url: str,
+    name: str | None = None,
+    force: bool = False,
+    download_kwargs: DownloadKwargs | None = None,
+    mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
+    open_kwargs: Mapping[str, Any] | None = None,
+) -> Generator[zstd.ZstdFile, None, None]:
+    """Ensure a zstd-compressed file is downloaded and open a file inside it.
+
+    :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
+        where key is uppercased is checked first before using the default home
+        directory.
+    :param subkeys: A sequence of additional strings to join. If none are given, returns
+        the directory for this module.
+    :param url: The URL to download.
+    :param name: Overrides the name of the file at the end of the URL, if given. Also
+        useful for URLs that don't have proper filenames with extensions.
+    :param force: Should the download be done again, even if the path already exists?
+        Defaults to false.
+    :param download_kwargs: Keyword arguments to pass through to
+        :func:`pystow.utils.download`.
+    :param mode: The read mode, passed to :func:`zstd.open`
+    :param open_kwargs: Additional keyword arguments passed to :func:`zstd.open`
+
+    :yields: An open file object
+    """
+    _module = Module.from_key(key, ensure_exists=True)
+    with _module.ensure_open_zstd(
         *subkeys,
         url=url,
         name=name,

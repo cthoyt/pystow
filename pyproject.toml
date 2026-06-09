@@ -50,6 +50,7 @@ requires-python = ">=3.10"
 dependencies = [
     "tqdm",
     "typing-extensions",
+    "backports.zstd; python<'3.14'",
 ]
 
 [dependency-groups]
