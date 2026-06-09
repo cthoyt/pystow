@@ -67,12 +67,13 @@ TEST_TXT = RESOURCES.joinpath("test.txt")
 TEST_TXT_CONTENT = "this is a test file\n"
 TEST_TXT_MD5 = RESOURCES.joinpath("test.txt.md5")
 TEST_TXT_GZ = RESOURCES.joinpath("test.txt.gz")
+TEST_TXT_BZ2 = RESOURCES.joinpath("test.txt.bz2")
 TEST_TXT_LZMA = RESOURCES.joinpath("test.txt.xz")
 TEST_TXT_ZSTD = RESOURCES.joinpath("test.txt.zst")
 TEST_TXT_VERBOSE_MD5 = RESOURCES.joinpath("test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = RESOURCES.joinpath("test_wrong.txt.md5")
 
-TEST_PATHS = [TEST_TXT, TEST_TXT_GZ, TEST_TXT_LZMA, TEST_TXT_ZSTD]
+TEST_PATHS = [TEST_TXT, TEST_TXT_GZ, TEST_TXT_BZ2, TEST_TXT_LZMA, TEST_TXT_ZSTD]
 
 
 class _Session(requests.sessions.Session):

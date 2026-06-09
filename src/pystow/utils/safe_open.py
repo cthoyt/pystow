@@ -150,7 +150,10 @@ def safe_open(  # noqa:C901
                 "must specify `text` representation when passing through a text file-like object"
             )
         yield path
-    elif isinstance(path, typing.BinaryIO | io.BufferedReader | gzip.GzipFile):
+
+    # io.BufferedIOBase covers the LZMA, BZ2, Gzip, and ZSTD file types
+    # as well as io.BufferedReader
+    elif isinstance(path, typing.BinaryIO | io.BufferedIOBase):
         if representation != "binary":
             raise ValueError(
                 "must specify `binary` representation when passing through "
