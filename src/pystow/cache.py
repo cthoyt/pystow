@@ -9,16 +9,13 @@ import pickle
 from abc import ABC, abstractmethod
 from collections.abc import Callable, MutableMapping
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+
+from .utils import read_pydantic_json, write_pydantic_json
 
 if TYPE_CHECKING:
     import pandas as pd
+    import pydantic
 
 __all__ = [
     # Classes
@@ -112,6 +109,43 @@ class CachedJSON(Cached[JSONType]):
         """
         with open(self.path, "w") as file:
             json.dump(rv, file, indent=2)
+
+
+B = TypeVar("B", bound=pydantic.BaseModel)
+
+
+class CachedPydantic(Cached[B]):
+    """Make a function lazily cache its return value as JSON."""
+
+    model_cls: type[B]
+
+    def __init__(
+        self,
+        path: str | Path,
+        *,
+        model_cls: type[B],
+        force: bool = False,
+        cache: bool = True,
+    ) -> None:
+        """Instantiate the decorator."""
+        super().__init__(path=path, force=force, cache=cache)
+        self.model_cls = model_cls
+
+    def load(self) -> B:
+        """Load data from the cache as JSON.
+
+        :returns: A Pydantic model parsed from the JSON
+        """
+        return read_pydantic_json(self.path, self.model_cls)
+        with open(self.path) as file:
+            return cast(JSONType, json.load(file))
+
+    def dump(self, model: B) -> None:
+        """Dump data to the cache as JSON.
+
+        :param model: The Pydantic model to dump
+        """
+        write_pydantic_json(model, self.path)
 
 
 class CachedPickle(Cached[Any]):
