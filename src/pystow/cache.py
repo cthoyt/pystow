@@ -137,8 +137,6 @@ class CachedPydantic(Cached[B]):
         :returns: A Pydantic model parsed from the JSON
         """
         return read_pydantic_json(self.path, self.model_cls)
-        with open(self.path) as file:
-            return cast(JSONType, json.load(file))
 
     def dump(self, model: B) -> None:
         """Dump data to the cache as JSON.
