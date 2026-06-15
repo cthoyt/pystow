@@ -24,6 +24,7 @@ __all__ = [
     "CachedDataFrame",
     "CachedJSON",
     "CachedPickle",
+    "CachedPydantic",
     # Types
     "Getter",
 ]
@@ -111,7 +112,7 @@ class CachedJSON(Cached[JSONType]):
             json.dump(rv, file, indent=2)
 
 
-B = TypeVar("B", bound=pydantic.BaseModel)
+B = TypeVar("B", bound="pydantic.BaseModel")
 
 
 class CachedPydantic(Cached[B]):
