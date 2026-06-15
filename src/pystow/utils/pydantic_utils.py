@@ -210,7 +210,11 @@ def write_pydantic_json(
     exclude_unset: bool = False,
     encoding: str | None = None,
     newline: str | None = None,
+    ensure_ascii: bool = False,
+    indent: int | None = None,
 ) -> None:
     """Write a model to a JSON file."""
     data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
-    write_json(data, path, encoding=encoding, newline=newline)
+    write_json(
+        data, path, encoding=encoding, newline=newline, ensure_ascii=ensure_ascii, indent=indent
+    )

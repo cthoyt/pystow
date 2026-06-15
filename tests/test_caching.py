@@ -7,7 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pystow.cache import CachedPickle
+from pydantic import BaseModel
+
+from pystow.cache import CachedPickle, CachedPydantic
 
 EXPECTED = 5
 EXPECTED_2 = 6
@@ -92,6 +94,61 @@ class TestCache(unittest.TestCase):
 
         self.assertEqual(EXPECTED_2, _f2())  # overwrites the file
         self.assertEqual(EXPECTED_2, _f1())
+
+    def test_cache_pydantic(self) -> None:
+        """Test caching a pydantic."""
+        path = self.directory.joinpath("test.json")
+        self.assertFalse(
+            path.is_file(),
+            msg="the file should not exist at the beginning of the test",
+        )
+
+        class Model(BaseModel):
+            """A simple model."""
+
+            value: int
+
+        raise_flag = True
+
+        @CachedPydantic(path=path, model_cls=Model)
+        def _f1() -> Model:
+            if raise_flag:
+                raise ValueError
+            return Model(value=EXPECTED)
+
+        self.assertFalse(path.is_file(), msg="the file should not exist until function is called")
+
+        with self.assertRaises(ValueError):
+            _f1()
+        self.assertFalse(
+            path.is_file(),
+            msg="the function should throw an exception "
+            "because of the flag, and no file should be created",
+        )
+
+        raise_flag = False
+        actual = _f1()
+        self.assertIsInstance(actual, Model)
+        self.assertEqual(EXPECTED, actual.value)
+        self.assertTrue(path.is_file(), msg="a file should have been created")
+
+        raise_flag = True
+        actual_2 = _f1()  # if raises, the caching mechanism didn't work
+        self.assertIsInstance(actual_2, Model)
+        self.assertEqual(EXPECTED, actual_2.value)
+        self.assertTrue(path.is_file())
+
+        os.unlink(path)
+        self.assertFalse(path.is_file())
+        with self.assertRaises(ValueError):
+            _f1()
+
+        @CachedPydantic(path=path, model_cls=Model, force=True)
+        def _f2() -> Model:
+            return Model(value=EXPECTED_2)
+
+        self.assertEqual(EXPECTED_2, _f2().value)  # overwrites the file
+        self.assertEqual(EXPECTED_2, _f1().value)
 
     def test_no_cache(self) -> None:
         """Test that no caching happens."""

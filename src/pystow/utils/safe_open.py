@@ -258,11 +258,13 @@ def write_json(
     *,
     encoding: str | None = None,
     newline: str | None = None,
+    ensure_ascii: bool = False,
+    indent: int | None = None,
     **kwargs: Any,
 ) -> Any:
     """Write JSON to a file."""
     with _open_write_text(path, encoding=encoding, newline=newline) as file:
-        json.dump(data, file, **kwargs)
+        json.dump(data, file, ensure_ascii=ensure_ascii, indent=indent, **kwargs)
 
 
 # docstr-coverage:excused `overload`
