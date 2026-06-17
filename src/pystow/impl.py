@@ -11,7 +11,6 @@ import lzma
 import os
 import pickle
 import sqlite3
-import sys
 import tarfile
 import typing
 from collections.abc import Callable, Generator, Mapping, Sequence
@@ -42,11 +41,7 @@ from .utils import (
     read_zipfile_csv,
 )
 from .utils.download import DownloadKwargs
-
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    from backports import zstd
+from .utils.safe_open import zstd_open
 
 if TYPE_CHECKING:
     import botocore.client
@@ -750,7 +745,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = None,
         mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Generator[zstd.ZstdFile, None, None]:
+    ) -> Generator[io.BufferedIOBase, None, None]:
         """Ensure a zSTD-compressed file is downloaded and open a file inside it.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
@@ -772,7 +767,7 @@ class Module:
         )
         open_kwargs = {} if open_kwargs is None else dict(open_kwargs)
         open_kwargs.setdefault("mode", mode)
-        with zstd.open(path, **open_kwargs) as file:
+        with zstd_open(path, **open_kwargs) as file:
             yield file
 
     # docstr-coverage:excused `overload`

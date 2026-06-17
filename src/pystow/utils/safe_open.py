@@ -17,6 +17,8 @@ from collections.abc import Generator, Mapping
 from pathlib import Path
 from typing import Any, BinaryIO, Literal, TextIO, TypeGuard, cast, overload
 
+from typing_extensions import Never
+
 from .io_typing import (
     _MODE_TO_SIMPLE,
     MODE_MAP,
@@ -30,10 +32,20 @@ from .io_typing import (
     ensure_sensible_newline,
 )
 
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    from backports import zstd
+try:
+    if sys.version_info >= (3, 14):
+        from compression import zstd
+    else:
+        from backports import zstd
+
+    zstd_open = zstd.open
+
+except ImportError:
+
+    def zstd_open(*args: Any, **kwargs: Any) -> Never:
+        """Open a Zstandard compressed file in binary or text mode."""
+        raise RuntimeError("zstd is not available")
+
 
 __all__ = [
     "is_url",
@@ -47,6 +59,7 @@ __all__ = [
     "safe_write_text",
     "write_json",
     "write_yaml",
+    "zstd_open",
 ]
 
 
@@ -140,7 +153,7 @@ def safe_open(  # noqa:C901
                 with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
             elif path.suffix.endswith(".zst"):
-                with zstd.open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                with zstd_open(path, mode=mode, encoding=encoding, newline=newline) as file:
                     yield file  # type:ignore
             else:
                 with open(path, mode=mode, encoding=encoding, newline=newline) as file:

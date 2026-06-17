@@ -6,7 +6,6 @@ import bz2
 import io
 import lzma
 import sqlite3
-import sys
 import typing
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
@@ -18,11 +17,6 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 from .constants import JSON, Provider
 from .impl import Module, VersionHint
 from .utils.download import DownloadKwargs
-
-if sys.version_info >= (3, 14):
-    from compression import zstd
-else:
-    from backports import zstd
 
 if TYPE_CHECKING:
     import bs4
@@ -710,7 +704,7 @@ def ensure_open_zstd(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[zstd.ZstdFile, None, None]:
+) -> Generator[io.BufferedIOBase, None, None]:
     """Ensure a zstd-compressed file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
