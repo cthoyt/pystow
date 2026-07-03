@@ -196,10 +196,14 @@ def write_pydantic_yaml(
     exclude_unset: bool = False,
     encoding: str | None = None,
     newline: str | None = None,
+    indent: int | None = None,
+    allow_unicode: bool = True,
 ) -> None:
     """Write a model to a YAML file."""
     data = model_dump_yaml(model, exclude_none=exclude_none, exclude_unset=exclude_unset)
-    write_yaml(data, path, encoding=encoding, newline=newline)
+    write_yaml(
+        data, path, encoding=encoding, newline=newline, indent=indent, allow_unicode=allow_unicode
+    )
 
 
 def write_pydantic_json(

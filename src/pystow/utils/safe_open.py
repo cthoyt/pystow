@@ -256,13 +256,15 @@ def write_yaml(
     *,
     encoding: str | None = None,
     newline: str | None = None,
+    indent: int | None = None,
+    allow_unicode: bool = True,
     **kwargs: Any,
 ) -> Any:
     """Write YAML to a file."""
     import yaml
 
     with _open_write_text(path, encoding=encoding, newline=newline) as file:
-        yaml.safe_dump(data, file, **kwargs)
+        yaml.safe_dump(data, file, indent=indent, allow_unicode=allow_unicode, **kwargs)
 
 
 def write_json(
