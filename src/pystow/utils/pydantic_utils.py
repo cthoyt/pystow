@@ -178,6 +178,9 @@ def model_dump_yaml(
     exclude_none: bool = False,
     exclude_unset: bool = False,
     exclude: set[str] | None = None,
+    allow_unicode: bool = True,
+    indent: int | None = None,
+    sort_keys: bool = False,,
 ) -> str:
     """Dump the model as YAML string."""
     import yaml
@@ -185,24 +188,28 @@ def model_dump_yaml(
     data = model.model_dump(
         mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset, exclude=exclude
     )
-    return yaml.safe_dump(data, allow_unicode=True)
+    return yaml.safe_dump(data, allow_unicode=allow_unicode, indent=indent, sort_keys=sort_keys)
 
 
 def write_pydantic_yaml(
     model: pydantic.BaseModel,
     path: str | Path | TextIO,
     *,
+    exclude: set[str] | None = None,
     exclude_none: bool = False,
     exclude_unset: bool = False,
     encoding: str | None = None,
     newline: str | None = None,
     indent: int | None = None,
     allow_unicode: bool = True,
+    sort_keys: bool = False,
 ) -> None:
     """Write a model to a YAML file."""
-    data = model_dump_yaml(model, exclude_none=exclude_none, exclude_unset=exclude_unset)
+    data = model.model_dump(
+        mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset, exclude=exclude
+    )
     write_yaml(
-        data, path, encoding=encoding, newline=newline, indent=indent, allow_unicode=allow_unicode
+        data, path, encoding=encoding, newline=newline, indent=indent, allow_unicode=allow_unicode, sort_keys=sort_keys
     )
 
 
@@ -212,13 +219,26 @@ def write_pydantic_json(
     *,
     exclude_none: bool = False,
     exclude_unset: bool = False,
+    exclude_defaults: bool = False,
     encoding: str | None = None,
     newline: str | None = None,
     ensure_ascii: bool = False,
     indent: int | None = None,
+    trailing_newline: bool = True,
 ) -> None:
     """Write a model to a JSON file."""
-    data = model.model_dump(mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset)
+    data = model.model_dump(
+        mode="json",
+        exclude_none=exclude_none,
+        exclude_unset=exclude_unset,
+        exclude_defaults=exclude_defaults,
+    )
     write_json(
-        data, path, encoding=encoding, newline=newline, ensure_ascii=ensure_ascii, indent=indent
+        data,
+        path,
+        encoding=encoding,
+        newline=newline,
+        ensure_ascii=ensure_ascii,
+        indent=indent,
+        trailing_newline=trailing_newline,
     )

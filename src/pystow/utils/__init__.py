@@ -106,6 +106,7 @@ from .safe_open import (
     write_json,
     write_yaml,
 )
+from .testing import requires_package
 from ..constants import README_TEXT, TimeoutHint
 
 if TYPE_CHECKING:
@@ -188,6 +189,7 @@ __all__ = [
     "read_zipfile_csv",
     "read_zipfile_rdf",
     "read_zipfile_xml",
+    "requires_package",
     "reyield",
     "safe_open",
     "safe_open_dict_reader",
