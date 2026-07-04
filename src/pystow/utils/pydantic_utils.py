@@ -180,7 +180,7 @@ def model_dump_yaml(
     exclude: set[str] | None = None,
     allow_unicode: bool = True,
     indent: int | None = None,
-    sort_keys: bool = False,,
+    sort_keys: bool = False,
 ) -> str:
     """Dump the model as YAML string."""
     import yaml
@@ -209,7 +209,13 @@ def write_pydantic_yaml(
         mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset, exclude=exclude
     )
     write_yaml(
-        data, path, encoding=encoding, newline=newline, indent=indent, allow_unicode=allow_unicode, sort_keys=sort_keys
+        data,
+        path,
+        encoding=encoding,
+        newline=newline,
+        indent=indent,
+        allow_unicode=allow_unicode,
+        sort_keys=sort_keys,
     )
 
 
