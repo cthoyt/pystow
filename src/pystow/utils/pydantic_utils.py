@@ -196,8 +196,9 @@ def write_pydantic_yaml(
     path: str | Path | TextIO,
     *,
     exclude: set[str] | None = None,
-    exclude_none: bool = False,
-    exclude_unset: bool = False,
+    exclude_none: bool = True,
+    exclude_unset: bool = True,
+    exclude_defaults: bool = True,
     encoding: str | None = None,
     newline: str | None = None,
     indent: int | None = None,
@@ -206,7 +207,11 @@ def write_pydantic_yaml(
 ) -> None:
     """Write a model to a YAML file."""
     data = model.model_dump(
-        mode="json", exclude_none=exclude_none, exclude_unset=exclude_unset, exclude=exclude
+        mode="json",
+        exclude_none=exclude_none,
+        exclude_unset=exclude_unset,
+        exclude_defaults=exclude_defaults,
+        exclude=exclude,
     )
     write_yaml(
         data,
@@ -223,9 +228,10 @@ def write_pydantic_json(
     model: pydantic.BaseModel,
     path: str | Path | TextIO,
     *,
-    exclude_none: bool = False,
-    exclude_unset: bool = False,
-    exclude_defaults: bool = False,
+    exclude: set[str] | None = None,
+    exclude_none: bool = True,
+    exclude_unset: bool = True,
+    exclude_defaults: bool = True,
     encoding: str | None = None,
     newline: str | None = None,
     ensure_ascii: bool = False,
@@ -235,6 +241,7 @@ def write_pydantic_json(
     """Write a model to a JSON file."""
     data = model.model_dump(
         mode="json",
+        exclude=exclude,
         exclude_none=exclude_none,
         exclude_unset=exclude_unset,
         exclude_defaults=exclude_defaults,
