@@ -63,9 +63,8 @@ def mock_home() -> Iterator[Path]:
 
     :yield: The path to the temporary directory.
     """
-    with tempfile.TemporaryDirectory() as directory:
-        with mock_envvar(PYSTOW_HOME_ENVVAR, directory):
-            yield Path(directory)
+    with tempfile.TemporaryDirectory() as directory, mock_envvar(PYSTOW_HOME_ENVVAR, directory):
+        yield Path(directory)
 
 
 def getenv_path(envvar: str, default: Path, ensure_exists: bool = True) -> Path:

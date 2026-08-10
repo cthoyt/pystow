@@ -68,6 +68,7 @@ def _check_output(*args: str, directory: Path | None = None) -> GitReturn:
         cwd=None if directory is None else directory.as_posix(),
         capture_output=True,
         text=True,
+        check=False,
     )
 
 

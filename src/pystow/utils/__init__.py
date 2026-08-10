@@ -917,24 +917,24 @@ def get_soup(
     return soup
 
 
-ArchiveType = TypeVar("ArchiveType", contravariant=True)
-ArchiveInfo = TypeVar("ArchiveInfo", covariant=True)
-Predicate: TypeAlias = Callable[[ArchiveInfo], bool]
+ArchiveType_contra = TypeVar("ArchiveType_contra", contravariant=True)
+ArchiveInfo_co = TypeVar("ArchiveInfo_co", covariant=True)
+Predicate: TypeAlias = Callable[[ArchiveInfo_co], bool]
 
 
-class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
+class ArchivedFileIterator(Protocol[ArchiveType_contra, ArchiveInfo_co]):
     """A protocol for opening files in an archive."""
 
     # docstr-coverage:excused `overload`
     @overload
     def __call__(
         self,
-        path: str | Path | ArchiveType,
+        path: str | Path | ArchiveType_contra,
         *,
         representation: Literal["binary"] = ...,
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
-        keep: Predicate[ArchiveInfo] | None = ...,
+        keep: Predicate[ArchiveInfo_co] | None = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
         encoding: str | None = ...,
         newline: str | None = ...,
@@ -944,12 +944,12 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
     @overload
     def __call__(
         self,
-        path: str | Path | ArchiveType,
+        path: str | Path | ArchiveType_contra,
         *,
         representation: Literal["text"] = ...,
         progress: bool = ...,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
-        keep: Predicate[ArchiveInfo] | None = ...,
+        keep: Predicate[ArchiveInfo_co] | None = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
         encoding: str | None = ...,
         newline: str | None = ...,
@@ -957,12 +957,12 @@ class ArchivedFileIterator(Protocol[ArchiveType, ArchiveInfo]):
 
     def __call__(
         self,
-        path: str | Path | ArchiveType,
+        path: str | Path | ArchiveType_contra,
         *,
         representation: Representation = ...,
         progress: bool = True,
         tqdm_kwargs: Mapping[str, Any] | None = ...,
-        keep: Predicate[ArchiveInfo] | None = ...,
+        keep: Predicate[ArchiveInfo_co] | None = ...,
         open_kwargs: Mapping[str, Any] | None = None,
         encoding: str | None = ...,
         newline: str | None = ...,
@@ -1040,8 +1040,8 @@ def safe_tarfile_open(
 ) -> Generator[tarfile.TarFile, None, None]:
     """Open a tar archive safely."""
     if isinstance(tar_file, str | Path):
-        with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as tar_file:
-            yield tar_file
+        with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as yv:
+            yield yv
     else:
         yield tar_file
 
@@ -1168,8 +1168,8 @@ def safe_zipfile_open(
 ) -> Generator[zipfile.ZipFile, None, None]:
     """Open a zip archive safely."""
     if isinstance(zip_file, str | Path):
-        with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as zip_file:
-            yield zip_file
+        with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as yv:
+            yield yv
     else:
         yield zip_file
 
@@ -1225,13 +1225,13 @@ def _keep_zip_info_csv(zip_info: zipfile.ZipInfo) -> bool:
 
 
 def _iter_archived_csvs(
-    path: str | Path | ArchiveType,
+    path: str | Path | ArchiveType_contra,
     *,
     progress: bool = True,
     tqdm_kwargs: Mapping[str, Any] | None = None,
-    keep: Predicate[ArchiveInfo] | None = None,
+    keep: Predicate[ArchiveInfo_co] | None = None,
     return_type: ReturnType = "sequence",
-    iter_files: ArchivedFileIterator[ArchiveType, ArchiveInfo],
+    iter_files: ArchivedFileIterator[ArchiveType_contra, ArchiveInfo_co],
     max_line_length: int | None = None,
     encoding: str | None = None,
 ) -> Iterable[Sequence[str]] | Iterable[dict[str, Any]]:

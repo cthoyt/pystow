@@ -498,7 +498,7 @@ def ensure_open(
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
-    mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+    mode: Literal["r", "rt", "w", "wt", "rb", "wb"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[StringIO | BytesIO, None, None]:
     """Ensure a file is downloaded and open it.
@@ -576,7 +576,7 @@ def ensure_open_zip(
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
-    mode: Literal["r", "w", "rb", "wb"] | Literal["rt", "wt"] = "r",
+    mode: Literal["r", "w", "rb", "wb", "rt", "wt"] = "r",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
 ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:

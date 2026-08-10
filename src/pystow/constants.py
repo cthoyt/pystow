@@ -75,4 +75,4 @@ JSON = Any
 Provider = Callable[..., None]
 
 #: A hint for timeout in :func:`requests.get`
-TimeoutHint: TypeAlias = int | float | None | tuple[float | int, float | int]
+TimeoutHint: TypeAlias = int | float | tuple[float | int, float | int] | None
