@@ -358,9 +358,7 @@ def safe_open_dict_reader(
 
 def is_url(s: str | Path | TextIO | Any) -> TypeGuard[str]:
     """Check if the object is a URL."""
-    if isinstance(s, str) and (s.startswith("http://") or s.startswith("https://")):
-        return True
-    return False
+    return bool(isinstance(s, str) and (s.startswith(("http://", "https://"))))
 
 
 # docstr-coverage:excused `overload`

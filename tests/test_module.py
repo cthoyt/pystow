@@ -296,9 +296,8 @@ class TestJoin(unittest.TestCase):
 
     def test_open_fail(self) -> None:
         """Test opening a missing file."""
-        with self.assertRaises(FileNotFoundError):
-            with pystow.open("nope", name="nope"):
-                pass
+        with self.assertRaises(FileNotFoundError), pystow.open("nope", name="nope"):
+            pass
 
         with self.assertRaises(FileNotFoundError):
             pystow.load_json("nope", name="nope")

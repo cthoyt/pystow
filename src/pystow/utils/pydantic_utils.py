@@ -6,8 +6,9 @@ import logging
 import typing
 from collections.abc import Callable, Generator, Iterable, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
+from typing import Any, Literal, TextIO, TypeAlias
 
+import pydantic
 from tqdm import tqdm
 
 from .safe_open import (
@@ -19,9 +20,6 @@ from .safe_open import (
     write_json,
     write_yaml,
 )
-
-if TYPE_CHECKING:
-    import pydantic
 
 __all__ = [
     "ModelValidateFailureAction",

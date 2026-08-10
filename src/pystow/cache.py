@@ -36,7 +36,7 @@ X = TypeVar("X")
 Getter = Callable[[], X]
 
 
-class Cached(Generic[X], ABC):
+class Cached(ABC, Generic[X]):
     """Caching decorator."""
 
     def __init__(

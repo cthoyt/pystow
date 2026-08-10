@@ -379,9 +379,8 @@ class TestUtils(unittest.TestCase):
         with self.assertRaises(ValueError):
             with safe_open(TEST_TXT, operation="nope") as _file:  # type:ignore
                 pass
-        with self.assertRaises(TypeError):
-            with safe_open(5) as _file:  # type:ignore
-                pass
+        with self.assertRaises(TypeError), safe_open(5) as _file:  # type:ignore
+            pass
         with self.assertRaises(ValueError):
             with safe_open(TEST_TXT, representation="binary", encoding="utf-8") as _file:
                 pass
@@ -400,9 +399,8 @@ class TestUtils(unittest.TestCase):
                     pass
 
         url = "https://zenodo.org/records/15504009/files/startup.sh"
-        with self.assertRaises(ValueError):
-            with safe_open(url, operation="write") as _file:
-                pass
+        with self.assertRaises(ValueError), safe_open(url, operation="write") as _file:
+            pass
 
     def test_safe_open_binary(self) -> None:
         """Test safe open in binary mode."""
@@ -441,15 +439,17 @@ class TestUtils(unittest.TestCase):
                         TEST_TXT_CONTENT, file.read(), msg=f"failed to read text from {path}"
                     )
 
-                with safe_open(
-                    path, encoding=encoding, representation="text", newline=newline
-                ) as passthrough:
-                    with safe_open(passthrough) as file:
-                        self.assertEqual(
-                            TEST_TXT_CONTENT,
-                            file.read(),
-                            msg=f"failed to read text from {path} in a passthrough scenario",
-                        )
+                with (
+                    safe_open(
+                        path, encoding=encoding, representation="text", newline=newline
+                    ) as passthrough,
+                    safe_open(passthrough) as file,
+                ):
+                    self.assertEqual(
+                        TEST_TXT_CONTENT,
+                        file.read(),
+                        msg=f"failed to read text from {path} in a passthrough scenario",
+                    )
 
     def test_safe_open_url_text(self) -> None:
         """Test safe open in URL mode."""
