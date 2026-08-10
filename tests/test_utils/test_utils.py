@@ -384,21 +384,21 @@ class TestUtils(unittest.TestCase):
             pass
         with (
             self.assertRaises(ValueError),
-            safe_open(TEST_TXT, representation="binary", newline="") as _file,
+            safe_open(TEST_TXT, representation="binary", newline="") as _file_binary,
         ):
             pass
 
         with (
-            safe_open(TEST_TXT, representation="binary") as passthrough,
+            safe_open(TEST_TXT, representation="binary") as passthrough_binary,
             self.assertRaises(ValueError),
-            safe_open(passthrough, representation="text") as _file,
+            safe_open(passthrough_binary, representation="text") as _file,
         ):
             pass
 
         with (
-            safe_open(TEST_TXT, representation="text") as passthrough,
+            safe_open(TEST_TXT, representation="text") as passthrough_text,
             self.assertRaises(ValueError),
-            safe_open(passthrough, representation="binary") as _file,
+            safe_open(passthrough_text, representation="binary") as _file_binary,
         ):
             pass
 
