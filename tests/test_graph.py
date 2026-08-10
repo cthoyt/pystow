@@ -27,7 +27,7 @@ class TestGraph(unittest.TestCase):
         ]
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(TypeError):
                 build_graph_cache(edges, tmpdir)  # type:ignore[arg-type]
 
             paths = GraphCachePaths.from_directory(tmpdir)
