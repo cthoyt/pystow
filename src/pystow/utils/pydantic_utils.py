@@ -64,8 +64,8 @@ def iter_pydantic_jsonl(
     }
     if tqdm_kwargs is not None:
         _tqdm_kwargs.update(tqdm_kwargs)
-    with _open_read_text(file, encoding=encoding, newline=newline) as file:
-        for i, line in enumerate(tqdm(file, disable=not progress, **_tqdm_kwargs)):
+    with _open_read_text(file, encoding=encoding, newline=newline) as file_:
+        for i, line in enumerate(tqdm(file_, disable=not progress, **_tqdm_kwargs)):
             try:
                 yv = model_cls.model_validate_json(line.strip())
             except pydantic.ValidationError:
@@ -92,9 +92,9 @@ def write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with _open_write_text(file) as file:
+    with _open_write_text(file) as file_:
         for model in models:
-            file.write(model.model_dump_json(**kwargs) + "\n")
+            file_.write(model.model_dump_json(**kwargs) + "\n")
 
 
 def stream_write_pydantic_jsonl(
@@ -104,9 +104,9 @@ def stream_write_pydantic_jsonl(
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
     kwargs.setdefault("exclude_defaults", True)
-    with _open_write_text(file) as file:
+    with _open_write_text(file) as file_:
         for model in models:
-            file.write(model.model_dump_json(**kwargs) + "\n")
+            file_.write(model.model_dump_json(**kwargs) + "\n")
             yield model
 
 
