@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 #: A type hint for something that can be passed to the
 #: `version` argument of Module.join, Module.ensure, etc.
-VersionHint: TypeAlias = None | str | Callable[[], str | None]
+VersionHint: TypeAlias = str | Callable[[], str | None] | None
 
 
 class Module:
@@ -298,7 +298,7 @@ class Module:
         version: VersionHint = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
-        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        mode: Literal["r", "rt", "w", "wt", "rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
         beautiful_soup_kwargs: Mapping[str, Any] | None = None,
     ) -> bs4.BeautifulSoup:
@@ -504,7 +504,7 @@ class Module:
         version: VersionHint = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
-        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        mode: Literal["r", "rt", "w", "wt", "rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
     ) -> Generator[StringIO | BytesIO, None, None]:
         """Ensure a file is downloaded and open it.
@@ -589,7 +589,7 @@ class Module:
         self,
         *subkeys: str,
         name: str,
-        mode: Literal["r", "rt", "w", "wt"] | Literal["rb", "wb"] = "r",
+        mode: Literal["r", "rt", "w", "wt", "rb", "wb"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
         ensure_exists: bool = False,
     ) -> Generator[StringIO | BytesIO, None, None]:
@@ -1982,7 +1982,7 @@ class Module:
             yield conn
 
 
-def _clean_csv_kwargs(read_csv_kwargs: None | Mapping[str, Any]) -> dict[str, Any]:
+def _clean_csv_kwargs(read_csv_kwargs: Mapping[str, Any] | None) -> dict[str, Any]:
     read_csv_kwargs = {} if read_csv_kwargs is None else dict(read_csv_kwargs)
     read_csv_kwargs.setdefault("sep", "\t")
     return read_csv_kwargs

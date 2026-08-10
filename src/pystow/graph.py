@@ -151,7 +151,7 @@ def build_graph_cache(
     :returns: A graph cache object, which can access the written binaries quickly
     """
     if not callable(edges):
-        raise ValueError(
+        raise TypeError(
             "`edges` argument must be callable. This is because construction "
             "takes three passes, so it's better that a function that can iterate "
             "is given, to avoid needing to load into memory. If you already have "

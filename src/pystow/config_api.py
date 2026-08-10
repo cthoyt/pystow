@@ -163,7 +163,7 @@ def get_config(
     return _cast(rv, dtype)
 
 
-def _cast(rv: Any, dtype: None | Callable[..., Any]) -> Any:
+def _cast(rv: Any, dtype: Callable[..., Any] | None) -> Any:
     if not isinstance(rv, str):  # if it's not a string, it doesn't need munging
         return rv
     if dtype in (None, str):  # no munging necessary

@@ -201,8 +201,7 @@ def search_code(
     page = 1
     if page_size is None:
         page_size = MAXIMUM_SEARCH_PAGE_SIZE
-    if page_size > MAXIMUM_SEARCH_PAGE_SIZE:
-        page_size = MAXIMUM_SEARCH_PAGE_SIZE
+    page_size = min(page_size, MAXIMUM_SEARCH_PAGE_SIZE)
 
     inner_tqdm = partial(tqdm, disable=not inner_progress, unit="record", leave=False)
 

@@ -26,8 +26,8 @@ __all__ = [
     "get_mode_pair",
 ]
 
-Reader: TypeAlias = "_csv._reader"
-Writer: TypeAlias = "_csv._writer"
+Reader: TypeAlias = "_csv.Reader"
+Writer: TypeAlias = "_csv.Writer"
 
 #: A human-readable flag for how to open a file.
 Operation: TypeAlias = Literal["read", "write"]

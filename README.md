@@ -35,13 +35,13 @@ Get a directory for your application.
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.join("pykeen")
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pystow.join('pykeen', 'experiments')
+pykeen_experiments_directory = pystow.join("pykeen", "experiments")
 
 # You can go as deep as you want
-pykeen_deep_directory = pystow.join('pykeen', 'experiments', 'a', 'b', 'c')
+pykeen_deep_directory = pystow.join("pykeen", "experiments", "a", "b", "c")
 ```
 
 If you reuse the same directory structure a lot, you can save them in a module:
@@ -55,10 +55,10 @@ pykeen_module = pystow.module("pykeen")
 assert pystow.join("pykeen") == pystow.module("pykeen").base
 
 # Get a subdirectory (as a pathlib.Path) for ~/.data/pykeen/experiments
-pykeen_experiments_directory = pykeen_module.join('experiments')
+pykeen_experiments_directory = pykeen_module.join("experiments")
 
 # You can go as deep as you want past the original "pykeen" module
-pykeen_deep_directory = pykeen_module.join('experiments', 'a', 'b', 'c')
+pykeen_deep_directory = pykeen_module.join("experiments", "a", "b", "c")
 ```
 
 Get a file path for your application by adding the `name` keyword argument. This
@@ -69,7 +69,7 @@ create. This works with `pystow` or any module you create with `pystow.module`.
 import pystow
 
 # Get a directory (as a pathlib.Path) for ~/.data/indra/database.tsv
-indra_database_path = pystow.join('indra', 'database', name='database.tsv')
+indra_database_path = pystow.join("indra", "database", name="database.tsv")
 ```
 
 Ensure a file from the internet is available in your application's directory:
@@ -77,8 +77,8 @@ Ensure a file from the internet is available in your application's directory:
 ```python
 import pystow
 
-url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-path = pystow.ensure('pykeen', 'datasets', 'nations', url=url)
+url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
+path = pystow.ensure("pykeen", "datasets", "nations", url=url)
 ```
 
 Ensure a tabular data file from the internet and load it for usage (requires
@@ -88,8 +88,8 @@ Ensure a tabular data file from the internet and load it for usage (requires
 import pystow
 import pandas as pd
 
-url = 'https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt'
-df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url)
+url = "https://raw.githubusercontent.com/pykeen/pykeen/master/src/pykeen/datasets/nations/test.txt"
+df: pd.DataFrame = pystow.ensure_csv("pykeen", "datasets", "nations", url=url)
 ```
 
 Ensure a comma-separated tabular data file from the internet and load it for
@@ -99,8 +99,10 @@ usage (requires `pip install pandas`):
 import pystow
 import pandas as pd
 
-url = 'https://raw.githubusercontent.com/cthoyt/pystow/main/tests/resources/test_1.csv'
-df: pd.DataFrame = pystow.ensure_csv('pykeen', 'datasets', 'nations', url=url, read_csv_kwargs=dict(sep=","))
+url = "https://raw.githubusercontent.com/cthoyt/pystow/main/tests/resources/test_1.csv"
+df: pd.DataFrame = pystow.ensure_csv(
+    "pykeen", "datasets", "nations", url=url, read_csv_kwargs=dict(sep=",")
+)
 ```
 
 Ensure a RDF file from the internet and load it for usage (requires
@@ -110,8 +112,8 @@ Ensure a RDF file from the internet and load it for usage (requires
 import pystow
 import rdflib
 
-url = 'https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz'
-rdf_graph: rdflib.Graph = pystow.ensure_rdf('rhea', url=url)
+url = "https://ftp.expasy.org/databases/rhea/rdf/rhea.rdf.gz"
+rdf_graph: rdflib.Graph = pystow.ensure_rdf("rhea", url=url)
 ```
 
 Also see `pystow.ensure_excel()`, `pystow.ensure_rdf()`,
@@ -150,10 +152,10 @@ import pystow
 
 # Only for demonstration purposes. You should set environment
 # variables either with your .bashrc or in the command line REPL.
-os.environ['PYSTOW_NAME'] = 'mydata'
+os.environ["PYSTOW_NAME"] = "mydata"
 
 # Get a directory (as a pathlib.Path) for ~/mydata/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.join("pykeen")
 ```
 
 If you want to specify a completely custom directory that isn't relative to your
@@ -167,10 +169,10 @@ import pystow
 
 # Only for demonstration purposes. You should set environment
 # variables either with your .bashrc or in the command line REPL.
-os.environ['PYSTOW_HOME'] = '/usr/local/'
+os.environ["PYSTOW_HOME"] = "/usr/local/"
 
 # Get a directory (as a pathlib.Path) for /usr/local/pykeen
-pykeen_directory = pystow.join('pykeen')
+pykeen_directory = pystow.join("pykeen")
 ```
 
 Note: if you set `PYSTOW_HOME`, then `PYSTOW_NAME` is disregarded.
