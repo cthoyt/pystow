@@ -15,9 +15,7 @@ import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
 from pathlib import Path
-from typing import Any, BinaryIO, Literal, TextIO, TypeGuard, cast, overload
-
-from typing_extensions import Never
+from typing import Any, BinaryIO, Literal, Never, TextIO, TypeGuard, cast, overload
 
 from .io_typing import (
     _MODE_TO_SIMPLE,
