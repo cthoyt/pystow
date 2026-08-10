@@ -5,11 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, TypeAlias
+from typing import Literal, Self, TypeAlias
 
 import numpy as np
 from tqdm import tqdm
-from typing_extensions import Self
 
 from .utils import safe_open
 
