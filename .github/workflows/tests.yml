@@ -25,12 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.14", "3.10" ]
+        python-version: [ "3.14", "3.11" ]
         tox-command: [  "lint", "pyroma", "mypy" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -45,14 +47,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # We only test documentation on the latest version
-        # sphinx 8.0 / sphinx-rtd-theme 3.0 discontinued Python 3.10 support
-        # a year early, which prompted re-thinking about this.
         python-version: [ "3.14" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -66,7 +67,7 @@ jobs:
       - name: Check documentation build with Sphinx
         run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docs-test
 
-      # Check all markdown files are properly formatted
+      # Check all Markdown files are properly formatted
       # inspired by https://github.com/astral-sh/uv/blob/98523e2014e9a5c69706623344026d76296e178f/.github/workflows/ci.yml#L67C1-L70C61
       - name: Check markdown formatting
         run: |
@@ -80,11 +81,13 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
-        python-version: [ "3.14", "3.10" ]
+        python-version: [ "3.14", "3.11" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -95,7 +98,7 @@ jobs:
         run:
           uvx -p ${{ matrix.python-version }} --with tox-uv tox -e doctests
       - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v4
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         if: success()
         with:
           file: coverage.xml
