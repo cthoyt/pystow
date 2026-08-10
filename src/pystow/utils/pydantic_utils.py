@@ -6,9 +6,8 @@ import logging
 import typing
 from collections.abc import Callable, Generator, Iterable, Mapping
 from pathlib import Path
-from typing import Any, Literal, TextIO, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
 
-import pydantic
 from tqdm import tqdm
 
 from .safe_open import (
@@ -20,6 +19,9 @@ from .safe_open import (
     write_json,
     write_yaml,
 )
+
+if TYPE_CHECKING:
+    import pydantic
 
 __all__ = [
     "ModelValidateFailureAction",
@@ -129,6 +131,8 @@ def iter_pydantic_tsv(
     failure_action: ModelValidateFailureAction = "skip",
 ) -> Generator[BaseModelVar, None, None]:
     """Read models from a TSV file, iteratively."""
+    import pydantic
+
     with safe_open_dict_reader(path) as reader:
         records: Iterable[dict[str, Any]]
         if process is None:
