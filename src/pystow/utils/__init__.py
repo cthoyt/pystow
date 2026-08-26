@@ -151,6 +151,7 @@ __all__ = [
     "get_np_io",
     "get_offending_hexdigests",
     "get_soup",
+    "get_xml_root",
     "getenv_path",
     "gunzip",
     "gzip_compress",
@@ -161,6 +162,7 @@ __all__ = [
     "iter_tarred_files",
     "iter_zipped_csvs",
     "iter_zipped_files",
+    "iterparse_xml",
     "mkdir",
     "mock_envvar",
     "mock_home",
@@ -185,6 +187,7 @@ __all__ = [
     "read_rdf",
     "read_tarfile_csv",
     "read_tarfile_xml",
+    "read_xml",
     "read_zip_np",
     "read_zipfile_csv",
     "read_zipfile_rdf",
@@ -221,7 +224,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
 
 #: Backwards compatible name
 UnexpectedDirectory = UnexpectedDirectoryError
@@ -552,6 +554,41 @@ def write_zipfile_xml(
     kwargs.setdefault("pretty_print", True)
     with open_zipfile(path, inner_path, operation="write", representation="binary") as file:
         file.write(etree.tostring(element_tree, **kwargs))
+
+
+def read_xml(
+    path: str | Path, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
+) -> lxml.etree.ElementTree:
+    """Read an XML element tree.
+
+    :param path: The path to an XML file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
+
+    :returns: An element tree
+    """
+    from lxml import etree
+
+    with safe_open(path, representation="binary") as file:
+        return etree.parse(file, **kwargs)
+
+
+def get_xml_root(path: str | Path, **kwargs: Any) -> lxml.etree.Element:
+    """Read an XML element tree then get the root element.
+
+    :param path: The path to an XML file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
+
+    :returns: The root element from the element tree
+    """
+    return read_xml(path, **kwargs).getroot()
+
+
+def iterparse_xml(path: str | Path, tag: str | tuple[str, ...], **kwargs: Any) -> Iterable[Any]:
+    """Parse the given tags, iteratively."""
+    from lxml import etree
+
+    with safe_open(path, representation="binary") as file:
+        yield from etree.iterparse(file, tag=tag, **kwargs)
 
 
 def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:

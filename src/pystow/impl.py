@@ -1589,12 +1589,10 @@ class Module:
             If you have lots of files to read in the same archive, it's better just to
             unzip first.
         """
-        from lxml import etree
-
         path = self.ensure(
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
-        return etree.parse(path, **(parse_kwargs or {}))
+        return utils.read_xml(path, **(parse_kwargs or {}))
 
     def load_xml(
         self,
