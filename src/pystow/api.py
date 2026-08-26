@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     import sentence_transformers
 
 __all__ = [
+    "DEFAULT_SENTENCE_TRANSFORMER_NAME",
     "dump_df",
     "dump_json",
     "dump_pickle",
@@ -2064,12 +2065,18 @@ def ensure_nltk(resource: str = "stopwords") -> tuple[Path, bool]:
     return directory, result
 
 
+#: The default sentence transformer model
+DEFAULT_SENTENCE_TRANSFORMER_NAME = "all-MiniLM-L6-v2"
+
+
 def get_sentence_transformer(
-    name: str | None = None, **kwargs: Any
+    name: str | sentence_transformers.SentenceTransformer | None = None, **kwargs: Any
 ) -> sentence_transformers.SentenceTransformer:
     """Get a sentence transformer.
 
-    :param name: The name of the sentence transformer model on HuggingFace
+    :param name: The name of the sentence transformer model on HuggingFace. If none is
+        passed, then :data:`DEFAULT_SENTENCE_TRANSFORMER_NAME` is used. If a
+        pre-instantiated model is passed, then it is passed through.
     :param kwargs: Keyword arguments to pass to
         :class:`sentence_transformers.SentenceTransformer`.
 
@@ -2079,7 +2086,10 @@ def get_sentence_transformer(
     from sentence_transformers import SentenceTransformer
 
     if name is None:
-        name = "all-MiniLM-L6-v2"
+        name = DEFAULT_SENTENCE_TRANSFORMER_NAME
+    elif not isinstance(name, str):
+        # allow a pre-loaded model to go through
+        return name
 
     directory = join("sentence-transformers", name)
     model = SentenceTransformer(name, cache_folder=directory.as_posix(), **kwargs)
