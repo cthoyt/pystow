@@ -18,6 +18,7 @@ import requests
 from lxml import etree
 from requests_file import FileAdapter
 
+from pystow import utils
 from pystow.github import get_default_branch, get_repository
 from pystow.utils import (
     DownloadError,
@@ -74,6 +75,7 @@ TEST_TXT_LZMA = RESOURCES.joinpath("test.txt.xz")
 TEST_TXT_ZSTD = RESOURCES.joinpath("test.txt.zst")
 TEST_TXT_VERBOSE_MD5 = RESOURCES.joinpath("test_verbose.txt.md5")
 TEST_TXT_WRONG_MD5 = RESOURCES.joinpath("test_wrong.txt.md5")
+TEST_XML = RESOURCES.joinpath("test.xml")
 
 TEST_PATHS = [TEST_TXT, TEST_TXT_GZ, TEST_TXT_BZ2, TEST_TXT_LZMA, TEST_TXT_ZSTD]
 
@@ -218,6 +220,14 @@ class TestUtils(unittest.TestCase):
                     etree.tostring(tree, pretty_print=True),
                     etree.tostring(new_tree, pretty_print=True),
                 )
+
+    def test_read_xml(self) -> None:
+        """Test reading XML."""
+        root = utils.get_xml_root(TEST_XML)
+        self.assertEqual(2, len(root), msg=f"elements: {list(root)}")
+
+        elements = list(utils.iterparse_xml(TEST_XML, tag="element"))
+        self.assertEqual(2, len(elements), msg=f"elements: {elements}")
 
     def test_numpy_io(self) -> None:
         """Test IO with numpy."""
