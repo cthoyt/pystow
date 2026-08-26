@@ -38,7 +38,7 @@ class TestExposed(unittest.TestCase):
         """Set up the test case."""
         self.addTypeEqualityFunc(pd.DataFrame, _df_equal)  # type:ignore[arg-type]
         self.addTypeEqualityFunc(rdflib.Graph, _rdf_equal)  # type:ignore[arg-type]
-        self.addTypeEqualityFunc(etree.ElementTree, _etree_equal)  # type:ignore[arg-type]
+        self.addTypeEqualityFunc(type(etree.ElementTree(etree.Element("root"))), _etree_equal)  # type:ignore[arg-type]
 
     def assert_io(
         self, obj: X, extension: str, dump: Callable[..., None], load: Callable[..., X]
