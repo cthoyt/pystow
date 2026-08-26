@@ -556,8 +556,16 @@ def write_zipfile_xml(
         file.write(etree.tostring(element_tree, **kwargs))
 
 
-def read_xml(path: str | Path, **kwargs: Any) -> lxml.etree.ElementTree:
-    """Read an XML element tree."""
+def read_xml(
+    path: str | Path, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
+) -> lxml.etree.ElementTree:
+    """Read an XML element tree.
+
+    :param path: The path to an XML file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
+
+    :returns: An element tree
+    """
     from lxml import etree
 
     with safe_open(path, representation="binary") as file:
@@ -565,7 +573,13 @@ def read_xml(path: str | Path, **kwargs: Any) -> lxml.etree.ElementTree:
 
 
 def get_xml_root(path: str | Path, **kwargs: Any) -> lxml.etree.Element:
-    """Read an XML element tree then get the root element."""
+    """Read an XML element tree then get the root element.
+
+    :param path: The path to an XML file
+    :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
+
+    :returns: The root element from the element tree
+    """
     return read_xml(path, **kwargs).getroot()
 
 
