@@ -146,7 +146,7 @@ def get_name() -> str:
     """Get the PyStow home directory name.
 
     :returns: The name of the pystow home directory, either loaded from the
-        :data:`PYSTOW_NAME_ENVVAR`` environment variable or given by the default value
+        :data:`PYSTOW_NAME_ENVVAR` environment variable or given by the default value
         :data:`PYSTOW_NAME_DEFAULT`.
     """
     return os.getenv(PYSTOW_NAME_ENVVAR, default=PYSTOW_NAME_DEFAULT)

@@ -76,7 +76,7 @@ def get_name() -> str:
     """Get the config home directory name.
 
     :returns: The name of the pystow home directory, either loaded from the
-        :data:`CONFIG_NAME_ENVVAR`` environment variable or given by the default value
+        :data:`CONFIG_NAME_ENVVAR` environment variable or given by the default value
         :data:`CONFIG_NAME_DEFAULT`.
     """
     return os.getenv(CONFIG_NAME_ENVVAR, default=CONFIG_NAME_DEFAULT)
