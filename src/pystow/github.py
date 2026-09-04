@@ -249,4 +249,5 @@ def get_contents(owner: str, repo: str, path: str, **kwargs: Any) -> list[dict[s
         headers={"X-GitHub-Api-Version": "2026-03-10"},
         **kwargs,
     )
-    return res
+    res.raise_for_status()
+    return res.json()
