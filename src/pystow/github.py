@@ -250,4 +250,4 @@ def get_contents(owner: str, repo: str, path: str, **kwargs: Any) -> list[dict[s
         **kwargs,
     )
     res.raise_for_status()
-    return res.json()
+    return cast(list[dict[str, Any]], res.json())
