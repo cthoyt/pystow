@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 __all__ = [
     "MAXIMUM_SEARCH_PAGE_SIZE",
     "delete_branch",
+    "get_contents",
     "get_contributions",
     "get_default_branch",
     "get_issue",
@@ -80,6 +81,7 @@ def _request_github(
     timeout: TimeoutHint = None,
     require_token: bool = False,
     preview: bool = False,
+    headers: dict[str, str] | None = None,
     **kwargs: Any,
 ) -> requests.Response:
     """Make a POST request to the GitHub API."""
@@ -87,8 +89,10 @@ def _request_github(
 
     path = path.lstrip("/")
     url = f"https://api.github.com/{path}"
-    headers = get_headers(token=token, raise_on_missing=require_token, preview=preview)
-    return requests.request(method, url, headers=headers, params=params, timeout=timeout, **kwargs)
+    headers_ = get_headers(token=token, raise_on_missing=require_token, preview=preview)
+    if headers:
+        headers_.update(headers)
+    return requests.request(method, url, headers=headers_, params=params, timeout=timeout, **kwargs)
 
 
 def post_pull(
@@ -236,3 +240,14 @@ def _search_code_helper(page_size: int, page: int, query: str) -> requests.Respo
             "q": query,
         },
     )
+
+
+def get_contents(owner: str, repo: str, path: str, **kwargs: Any) -> list[dict[str, Any]]:
+    """List all files in a repository in the given path."""
+    res = requests_get_github(
+        f"repos/{owner}/{repo}/contents/{path}",
+        headers={"X-GitHub-Api-Version": "2026-03-10"},
+        **kwargs,
+    )
+    res.raise_for_status()
+    return cast(list[dict[str, Any]], res.json())
