@@ -12,6 +12,7 @@ import pickle
 import shutil
 import tarfile
 import typing
+import warnings
 import zipfile
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from io import BytesIO
@@ -174,6 +175,7 @@ __all__ = [
     "read_pydantic_tsv",
     "read_pydantic_yaml",
     "read_rdf",
+    "read_rdflib",
     "read_tarfile_csv",
     "read_tarfile_xml",
     "read_xml",
@@ -203,6 +205,7 @@ __all__ = [
     "write_pydantic_json",
     "write_pydantic_jsonl",
     "write_pydantic_yaml",
+    "write_rdflib",
     "write_tarfile_csv",
     "write_tarfile_xml",
     "write_yaml",
@@ -738,6 +741,16 @@ def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
 
 
 def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
+    """Read an RDF file with :mod:`rdflib` via :func:`read_rdflib`."""
+    warnings.warn(
+        "use read_rdflib() instead - this new function has a more precise name",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return read_rdflib(path, **kwargs)
+
+
+def read_rdflib(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
     :param path: The path to the RDF file
@@ -751,6 +764,19 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     with safe_open(path, representation="binary", operation="read") as file:
         graph.parse(file, **kwargs)
     return graph
+
+
+def write_rdflib(
+    graph: rdflib.Graph, path: str | Path | IO[str] | IO[bytes], *, format: str | None = None
+) -> None:
+    """Write an RDF file with :mod:`rdflib`.
+
+    :param graph: The RDF graph
+    :param path: The path to the RDF file
+    :param format: The format to write the RDF to. Defaults to ttl
+    """
+    with safe_open(path, representation="binary", operation="write") as file:
+        graph.serialize(file, format=format or "ttl")
 
 
 def write_sql(df: pandas.DataFrame, name: str, path: str | Path, **kwargs: Any) -> None:

@@ -1769,7 +1769,7 @@ def ensure_rdf(
     :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle for
         fast loading?
     :param parse_kwargs: Keyword arguments to pass through to
-        :func:`pystow.utils.read_rdf` and transitively to :func:`rdflib.Graph.parse`.
+        :func:`pystow.utils.read_rdflib` and transitively to :func:`rdflib.Graph.parse`.
 
     :returns: An RDF graph
 
@@ -1826,7 +1826,7 @@ def load_rdf(
         the directory for this module.
     :param name: The name of the file to open
     :param parse_kwargs: Keyword arguments to pass through to
-        :func:`pystow.utils.read_rdf` and transitively to :func:`rdflib.Graph.parse`.
+        :func:`pystow.utils.read_rdflib` and transitively to :func:`rdflib.Graph.parse`.
 
     :returns: An RDF graph
     """
