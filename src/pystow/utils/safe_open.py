@@ -65,32 +65,7 @@ __all__ = [
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: IO[bytes],
-    *,
-    operation: Operation = ...,
-    representation: Representation = ...,
-    encoding: str | None = ...,
-) -> Generator[IO[bytes]]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: IO[str],
-    *,
-    operation: Operation = ...,
-    representation: Representation = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-) -> Generator[IO[str]]: ...
-
-
-# docstr-coverage:excused `overload`
-@typing.overload
-@contextlib.contextmanager
-def safe_open(
-    path: str | Path,
+    path: str | Path | IO[str] | IO[bytes],
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
@@ -103,7 +78,7 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path,
+    path: str | Path | IO[str] | IO[bytes],
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
@@ -159,9 +134,7 @@ def safe_open(  # noqa:C901
 
     elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
         if representation != "text":
-            raise ValueError(
-                "must specify `text` representation when passing through a text file-like object"
-            )
+            path = path.buffer
         yield path
 
     # io.BufferedIOBase covers the LZMA, BZ2, Gzip, and ZSTD file types
