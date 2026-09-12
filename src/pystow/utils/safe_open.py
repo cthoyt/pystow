@@ -167,7 +167,7 @@ def safe_open(  # noqa:C901
     # io.BufferedIOBase covers the LZMA, BZ2, Gzip, and ZSTD file types
     # as well as io.BufferedReader
     elif isinstance(path, typing.BinaryIO | io.BufferedIOBase):
-        with _wrap_if_needed(path, representation, encoding=encoding, newline=newline) as yp:
+        with _wrap_binary_if_needed(path, representation, encoding=encoding, newline=newline) as yp:
             yield yp
     else:
         raise TypeError(f"unsupported type for opening: {type(path)} - {path}")
@@ -326,7 +326,9 @@ def open_inner_zipfile(
     newline = ensure_sensible_newline(newline, representation=representation)
     with (
         zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file,
-        _wrap_if_needed(binary_file, representation, encoding=encoding, newline=newline) as yf,
+        _wrap_binary_if_needed(
+            binary_file, representation, encoding=encoding, newline=newline
+        ) as yf,
     ):
         yield yf
 
@@ -336,7 +338,7 @@ ZZ = typing.TypeVar("ZZ", bound=IO[bytes])
 
 @overload
 @contextlib.contextmanager
-def _wrap_if_needed(
+def _wrap_binary_if_needed(
     file: ZZ,
     representation: Literal["text"],
     *,
@@ -347,7 +349,7 @@ def _wrap_if_needed(
 
 @overload
 @contextlib.contextmanager
-def _wrap_if_needed(
+def _wrap_binary_if_needed(
     file: ZZ,
     representation: Literal["binary"],
     *,
@@ -357,7 +359,7 @@ def _wrap_if_needed(
 
 
 @contextlib.contextmanager
-def _wrap_if_needed(
+def _wrap_binary_if_needed(
     file: ZZ,
     representation: Representation,
     *,
