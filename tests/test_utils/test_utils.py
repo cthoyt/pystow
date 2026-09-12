@@ -422,13 +422,6 @@ class TestUtils(unittest.TestCase):
         ):
             pass
 
-        with (
-            safe_open(TEST_TXT, representation="text") as passthrough_text,
-            self.assertRaises(ValueError),
-            safe_open(passthrough_text, representation="binary") as _file_binary,
-        ):
-            pass
-
         url = "https://zenodo.org/records/15504009/files/startup.sh"
         with self.assertRaises(ValueError), safe_open(url, operation="write") as _file:
             pass
@@ -492,6 +485,18 @@ class TestUtils(unittest.TestCase):
                         TEST_TXT_CONTENT,
                         file.read(),
                         msg=f"failed to read text from {path} in a passthrough scenario",
+                    )
+
+                with (
+                    safe_open(
+                        path, encoding=encoding, representation="text", newline=newline
+                    ) as passthrough,
+                    safe_open(passthrough, representation="binary") as file,
+                ):
+                    self.assertEqual(
+                        TEST_TXT_CONTENT,
+                        file.read().decode("utf-8"),
+                        msg=f"failed to buffer text from {path} in a passthrough scenario",
                     )
 
     def test_safe_open_url_text(self) -> None:
