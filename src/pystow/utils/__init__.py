@@ -203,6 +203,7 @@ __all__ = [
     "write_pydantic_json",
     "write_pydantic_jsonl",
     "write_pydantic_yaml",
+    "write_rdflib",
     "write_tarfile_csv",
     "write_tarfile_xml",
     "write_yaml",
@@ -751,6 +752,19 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     with safe_open(path, representation="binary", operation="read") as file:
         graph.parse(file, **kwargs)
     return graph
+
+
+def write_rdflib(
+    graph: rdflib.Graph, path: str | Path | IO[str] | IO[bytes], *, format: str | None = None
+) -> None:
+    """Write an RDF file with :mod:`rdflib`.
+
+    :param graph: The RDF graph
+    :param path: The path to the RDF file
+    :param format: The format to write the RDF to. Defaults to ttl
+    """
+    with safe_open(path, representation="binary", operation="write") as file:
+        graph.serialize(file, format=format or "ttl")
 
 
 def write_sql(df: pandas.DataFrame, name: str, path: str | Path, **kwargs: Any) -> None:

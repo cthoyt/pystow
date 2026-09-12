@@ -249,14 +249,23 @@ class TestUtils(unittest.TestCase):
         graph = rdflib.Graph()
         graph.add(t)
 
+        def _test_equal(gg: rdflib.Graph) -> None:
+            records = list(gg.query("SELECT ?s ?p ?o WHERE {?s ?p ?o}"))
+            self.assertEqual(1, len(records))
+            self.assertEqual(t, records[0])
+
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.zip"
             inner_path = "test_graph.ttl"
             write_zipfile_rdf(graph, path, inner_path)
             g2 = read_zipfile_rdf(path, inner_path)
-            records = list(g2.query("SELECT ?s ?p ?o WHERE {?s ?p ?o}"))
-            self.assertEqual(1, len(records))
-            self.assertEqual(t, records[0])
+            _test_equal(g2)
+
+            for name in ["test.ttl", "test.ttl.gz"]:
+                path = Path(directory) / name
+                utils.write_rdflib(graph, path)
+                g3 = utils.read_rdf(path)
+                _test_equal(g3)
 
     def test_safe_writer(self) -> None:
         """Test writers."""
