@@ -425,7 +425,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
-) -> Generator[IO[str], None, None]:
+) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
     """Open a zipfile."""
     mode = _MODE_TO_SIMPLE[operation]
     with (
