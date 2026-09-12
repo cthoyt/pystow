@@ -33,7 +33,6 @@ from .utils import (
     open_tarfile,
     open_zipfile,
     path_to_sqlite,
-    read_rdf,
     read_tarfile_csv,
     read_tarfile_xml,
     read_zip_np,
@@ -1769,7 +1768,7 @@ class Module:
         :param precache: Should the parsed :class:`rdflib.Graph` be stored as a pickle
             for fast loading?
         :param parse_kwargs: Keyword arguments to pass through to
-            :func:`pystow.utils.read_rdf` and transitively to
+            :func:`pystow.utils.read_rdflib` and transitively to
             :func:`rdflib.Graph.parse`.
 
         :returns: An RDF graph
@@ -1778,7 +1777,7 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
         if not precache:
-            return read_rdf(path=path, **(parse_kwargs or {}))
+            return utils.read_rdflib(path=path, **(parse_kwargs or {}))
 
         cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
@@ -1787,7 +1786,7 @@ class Module:
             with gzip.open(cache_path, "rb") as file:
                 return cast(rdflib.Graph, pickle.load(file))
 
-        rv = read_rdf(path=path, **(parse_kwargs or {}))
+        rv = utils.read_rdflib(path=path, **(parse_kwargs or {}))
         with gzip.open(cache_path, "wb") as file:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)
         return rv
@@ -1804,13 +1803,13 @@ class Module:
             returns the directory for this module.
         :param name: The name of the file to open
         :param parse_kwargs: Keyword arguments to pass through to
-            :func:`pystow.utils.read_rdf` and transitively to
+            :func:`pystow.utils.read_rdflib` and transitively to
             :func:`rdflib.Graph.parse`.
 
         :returns: An RDF graph
         """
         path = self.join(*subkeys, name=name, ensure_exists=False)
-        return read_rdf(path=path, **(parse_kwargs or {}))
+        return utils.read_rdflib(path=path, **(parse_kwargs or {}))
 
     def dump_rdf(
         self,

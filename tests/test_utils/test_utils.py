@@ -264,20 +264,20 @@ class TestUtils(unittest.TestCase):
             for name in ["test.ttl", "test.ttl.gz"]:
                 path = Path(directory) / name
                 utils.write_rdflib(graph, path)
-                g3 = utils.read_rdf(path)
+                g3 = utils.read_rdflib(path)
                 _test_equal(g3)
 
             # test text mode works
             path = Path(directory) / "test-2.ttl"
             with path.open("wt") as file:
                 utils.write_rdflib(graph, file)
-            _test_equal(utils.read_rdf(path))
+            _test_equal(utils.read_rdflib(path))
 
             # test binary mode works
             path = Path(directory) / "test-3.ttl"
             with path.open("wb") as bfile:
                 utils.write_rdflib(graph, bfile)
-            _test_equal(utils.read_rdf(path))
+            _test_equal(utils.read_rdflib(path))
 
     def test_safe_writer(self) -> None:
         """Test writers."""

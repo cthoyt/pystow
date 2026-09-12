@@ -12,6 +12,7 @@ import pickle
 import shutil
 import tarfile
 import typing
+import warnings
 import zipfile
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from io import BytesIO
@@ -174,6 +175,7 @@ __all__ = [
     "read_pydantic_tsv",
     "read_pydantic_yaml",
     "read_rdf",
+    "read_rdflib",
     "read_tarfile_csv",
     "read_tarfile_xml",
     "read_xml",
@@ -739,6 +741,16 @@ def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
 
 
 def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
+    """Read an RDF file with :mod:`rdflib` via :func:`read_rdflib`."""
+    warnings.warn(
+        "use read_rdflib() instead - this new function has a more precise name",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return read_rdflib(path, **kwargs)
+
+
+def read_rdflib(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
     :param path: The path to the RDF file
