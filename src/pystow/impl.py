@@ -12,12 +12,11 @@ import os
 import pickle
 import sqlite3
 import tarfile
-import typing
 from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import closing, contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast, overload
+from typing import IO, TYPE_CHECKING, Any, Literal, TypeAlias, cast, overload
 
 from . import utils
 from .constants import JSON, Provider
@@ -783,7 +782,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = ...,
         mode: Literal["rt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> Generator[typing.TextIO, None, None]: ...
+    ) -> Generator[IO[str], None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -798,7 +797,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = ...,
         mode: Literal["r", "rb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> Generator[typing.IO[bytes], None, None]: ...
+    ) -> Generator[IO[bytes], None, None]: ...
 
     @contextmanager
     def ensure_open_tarfile(
@@ -811,7 +810,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = None,
         mode: Literal["r", "rb", "rt"] = "r",
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
+    ) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
         """Ensure a tar file is downloaded and open a file inside it.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
@@ -858,7 +857,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = ...,
         mode: Literal["r", "rb"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> Generator[typing.BinaryIO, None, None]: ...
+    ) -> Generator[IO[bytes], None, None]: ...
 
     # docstr-coverage:excused `overload`
     @overload
@@ -873,7 +872,7 @@ class Module:
         download_kwargs: DownloadKwargs | None = ...,
         mode: Literal["rt"] = ...,
         open_kwargs: Mapping[str, Any] | None = ...,
-    ) -> Generator[typing.TextIO, None, None]: ...
+    ) -> Generator[IO[str], None, None]: ...
 
     @contextmanager
     def ensure_open_zip(
@@ -887,7 +886,7 @@ class Module:
         mode: Literal["r", "rb", "rt"] = "r",
         zipfile_kwargs: Mapping[str, Any] | None = None,
         open_kwargs: Mapping[str, Any] | None = None,
-    ) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
+    ) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
         """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
         :param subkeys: A sequence of additional strings to join. If none are given,
