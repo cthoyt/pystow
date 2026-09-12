@@ -28,7 +28,7 @@ def reyield(
     elements: Iterable[X],
     *args: P.args,
     **kwargs: P.kwargs,
-) -> Generator[X, None, None]:
+) -> Generator[X]:
     """Make a function that consumes an iterable yield its elements.
 
     :param func: A function that consumes an iterable, and does not return anything
@@ -73,7 +73,7 @@ def _help_reiter(
 
     queue: Queue[X | Sentinel] = Queue()
 
-    def _iterable_from_queue() -> Generator[X, None, None]:
+    def _iterable_from_queue() -> Generator[X]:
         while True:
             # queue.get() blocks indefinitely (because timeout is None)
             # until the queue receives something
