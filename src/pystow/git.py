@@ -25,7 +25,7 @@ __all__ = [
 
 
 @contextmanager
-def clone_github_tempdir(owner: str, repo: str) -> Generator[Path, None, None]:
+def clone_github_tempdir(owner: str, repo: str) -> Generator[Path]:
     """Temporarily clone a repository from a URL."""
     url = f"https://github.com/{owner}/{repo}.git"
     with clone_tempdir(url) as directory:
@@ -33,7 +33,7 @@ def clone_github_tempdir(owner: str, repo: str) -> Generator[Path, None, None]:
 
 
 @contextmanager
-def clone_tempdir(url: str) -> Generator[Path, None, None]:
+def clone_tempdir(url: str) -> Generator[Path]:
     """Temporarily clone a repository from a URL."""
     import shutil
     import tempfile

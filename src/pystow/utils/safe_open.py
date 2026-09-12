@@ -70,7 +70,7 @@ def safe_open(
     operation: Operation = ...,
     representation: Representation = ...,
     encoding: str | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -83,7 +83,7 @@ def safe_open(
     representation: Representation = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -96,7 +96,7 @@ def safe_open(
     representation: Literal["text"] = "text",
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -109,7 +109,7 @@ def safe_open(
     representation: Literal["binary"] = "binary",
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 @contextlib.contextmanager
@@ -120,7 +120,7 @@ def safe_open(  # noqa:C901
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
-) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
         raise InvalidOperationError(operation)
@@ -182,7 +182,7 @@ def _open_read_text(
     path: str | Path | IO[str],
     encoding: str | None = None,
     newline: str | None = None,
-) -> Generator[IO[str], None, None]:
+) -> Generator[IO[str]]:
     with safe_open(
         path, representation="text", operation="read", encoding=encoding, newline=newline
     ) as file:
@@ -194,7 +194,7 @@ def _open_write_text(
     path: str | Path | IO[str],
     encoding: str | None = None,
     newline: str | None = None,
-) -> Generator[IO[str], None, None]:
+) -> Generator[IO[str]]:
     with safe_open(
         path, representation="text", operation="write", encoding=encoding, newline=newline
     ) as file:
@@ -295,7 +295,7 @@ def open_inner_zipfile(
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -310,7 +310,7 @@ def open_inner_zipfile(
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 @contextlib.contextmanager
@@ -323,7 +323,7 @@ def open_inner_zipfile(
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
     newline: str | None = None,
-) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open a file inside an already opened zip archive."""
     mode = _MODE_TO_SIMPLE[operation]
     encoding = ensure_sensible_default_encoding(encoding, representation=representation)
@@ -341,7 +341,7 @@ def open_inner_zipfile(
 @contextlib.contextmanager
 def safe_open_dict_reader(
     f: str | Path | IO[str], *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[csv.DictReader[str], None, None]:
+) -> Generator[csv.DictReader[str]]:
     """Open a CSV dictionary reader, wrapping :func:`csv.DictReader`.
 
     :param f: A path to a file, or an already open text-based IO object
@@ -368,7 +368,7 @@ def open_url(
     representation: Literal["text"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -380,7 +380,7 @@ def open_url(
     representation: Literal["binary"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 @contextlib.contextmanager
@@ -390,7 +390,7 @@ def open_url(
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
-) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Get a file-like object from a URL."""
     with urllib.request.urlopen(url) as response:  # noqa:S310
         match representation:

@@ -101,7 +101,7 @@ def write_pydantic_jsonl(
 
 def stream_write_pydantic_jsonl(
     models: Iterable[BaseModelVar], file: str | Path | TextIO, **kwargs: Any
-) -> Generator[BaseModelVar, None, None]:
+) -> Generator[BaseModelVar]:
     """Write models to a file as JSONL and yield them."""
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
@@ -129,7 +129,7 @@ def iter_pydantic_tsv(
     *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     failure_action: ModelValidateFailureAction = "skip",
-) -> Generator[BaseModelVar, None, None]:
+) -> Generator[BaseModelVar]:
     """Read models from a TSV file, iteratively."""
     import pydantic
 

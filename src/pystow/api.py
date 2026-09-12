@@ -146,7 +146,7 @@ def open(
     name: str,
     mode: Literal["r", "rt", "w", "wt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[StringIO, None, None]: ...
+) -> Generator[StringIO]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -158,7 +158,7 @@ def open(
     name: str,
     mode: Literal["rb", "wb"],
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[BytesIO, None, None]: ...
+) -> Generator[BytesIO]: ...
 
 
 @contextmanager
@@ -169,7 +169,7 @@ def open(
     mode: Literal["r", "rb", "rt", "w", "wb", "wt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
     ensure_exists: bool = False,
-) -> Generator[StringIO | BytesIO, None, None]:
+) -> Generator[StringIO | BytesIO]:
     """Open a file.
 
     :param key: The name of the module. No funny characters. The envvar <key>_HOME where
@@ -209,7 +209,7 @@ def open_gz(
     name: str,
     mode: Literal["r", "w", "rt", "wt"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[StringIO, None, None]: ...
+) -> Generator[StringIO]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -221,7 +221,7 @@ def open_gz(
     name: str,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[BytesIO, None, None]: ...
+) -> Generator[BytesIO]: ...
 
 
 @contextmanager
@@ -232,7 +232,7 @@ def open_gz(
     mode: Literal["r", "w", "rt", "wt", "rb", "wb"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
     ensure_exists: bool = False,
-) -> Generator[StringIO | BytesIO, None, None]:
+) -> Generator[StringIO | BytesIO]:
     """Open a gzipped file that exists already.
 
     :param key: The name of the module. No funny characters. The envvar <key>_HOME where
@@ -473,7 +473,7 @@ def ensure_open(
     download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "rt", "w", "wt"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[StringIO, None, None]: ...
+) -> Generator[StringIO]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -488,7 +488,7 @@ def ensure_open(
     download_kwargs: DownloadKwargs | None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[BytesIO, None, None]: ...
+) -> Generator[BytesIO]: ...
 
 
 @contextmanager
@@ -501,7 +501,7 @@ def ensure_open(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rt", "w", "wt", "rb", "wb"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[StringIO | BytesIO, None, None]:
+) -> Generator[StringIO | BytesIO]:
     """Ensure a file is downloaded and open it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -548,7 +548,7 @@ def ensure_open_zip(
     mode: Literal["r", "w", "rb", "wb"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -565,7 +565,7 @@ def ensure_open_zip(
     mode: Literal["rt", "wt"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 @contextmanager
@@ -580,7 +580,7 @@ def ensure_open_zip(
     mode: Literal["r", "w", "rb", "wb", "rt", "wt"] = "r",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -634,7 +634,7 @@ def ensure_open_lzma(
     download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "w", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[io.TextIOWrapper[lzma.LZMAFile], None, None]: ...
+) -> Generator[io.TextIOWrapper[lzma.LZMAFile]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -649,7 +649,7 @@ def ensure_open_lzma(
     download_kwargs: DownloadKwargs | None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[lzma.LZMAFile, None, None]: ...
+) -> Generator[lzma.LZMAFile]: ...
 
 
 @contextmanager
@@ -662,7 +662,7 @@ def ensure_open_lzma(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile], None, None]:
+) -> Generator[lzma.LZMAFile | io.TextIOWrapper[lzma.LZMAFile]]:
     """Ensure a LZMA-compressed file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -705,7 +705,7 @@ def ensure_open_zstd(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rt",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[io.BufferedIOBase, None, None]:
+) -> Generator[io.BufferedIOBase]:
     """Ensure a zstd-compressed file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -751,7 +751,7 @@ def ensure_open_tarfile(
     download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["rt"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -767,7 +767,7 @@ def ensure_open_tarfile(
     download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["r", "rb"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[typing.IO[bytes], None, None]: ...
+) -> Generator[typing.IO[bytes]]: ...
 
 
 @contextmanager
@@ -781,7 +781,7 @@ def ensure_open_tarfile(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "rt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[IO[str], None, None] | Generator[typing.IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[typing.IO[bytes]]:
     """Ensure a tar file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -828,7 +828,7 @@ def ensure_open_gz(
     download_kwargs: DownloadKwargs | None,
     mode: Literal["r", "w", "rt", "wt"] = ...,
     open_kwargs: Mapping[str, Any] | None,
-) -> Generator[StringIO, None, None]: ...
+) -> Generator[StringIO]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -843,7 +843,7 @@ def ensure_open_gz(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb", "wb"] = ...,
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[BytesIO, None, None]: ...
+) -> Generator[BytesIO]: ...
 
 
 @contextmanager
@@ -856,7 +856,7 @@ def ensure_open_gz(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "w", "wb", "rt", "wt"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[StringIO | BytesIO, None, None]:
+) -> Generator[StringIO | BytesIO]:
     """Ensure a gzipped file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -899,7 +899,7 @@ def ensure_open_bz2(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["rb"] = "rb",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[bz2.BZ2File, None, None]:
+) -> Generator[bz2.BZ2File]:
     """Ensure a BZ2-compressed file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -1963,7 +1963,7 @@ def ensure_open_sqlite(
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
-) -> Generator[sqlite3.Connection, None, None]:
+) -> Generator[sqlite3.Connection]:
     """Ensure and connect to a SQLite database.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -2008,7 +2008,7 @@ def ensure_open_sqlite_gz(
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
-) -> Generator[sqlite3.Connection, None, None]:
+) -> Generator[sqlite3.Connection]:
     """Ensure and connect to a gzipped SQLite database.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
