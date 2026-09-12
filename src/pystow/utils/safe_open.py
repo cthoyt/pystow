@@ -15,7 +15,7 @@ import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
 from pathlib import Path
-from typing import IO, Any, Literal, Never, TypeGuard, cast, overload
+from typing import IO, Any, Literal, Never, TypeGuard, overload
 
 from .io_typing import (
     _MODE_TO_SIMPLE,
@@ -328,14 +328,53 @@ def open_inner_zipfile(
     mode = _MODE_TO_SIMPLE[operation]
     encoding = ensure_sensible_default_encoding(encoding, representation=representation)
     newline = ensure_sensible_newline(newline, representation=representation)
-    with zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file:
-        if representation == "text":
-            with io.TextIOWrapper(binary_file, encoding=encoding, newline=newline) as text_file:
-                yield text_file
-        elif representation == "binary":
-            yield cast(typing.BinaryIO, binary_file)
-        else:
-            raise InvalidRepresentationError(representation)
+    with (
+        zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file,
+        _wrap_if_needed(binary_file, representation, encoding=encoding, newline=newline) as yf,
+    ):
+        yield yf
+
+
+ZZ = typing.TypeVar("ZZ", bound=IO[bytes])
+
+
+@overload
+@contextlib.contextmanager
+def _wrap_if_needed(
+    file: ZZ,
+    representation: Literal["text"],
+    *,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[io.TextIOWrapper[ZZ]]: ...
+
+
+@overload
+@contextlib.contextmanager
+def _wrap_if_needed(
+    file: ZZ,
+    representation: Literal["binary"],
+    *,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[ZZ]: ...
+
+
+@contextlib.contextmanager
+def _wrap_if_needed(
+    file: ZZ,
+    representation: Representation,
+    *,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[ZZ | io.TextIOWrapper[ZZ]]:
+    if representation == "text":
+        with io.TextIOWrapper(file, encoding=encoding, newline=newline) as text_file:
+            yield text_file
+    elif representation == "binary":
+        yield file
+    else:
+        raise InvalidRepresentationError(representation)
 
 
 @contextlib.contextmanager

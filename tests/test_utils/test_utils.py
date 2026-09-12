@@ -318,6 +318,30 @@ class TestUtils(unittest.TestCase):
                 self.assertEqual(b"c1\tc2\n", next(file))
                 self.assertEqual(b"v1\tv2", next(file))
 
+    def test_open_inner_zip(self) -> None:
+        """Test opening a file within a zip archive."""
+        inner_path = "test-1.csv"
+        data = "c1,c2\nv1,v2"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.zip")
+            with zipfile.ZipFile(path, "w") as zip_file:
+                zip_file.writestr(inner_path, data)
+
+                # default
+                with utils.open_inner_zipfile(zip_file, inner_path=inner_path) as file:
+                    self.assertEqual(data, file.read())
+                # explicit text mode
+                with utils.open_inner_zipfile(
+                    zip_file, inner_path=inner_path, representation="text"
+                ) as file:
+                    self.assertEqual("TextIOWrapper", file.__class__.__name__)
+                    self.assertEqual(data, file.read())
+                with utils.open_inner_zipfile(
+                    zip_file, inner_path=inner_path, representation="binary"
+                ) as file:
+                    self.assertEqual("ZipExtFile", file.__class__.__name__)
+                    self.assertEqual(data, file.read().decode("utf-8"))
+
     def test_zip_csvs(self) -> None:
         """Test reading many CSVs from inside a zip file."""
         with tempfile.TemporaryDirectory() as directory:
