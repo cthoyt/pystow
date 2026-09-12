@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import IO, TYPE_CHECKING, Any, Literal, overload
 
 from .constants import JSON, Provider
 from .impl import Module, VersionHint
@@ -548,7 +548,7 @@ def ensure_open_zip(
     mode: Literal["r", "w", "rb", "wb"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[typing.BinaryIO, None, None]: ...
+) -> Generator[IO[bytes], None, None]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -565,7 +565,7 @@ def ensure_open_zip(
     mode: Literal["rt", "wt"] = ...,
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[typing.TextIO, None, None]: ...
+) -> Generator[IO[str], None, None]: ...
 
 
 @contextmanager
@@ -580,7 +580,7 @@ def ensure_open_zip(
     mode: Literal["r", "w", "rb", "wb", "rt", "wt"] = "r",
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[typing.TextIO, None, None] | Generator[typing.BinaryIO, None, None]:
+) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
     """Ensure a file is downloaded then open it with :mod:`zipfile`.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
@@ -751,7 +751,7 @@ def ensure_open_tarfile(
     download_kwargs: DownloadKwargs | None = ...,
     mode: Literal["rt"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
-) -> Generator[typing.TextIO, None, None]: ...
+) -> Generator[IO[str], None, None]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -781,7 +781,7 @@ def ensure_open_tarfile(
     download_kwargs: DownloadKwargs | None = None,
     mode: Literal["r", "rb", "rt"] = "r",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[typing.TextIO, None, None] | Generator[typing.IO[bytes], None, None]:
+) -> Generator[IO[str], None, None] | Generator[typing.IO[bytes], None, None]:
     """Ensure a tar file is downloaded and open a file inside it.
 
     :param key: The name of the module. No funny characters. The envvar `<key>_HOME`
