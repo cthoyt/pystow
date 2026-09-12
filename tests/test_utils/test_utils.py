@@ -318,6 +318,30 @@ class TestUtils(unittest.TestCase):
                 self.assertEqual(b"c1\tc2\n", next(file))
                 self.assertEqual(b"v1\tv2", next(file))
 
+    def test_open_inner_zip(self) -> None:
+        """Test opening a file within a zip archive."""
+        inner_path = "test-1.csv"
+        data = "c1,c2\nv1,v2"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.zip")
+            with zipfile.ZipFile(path, "w") as zip_file:
+                zip_file.writestr(inner_path, data)
+
+                # default
+                with utils.open_inner_zipfile(zip_file, inner_path=inner_path) as file:
+                    self.assertEqual(data, file.read())
+                # explicit text mode
+                with utils.open_inner_zipfile(
+                    zip_file, inner_path=inner_path, representation="text"
+                ) as file:
+                    self.assertEqual("TextIOWrapper", file.__class__.__name__)
+                    self.assertEqual(data, file.read())
+                with utils.open_inner_zipfile(
+                    zip_file, inner_path=inner_path, representation="binary"
+                ) as file:
+                    self.assertEqual("ZipExtFile", file.__class__.__name__)
+                    self.assertEqual(data, file.read().decode("utf-8"))
+
     def test_zip_csvs(self) -> None:
         """Test reading many CSVs from inside a zip file."""
         with tempfile.TemporaryDirectory() as directory:
@@ -399,13 +423,6 @@ class TestUtils(unittest.TestCase):
             pass
 
         with (
-            safe_open(TEST_TXT, representation="binary") as passthrough_binary,
-            self.assertRaises(ValueError),
-            safe_open(passthrough_binary, representation="text") as _file,
-        ):
-            pass
-
-        with (
             safe_open(TEST_TXT, representation="text") as passthrough_text,
             self.assertRaises(ValueError),
             safe_open(passthrough_text, representation="binary") as _file_binary,
@@ -435,6 +452,16 @@ class TestUtils(unittest.TestCase):
                         TEST_TXT_CONTENT,
                         file.read().decode("utf-8"),
                         msg=f"failed to read bytes from {path} in a passthrough scenario",
+                    )
+
+                with (
+                    safe_open(path, representation="binary") as passthrough,
+                    safe_open(passthrough, representation="text") as file,
+                ):
+                    self.assertEqual(
+                        TEST_TXT_CONTENT,
+                        file.read(),
+                        msg=f"failed to wrap bytes from {path} in a passthrough scenario",
                     )
 
     def test_safe_open_url_binary(self) -> None:
