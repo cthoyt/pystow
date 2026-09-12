@@ -397,7 +397,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
-) -> Generator[IO[str], None, None]: ...
+) -> Generator[IO[str]]: ...
 
 
 # docstr-coverage:excused `overload`
@@ -412,7 +412,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
-) -> Generator[IO[bytes], None, None]: ...
+) -> Generator[IO[bytes]]: ...
 
 
 @contextlib.contextmanager
@@ -425,7 +425,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
-) -> Generator[IO[str], None, None] | Generator[IO[bytes], None, None]:
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open a zipfile."""
     mode = _MODE_TO_SIMPLE[operation]
     with (
@@ -450,7 +450,7 @@ def open_tarfile(
     operation: Operation = "read",
     representation: Representation = "binary",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[IO[bytes], None, None]:
+) -> Generator[IO[bytes]]:
     """Open a tar file."""
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
@@ -477,7 +477,7 @@ def open_tarfile(
 @contextlib.contextmanager
 def open_zip_reader(
     path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
-) -> Generator[Reader, None, None]:
+) -> Generator[Reader]:
     """Read an inner CSV file from a zip archive.
 
     :param path: The path to the zip archive
@@ -494,7 +494,7 @@ def open_zip_reader(
 @contextlib.contextmanager
 def open_zip_dict_reader(
     path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
-) -> Generator[csv.DictReader[str], None, None]:
+) -> Generator[csv.DictReader[str]]:
     """Read an inner CSV file from a zip archive.
 
     :param path: The path to the zip archive
@@ -511,7 +511,7 @@ def open_zip_dict_reader(
 @contextlib.contextmanager
 def open_zip_writer(
     path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
-) -> Generator[Writer, None, None]:
+) -> Generator[Writer]:
     """Open a writer for an inner CSV file from a zip archive.
 
     :param path: The path to the zip archive
@@ -863,7 +863,7 @@ def gzip_compress(
 @contextlib.contextmanager
 def safe_open_writer(
     f: str | Path | IO[str], *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[Writer, None, None]:
+) -> Generator[Writer]:
     """Open a CSV writer, wrapping :func:`csv.writer`.
 
     :param f: A path to a file, or an already open text-based IO object
@@ -883,7 +883,7 @@ def safe_open_dict_writer(
     *,
     delimiter: str = "\t",
     **kwargs: Any,
-) -> Generator[csv.DictWriter[str], None, None]:
+) -> Generator[csv.DictWriter[str]]:
     """Open a CSV dictionary writer, wrapping :func:`csv.DictWriter`.
 
     :param f: A path to a file, or an already open text-based IO object
@@ -900,7 +900,7 @@ def safe_open_dict_writer(
 @contextlib.contextmanager
 def safe_open_reader(
     f: str | Path | IO[str], *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[Reader, None, None]:
+) -> Generator[Reader]:
     """Open a CSV reader, wrapping :func:`csv.reader`.
 
     :param f: A path to a file, or an already open text-based IO object
@@ -1064,7 +1064,7 @@ def iter_tarred_files(
 @contextlib.contextmanager
 def safe_tarfile_open(
     tar_file: str | Path | tarfile.TarFile,
-) -> Generator[tarfile.TarFile, None, None]:
+) -> Generator[tarfile.TarFile]:
     """Open a tar archive safely."""
     if isinstance(tar_file, str | Path):
         with tarfile.open(Path(tar_file).expanduser().resolve(), mode="r") as yv:
@@ -1192,7 +1192,7 @@ def iter_zipped_files(
 @contextlib.contextmanager
 def safe_zipfile_open(
     zip_file: str | Path | zipfile.ZipFile,
-) -> Generator[zipfile.ZipFile, None, None]:
+) -> Generator[zipfile.ZipFile]:
     """Open a zip archive safely."""
     if isinstance(zip_file, str | Path):
         with zipfile.ZipFile(Path(zip_file).expanduser().resolve(), mode="r") as yv:
