@@ -114,7 +114,7 @@ def safe_open(
 
 @contextlib.contextmanager
 def safe_open(  # noqa:C901
-    path: str | Path | IO[str],
+    path: str | Path | IO[str] | IO[bytes],
     *,
     operation: Operation = "read",
     representation: Representation = "text",
