@@ -592,19 +592,21 @@ class TestUtils(unittest.TestCase):
     def test_open_url(self) -> None:
         """Test opening a URL."""
         with open_url(
-            "https://zenodo.org/records/15504009/files/startup.sh", representation="text"
+            "https://zenodo.org/records/15504009/files/startup.sh", representation="text", timeout=5
         ) as file:
             self.assertIn("sleep 5", file.read())
 
         with open_url(
-            "https://zenodo.org/records/15504009/files/startup.sh", representation="binary"
+            "https://zenodo.org/records/15504009/files/startup.sh",
+            representation="binary",
+            timeout=5,
         ) as file:
             self.assertIn("sleep 5", file.read().decode("utf-8"))
 
     def test_get_json(self) -> None:
         """Test getting JSON."""
         url = "https://zenodo.org/records/15826754/files/configuration.json?download=1"
-        x = safe_open_json(url)
+        x = safe_open_json(url, timeout=5)
         self.assertIsInstance(x, dict)
         self.assertIn("name", x)
 

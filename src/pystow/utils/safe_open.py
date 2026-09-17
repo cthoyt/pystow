@@ -73,6 +73,7 @@ def safe_open(
     encoding: str | None = ...,
     newline: str | None = ...,
     buffering: int | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -87,6 +88,7 @@ def safe_open(
     encoding: str | None = ...,
     newline: str | None = ...,
     buffering: int | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -99,6 +101,7 @@ def safe_open(  # noqa:C901
     encoding: str | None = None,
     newline: str | None = None,
     buffering: int | None = None,
+    timeout: int | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -114,7 +117,11 @@ def safe_open(  # noqa:C901
             if operation != "read":
                 raise ValueError('can only use operation="read" with URLs')
             with open_url(
-                path, representation=representation, encoding=encoding, newline=newline
+                path,
+                representation=representation,
+                encoding=encoding,
+                newline=newline,
+                timeout=timeout,
             ) as file:
                 yield file
         else:
@@ -157,13 +164,37 @@ def safe_open(  # noqa:C901
 
 
 @contextlib.contextmanager
+def _gzip_open(
+    path: str | Path,
+    buffering: int = -1,
+    *,
+    compression_level: int = 6,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[IO[str]]:
+    path = Path(path).expanduser().resolve()
+    with (
+        path.open("wb", buffering=buffering) as raw,
+        gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=compression_level) as gz,
+        io.TextIOWrapper(gz, encoding=encoding or "utf-8", newline=newline or "") as text,
+    ):
+        yield text
+
+
+@contextlib.contextmanager
 def _open_read_text(
     path: str | Path | IO[str],
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | None = None,
 ) -> Generator[IO[str]]:
     with safe_open(
-        path, representation="text", operation="read", encoding=encoding, newline=newline
+        path,
+        representation="text",
+        operation="read",
+        encoding=encoding,
+        newline=newline,
+        timeout=timeout,
     ) as file:
         yield file
 
@@ -185,9 +216,10 @@ def safe_open_json(
     *,
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | None = None,
 ) -> Any:
     """Safely open a file and parse as JSON."""
-    with _open_read_text(path_or_url, encoding=encoding, newline=newline) as file:
+    with _open_read_text(path_or_url, encoding=encoding, newline=newline, timeout=timeout) as file:
         return json.load(file)
 
 
@@ -379,6 +411,12 @@ def is_url(s: str | Path | IO[str] | Any) -> TypeGuard[str]:
     return isinstance(s, str) and s.startswith(("http://", "https://"))
 
 
+class UrlOpenKwargs(typing.TypedDict):
+    """Keyword arguments for :func:`urllib.request.urlopen`."""
+
+    timeout: typing.NotRequired[int | None]
+
+
 # docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
@@ -388,6 +426,7 @@ def open_url(
     representation: Literal["text"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -400,6 +439,7 @@ def open_url(
     representation: Literal["binary"] = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
+    timeout: int | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -410,9 +450,15 @@ def open_url(
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Get a file-like object from a URL."""
-    with urllib.request.urlopen(url) as response:  # noqa:S310
+    kwargs: UrlOpenKwargs
+    if timeout is not None:
+        kwargs = {"timeout": timeout}
+    else:
+        kwargs = {}
+    with urllib.request.urlopen(url, **kwargs) as response:  # noqa:S310
         match representation:
             case "text":
                 yield io.TextIOWrapper(response, encoding=encoding, newline=newline)
