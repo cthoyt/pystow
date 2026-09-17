@@ -51,6 +51,10 @@ _MODE_TO_SIMPLE: Mapping[Operation, UnqualifiedMode] = {
     "read": "r",
     "write": "w",
 }
+_MODE_TO_BINARY_SOMETHING: Mapping[Operation, Literal["rb", "wb"]] = {
+    "read": "rb",
+    "write": "wb",
+}
 
 #: A mapping between operation/representation pairs and qualified modes
 MODE_MAP: dict[ModePair, QualifiedMode] = {

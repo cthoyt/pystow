@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import IO, Any, Literal, Never, TypeGuard, overload
 
 from .io_typing import (
+    _MODE_TO_BINARY_SOMETHING,
     _MODE_TO_SIMPLE,
     MODE_MAP,
     OPERATION_VALUES,
@@ -71,6 +72,7 @@ def safe_open(
     representation: Literal["text"] = "text",
     encoding: str | None = ...,
     newline: str | None = ...,
+    buffering: int | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -84,6 +86,7 @@ def safe_open(
     representation: Literal["binary"] = "binary",
     encoding: str | None = ...,
     newline: str | None = ...,
+    buffering: int | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -95,6 +98,7 @@ def safe_open(  # noqa:C901
     representation: Representation = "text",
     encoding: str | None = None,
     newline: str | None = None,
+    buffering: int | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Safely open a file for reading or writing text."""
     if operation not in OPERATION_VALUES:
@@ -115,21 +119,27 @@ def safe_open(  # noqa:C901
                 yield file
         else:
             mode = MODE_MAP[operation, representation]
+            premode = _MODE_TO_BINARY_SOMETHING[operation]
             path = Path(path).expanduser().resolve()
             if path.suffix.endswith(".gz"):
-                with gzip.open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                    yield file  # type:ignore
+                with (
+                    open(path, buffering=buffering or -1, mode=premode) as raw,
+                    gzip.open(raw, mode=mode, encoding=encoding, newline=newline) as gzf,
+                ):
+                    yield gzf  # type:ignore
             elif path.suffix.endswith(".bz2"):
-                with bz2.open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                    yield file
+                with bz2.open(path, mode=mode, encoding=encoding, newline=newline) as bz2f:
+                    yield bz2f
             elif path.suffix.endswith(".xz"):
-                with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                    yield file
+                with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as lzmaf:
+                    yield lzmaf
             elif path.suffix.endswith(".zst"):
-                with zstd_open(path, mode=mode, encoding=encoding, newline=newline) as file:
-                    yield file  # type:ignore
+                with zstd_open(path, mode=mode, encoding=encoding, newline=newline) as zstdf:
+                    yield zstdf  # type:ignore
             else:
-                with open(path, mode=mode, encoding=encoding, newline=newline) as file:
+                with open(
+                    path, mode=mode, encoding=encoding, newline=newline, buffering=buffering or -1
+                ) as file:
                     yield file
 
     elif isinstance(path, typing.TextIO | io.TextIOWrapper | io.TextIOBase):
