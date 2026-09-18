@@ -101,7 +101,6 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
-    timeout: int | None = ...,
     **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[str]]: ...
 
@@ -114,7 +113,6 @@ def safe_open(
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
-    timeout: int | None = ...,
     **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[bytes]]: ...
 
@@ -125,7 +123,6 @@ def safe_open(  # noqa:C901
     *,
     operation: Operation = "read",
     representation: Representation = "text",
-    timeout: int | None = None,
     **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Safely open a file for reading or writing text."""
@@ -204,12 +201,8 @@ def safe_open(  # noqa:C901
 
 
 @contextlib.contextmanager
-def _open_read_text(
-    path: TextSource, *, timeout: int | None = None, **kwargs: Unpack[OpenKwargs]
-) -> Generator[IO[str]]:
-    with safe_open(
-        path, representation="text", operation="read", timeout=timeout, **kwargs
-    ) as file:
+def _open_read_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> Generator[IO[str]]:
+    with safe_open(path, representation="text", operation="read", **kwargs) as file:
         yield file
 
 
@@ -219,21 +212,17 @@ def _open_write_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> Generato
         yield file
 
 
-def safe_open_json(
-    path_or_url: TextSource, *, timeout: int | None = None, **kwargs: Unpack[OpenKwargs]
-) -> Any:
+def safe_open_json(path_or_url: TextSource, **kwargs: Unpack[OpenKwargs]) -> Any:
     """Safely open a file and parse as JSON."""
-    with _open_read_text(path_or_url, timeout=timeout, **kwargs) as file:
+    with _open_read_text(path_or_url, **kwargs) as file:
         return json.load(file)
 
 
-def safe_open_yaml(
-    path_or_url: TextSource, *, timeout: int | None = None, **kwargs: Unpack[OpenKwargs]
-) -> Any:
+def safe_open_yaml(path_or_url: TextSource, **kwargs: Unpack[OpenKwargs]) -> Any:
     """Safely open a file and parse as YAML."""
     import yaml
 
-    with _open_read_text(path_or_url, timeout=timeout, **kwargs) as file:
+    with _open_read_text(path_or_url, **kwargs) as file:
         return yaml.safe_load(file)
 
 
