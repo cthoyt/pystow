@@ -173,24 +173,6 @@ def safe_open(  # noqa:C901
 
 
 @contextlib.contextmanager
-def _gzip_open(
-    path: str | Path,
-    buffering: int = -1,
-    *,
-    compression_level: int = 6,
-    encoding: str | None = None,
-    newline: str | None = None,
-) -> Generator[IO[str]]:
-    path = Path(path).expanduser().resolve()
-    with (
-        path.open("wb", buffering=buffering) as raw,
-        gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=compression_level) as gz,
-        io.TextIOWrapper(gz, encoding=encoding or "utf-8", newline=newline or "") as text,
-    ):
-        yield text
-
-
-@contextlib.contextmanager
 def _open_read_text(
     path: str | Path | IO[str],
     encoding: str | None = None,
@@ -237,11 +219,12 @@ def safe_open_yaml(
     *,
     encoding: str | None = None,
     newline: str | None = None,
+    timeout: int | None = None,
 ) -> Any:
     """Safely open a file and parse as YAML."""
     import yaml
 
-    with _open_read_text(path_or_url, encoding=encoding, newline=newline) as file:
+    with _open_read_text(path_or_url, encoding=encoding, newline=newline, timeout=timeout) as file:
         return yaml.safe_load(file)
 
 
@@ -473,3 +456,5 @@ def open_url(
                 yield io.TextIOWrapper(response, encoding=encoding, newline=newline)
             case "binary":
                 yield io.BufferedReader(response)
+            case _:
+                raise InvalidRepresentationError(representation)

@@ -901,32 +901,44 @@ class BatchedWriter:
     def writerow(self, row: Iterable[Any], /) -> None:
         """Write a single row to the batch."""
         self.batch.append(row)
-        self._flush()
+        if len(self.batch) >= self.batch_size:
+            self.flush()
 
     def writerows(self, rows: Iterable[Iterable[Any]], /) -> None:
         """Write multiple rows to the batch."""
         # TODO get fancy and only fill up the batch
         #  then batch on the rows themselves
         self.batch.extend(rows)
-        self._flush()
-
-    def _flush(self) -> None:
         if len(self.batch) >= self.batch_size:
-            self.writer.writerows(self.batch)
-            self.batch.clear()
+            self.flush()
+
+    def flush(self) -> None:
+        """Write the rest of the remaining batch."""
+        self.writer.writerows(self.batch)
+        self.batch.clear()
 
 
 @overload
 @contextlib.contextmanager
 def safe_open_writer(
-    f: str | Path | IO[str], *, delimiter: str = "\t", batch_size: None = ..., **kwargs: Any
+    f: str | Path | IO[str],
+    *,
+    delimiter: str = "\t",
+    buffering: int | None = ...,
+    batch_size: None = ...,
+    **kwargs: Any,
 ) -> Generator[Writer]: ...
 
 
 @overload
 @contextlib.contextmanager
 def safe_open_writer(
-    f: str | Path | IO[str], *, delimiter: str = "\t", batch_size: int = ..., **kwargs: Any
+    f: str | Path | IO[str],
+    *,
+    delimiter: str = "\t",
+    buffering: int | None = ...,
+    batch_size: int = ...,
+    **kwargs: Any,
 ) -> Generator[BatchedWriter]: ...
 
 
@@ -954,7 +966,9 @@ def safe_open_writer(
     with safe_open(f, operation="write", representation="text", buffering=buffering) as file:
         writer = csv.writer(file, delimiter=delimiter, **kwargs)
         if batch_size is not None:
-            yield BatchedWriter(writer, batch_size)
+            batched_writer = BatchedWriter(writer, batch_size)
+            yield batched_writer
+            batched_writer.flush()  # necessary to write remaining batches at end
         else:
             yield writer
 
