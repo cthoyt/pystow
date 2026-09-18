@@ -916,30 +916,7 @@ class BatchedWriter:
         """Write the rest of the remaining batch."""
         self.writer.writerows(self.batch)
         self.batch.clear()
-
-
-@overload
-@contextlib.contextmanager
-def safe_open_writer(
-    f: str | Path | IO[str],
-    *,
-    delimiter: str = "\t",
-    buffering: int | None = ...,
-    batch_size: None = ...,
-    **kwargs: Any,
-) -> Generator[Writer]: ...
-
-
-@overload
-@contextlib.contextmanager
-def safe_open_writer(
-    f: str | Path | IO[str],
-    *,
-    delimiter: str = "\t",
-    buffering: int | None = ...,
-    batch_size: int = ...,
-    **kwargs: Any,
-) -> Generator[BatchedWriter]: ...
+.
 
 
 @contextlib.contextmanager
@@ -950,7 +927,7 @@ def safe_open_writer(
     buffering: int | None = None,
     batch_size: int | None = None,
     **kwargs: Any,
-) -> Generator[Writer | BatchedWriter]:
+) -> Generator[Writer]:
     """Open a CSV writer, wrapping :func:`csv.writer`.
 
     :param f: A path to a file, or an already open text-based IO object
