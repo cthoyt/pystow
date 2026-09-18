@@ -135,13 +135,22 @@ def safe_open(  # noqa:C901
                 ):
                     yield gzf  # type:ignore
             elif path.suffix.endswith(".bz2"):
-                with bz2.open(path, mode=mode, encoding=encoding, newline=newline) as bz2f:
+                with (
+                    open(path, buffering=buffering or -1, mode=premode) as raw,
+                    bz2.open(raw, mode=mode, encoding=encoding, newline=newline) as bz2f,
+                ):
                     yield bz2f
             elif path.suffix.endswith(".xz"):
-                with lzma.open(path, mode=mode, encoding=encoding, newline=newline) as lzmaf:
+                with (
+                    open(path, buffering=buffering or -1, mode=premode) as raw,
+                    lzma.open(raw, mode=mode, encoding=encoding, newline=newline) as lzmaf,
+                ):
                     yield lzmaf
             elif path.suffix.endswith(".zst"):
-                with zstd_open(path, mode=mode, encoding=encoding, newline=newline) as zstdf:
+                with (
+                    open(path, buffering=buffering or -1, mode=premode) as raw,
+                    zstd_open(raw, mode=mode, encoding=encoding, newline=newline) as zstdf,
+                ):
                     yield zstdf  # type:ignore
             else:
                 with open(
