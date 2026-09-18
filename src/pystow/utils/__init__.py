@@ -916,7 +916,6 @@ class BatchedWriter:
         """Write the rest of the remaining batch."""
         self.writer.writerows(self.batch)
         self.batch.clear()
-.
 
 
 @contextlib.contextmanager
@@ -944,8 +943,10 @@ def safe_open_writer(
         writer = csv.writer(file, delimiter=delimiter, **kwargs)
         if batch_size is not None:
             batched_writer = BatchedWriter(writer, batch_size)
-            yield batched_writer
-            batched_writer.flush()  # necessary to write remaining batches at end
+            # cast because the batched writer object is a duck
+            yield cast(Writer, batched_writer)
+            # make sure there's a final flush of any remaining rows
+            batched_writer.flush()
         else:
             yield writer
 
