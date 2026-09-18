@@ -89,6 +89,7 @@ class OpenKwargs(TypedDict):
     encoding: NotRequired[str | None]
     newline: NotRequired[str | None]
     buffering: NotRequired[int | None]
+    timeout: NotRequired[int | None]
 
 
 # docstr-coverage:excused `overload`
@@ -145,6 +146,7 @@ def safe_open(  # noqa:C901
                 encoding=encoding,
                 newline=newline,
                 buffering=buffering,
+                timeout=kwargs.get("timeout"),
             ) as file:
                 yield file
         else:
@@ -388,6 +390,12 @@ def is_url(obj: Any) -> TypeGuard[str]:
     return isinstance(obj, str) and obj.startswith(("http://", "https://"))
 
 
+class UrlOpenKwargs(typing.TypedDict):
+    """Keyword arguments for :func:`urllib.request.urlopen`."""
+
+    timeout: typing.NotRequired[int | None]
+
+
 # docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
@@ -395,9 +403,7 @@ def open_url(
     url: str,
     *,
     representation: Literal["text"] = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-    buffering: int | None = None,
+    **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[str]]: ...
 
 
@@ -408,9 +414,7 @@ def open_url(
     url: str,
     *,
     representation: Literal["binary"] = ...,
-    encoding: str | None = ...,
-    newline: str | None = ...,
-    buffering: int | None = None,
+    **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -419,16 +423,23 @@ def open_url(
     url: str,
     *,
     representation: Representation = "text",
-    encoding: str | None = None,
-    newline: str | None = None,
-    buffering: int | None = None,
+    **kwargs: Unpack[OpenKwargs],
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Get a file-like object from a URL."""
-    if buffering is not None and buffering != -1:
+    if (buffering := kwargs.get("buffering")) and buffering != -1:
         raise NotImplementedError("can not buffer when opening a URL")
-    with urllib.request.urlopen(url) as response:  # noqa:S310
+    urlopen_kwargs: UrlOpenKwargs
+    if timeout := kwargs.get("timeout"):
+        urlopen_kwargs = {"timeout": timeout}
+    else:
+        urlopen_kwargs = {}
+    with urllib.request.urlopen(url, **urlopen_kwargs) as response:  # noqa:S310
         match representation:
             case "text":
-                yield io.TextIOWrapper(response, encoding=encoding, newline=newline)
+                yield io.TextIOWrapper(
+                    response, encoding=kwargs.get("encoding"), newline=kwargs.get("newline")
+                )
             case "binary":
                 yield io.BufferedReader(response)
+            case _:
+                raise InvalidRepresentationError(representation)
