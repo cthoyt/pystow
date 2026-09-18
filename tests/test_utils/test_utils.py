@@ -65,6 +65,7 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
+from pystow.utils.safe_open import COMPRESSION_EXTENSIONS
 from tests.constants import RESOURCES
 
 TEST_TXT = RESOURCES.joinpath("test.txt")
@@ -544,7 +545,7 @@ class TestUtils(unittest.TestCase):
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
         encodings = [None, "ascii", "utf-16-be", "CP1252"]
-        compressions = [None, "gz"]
+        compressions = [None, *COMPRESSION_EXTENSIONS]
         bufferings = [None, 1024 * 1024]
         for encoding, compression, buffering in itt.product(encodings, compressions, bufferings):
             with (

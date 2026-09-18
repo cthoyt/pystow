@@ -14,7 +14,7 @@ __all__ = [
     "OPERATION_VALUES",
     "REPRESENTATION_VALUES",
     "REVERSE_MODE_MAP",
-    "_MODE_TO_SIMPLE",
+    "_OPERATION_TO_UNQUALIFIED_MODE",
     "InvalidOperationError",
     "InvalidRepresentationError",
     "Operation",
@@ -47,11 +47,11 @@ QualifiedMode: TypeAlias = Literal["rt", "wt", "rb", "wb"]
 
 ModePair: TypeAlias = tuple[Operation, Representation]
 
-_MODE_TO_SIMPLE: Mapping[Operation, UnqualifiedMode] = {
+_OPERATION_TO_UNQUALIFIED_MODE: Mapping[Operation, UnqualifiedMode] = {
     "read": "r",
     "write": "w",
 }
-_MODE_TO_BINARY_SOMETHING: Mapping[Operation, Literal["rb", "wb"]] = {
+_OPERATION_TO_BINARY_MODE: Mapping[Operation, Literal["rb", "wb"]] = {
     "read": "rb",
     "write": "wb",
 }
