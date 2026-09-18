@@ -894,6 +894,7 @@ class BatchedWriter:
     batch: list[Iterable[Any]]
 
     def __init__(self, writer: Writer, batch_size: int) -> None:
+        """Initialize the batched writer."""
         self.writer = writer
         self.batch_size = batch_size
         self.batch = []
