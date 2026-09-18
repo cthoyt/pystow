@@ -886,20 +886,70 @@ def gzip_compress(
     return target
 
 
+class BatchedWriter:
+    """Wrap a writer for batching."""
+
+    writer: Writer
+    batch_size: int
+    batch: list[Iterable[Any]]
+
+    def __init__(self, writer: Writer, batch_size: int) -> None:
+        """Initialize the batched writer."""
+        self.writer = writer
+        self.batch_size = batch_size
+        self.batch = []
+
+    def writerow(self, row: Iterable[Any], /) -> None:
+        """Write a single row to the batch."""
+        self.batch.append(row)
+        if len(self.batch) >= self.batch_size:
+            self.flush()
+
+    def writerows(self, rows: Iterable[Iterable[Any]], /) -> None:
+        """Write multiple rows to the batch."""
+        # TODO get fancy and only fill up the batch
+        #  then batch on the rows themselves
+        self.batch.extend(rows)
+        if len(self.batch) >= self.batch_size:
+            self.flush()
+
+    def flush(self) -> None:
+        """Write the rest of the remaining batch."""
+        self.writer.writerows(self.batch)
+        self.batch.clear()
+
+
 @contextlib.contextmanager
 def safe_open_writer(
-    f: str | Path | IO[str], *, delimiter: str = "\t", **kwargs: Any
+    f: str | Path | IO[str],
+    *,
+    delimiter: str = "\t",
+    buffering: int | None = None,
+    batch_size: int | None = None,
+    **kwargs: Any,
 ) -> Generator[Writer]:
     """Open a CSV writer, wrapping :func:`csv.writer`.
 
     :param f: A path to a file, or an already open text-based IO object
     :param delimiter: The delimiter for writing to CSV
+    :param buffering: The buffer size for the file. If not given, defaults to -1, which
+        opens in unbuffered mode
+    :param batch_size: The number of rows to write in each batch. If you're using this,
+        it's probably also good to add ``buffering=1024*1024`` to the file opener
     :param kwargs: Keyword arguments to pass to :func:`csv.writer`
 
     :yields: A CSV writer object, constructed from :func:`csv.writer`
     """
-    with safe_open(f, operation="write", representation="text") as file:
-        yield csv.writer(file, delimiter=delimiter, **kwargs)
+    with safe_open(f, operation="write", representation="text", buffering=buffering) as file:
+        writer = csv.writer(file, delimiter=delimiter, **kwargs)
+        if batch_size is not None:
+            batched_writer = BatchedWriter(writer, batch_size)
+            # cast because the batched writer object is a duck
+            yield cast(Writer, batched_writer)
+            # make sure there's a final flush of any remaining rows
+            batched_writer.flush()
+        else:
+            yield writer
 
 
 @contextlib.contextmanager

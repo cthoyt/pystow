@@ -283,24 +283,37 @@ class TestUtils(unittest.TestCase):
 
     def test_safe_writer(self) -> None:
         """Test writers."""
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "test.tsv"
-            with safe_open_writer(path) as writer:
-                writer.writerow(("c1", "c2"))
-                writer.writerow(("v1", "v2"))
-                writer.writerow(("v3", "v4"))
+        bufferings: list[int | None] = [None, -1, 0, 1024 * 1024]
+        batch_sizes: list[int | None] = [None, 1, 2, 3]
 
-            df = pd.read_csv(path, sep="\t")
-            self.assertEqual(["c1", "c2"], list(df.columns))
-            self.assertEqual(2, len(df.index))
+        for buffering, batch_size in itt.product(bufferings, batch_sizes):
+            with (
+                self.subTest(batch_size=batch_size, buffering=buffering),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                path = Path(directory) / "test.tsv"
+                with safe_open_writer(path, buffering=buffering, batch_size=batch_size) as writer:
+                    writer.writerow(("c1", "c2"))
+                    writer.writerow(("v1", "v2"))
+                    writer.writerow(("v3", "v4"))
 
-            with safe_open_reader(path) as reader:
-                self.assertEqual([["c1", "c2"], ["v1", "v2"], ["v3", "v4"]], list(reader))
-
-            with safe_open_dict_reader(path) as reader2:
                 self.assertEqual(
-                    [{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], list(reader2)
+                    "c1\tc2\nv1\tv2\nv3\tv4\n",
+                    path.read_text(),
+                    msg=f"incorrectly written with {buffering=} and {batch_size=}",
                 )
+
+                df = pd.read_csv(path, sep="\t")
+                self.assertEqual(["c1", "c2"], list(df.columns))
+                self.assertEqual(2, len(df.index))
+
+                with safe_open_reader(path) as reader:
+                    self.assertEqual([["c1", "c2"], ["v1", "v2"], ["v3", "v4"]], list(reader))
+
+                with safe_open_dict_reader(path) as reader2:
+                    self.assertEqual(
+                        [{"c1": "v1", "c2": "v2"}, {"c1": "v3", "c2": "v4"}], list(reader2)
+                    )
 
     def test_zip_writer(self) -> None:
         """Test ZIP writers."""
@@ -549,7 +562,7 @@ class TestUtils(unittest.TestCase):
                 ) as file:
                     file.write(TEST_TXT_CONTENT)
                 with safe_open(path, encoding=encoding, operation="read") as file:
-                    self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
+                    self.assertEqual(TEST_TXT_CONTENT, file.read())
 
     def test_safe_write(self) -> None:
         """Test safe write."""
