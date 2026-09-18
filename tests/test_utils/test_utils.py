@@ -64,6 +64,7 @@ from pystow.utils import (
     write_zipfile_rdf,
     write_zipfile_xml,
 )
+from pystow.utils.safe_open import COMPRESSION_EXTENSIONS
 from tests.constants import RESOURCES
 
 TEST_TXT = RESOURCES.joinpath("test.txt")
@@ -529,10 +530,22 @@ class TestUtils(unittest.TestCase):
 
     def test_encodings(self) -> None:
         """Test I/O in different encodings."""
-        for encoding in ["ascii", "utf-16-be", "CP1252"]:
-            with self.subTest(encoding=encoding), tempfile.TemporaryDirectory() as directory:
-                path = Path(directory).joinpath("test.txt")
-                with safe_open(path, encoding=encoding, operation="write") as file:
+        encodings = [None, "ascii", "utf-16-be", "CP1252"]
+        compressions = [None, *COMPRESSION_EXTENSIONS]
+        bufferings = [None, 1024 * 1024]
+        for encoding, compression, buffering in itt.product(encodings, compressions, bufferings):
+            with (
+                self.subTest(encoding=encoding, compression=compression, buffering=buffering),
+                tempfile.TemporaryDirectory() as directory_name,
+            ):
+                directory = Path(directory_name)
+                if compression is None:
+                    path = directory.joinpath("test.txt")
+                else:
+                    path = directory.joinpath(f"test.txt.{compression}")
+                with safe_open(
+                    path, encoding=encoding, operation="write", buffering=buffering
+                ) as file:
                     file.write(TEST_TXT_CONTENT)
                 with safe_open(path, encoding=encoding, operation="read") as file:
                     self.assertEqual(TEST_TXT_CONTENT, file.read(), msg=f"failed for {encoding}")
