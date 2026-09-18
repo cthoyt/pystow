@@ -56,6 +56,10 @@ except ImportError:
         """Open a Zstandard compressed file in binary or text mode."""
         raise RuntimeError("zstd is not available")
 
+    zstd_available = False
+else:
+    zstd_available = True
+
 
 __all__ = [
     "is_url",
@@ -73,6 +77,10 @@ __all__ = [
 ]
 
 TextSource: TypeAlias = str | Path | IO[str]
+
+COMPRESSION_EXTENSIONS = ["gz", "xz", "bz2"]
+if zstd_available:
+    COMPRESSION_EXTENSIONS.append("zst")
 
 
 class OpenKwargs(TypedDict):
