@@ -53,7 +53,7 @@ from .hashing import (
     raise_on_digest_mismatch,
 )
 from .io_typing import (
-    _MODE_TO_SIMPLE,
+    _OPERATION_TO_UNQUALIFIED_MODE,
     MODE_MAP,
     OPERATION_VALUES,
     REPRESENTATION_VALUES,
@@ -430,7 +430,7 @@ def open_zipfile(
     encoding: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open a zipfile."""
-    mode = _MODE_TO_SIMPLE[operation]
+    mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         zipfile.ZipFile(file=path, mode=mode, **(zipfile_kwargs or {})) as zip_file,
         open_inner_zipfile(
@@ -1361,9 +1361,13 @@ class HeaderMismatchError(ValueError):
 
 
 def tarfile_writestr(tar_file: tarfile.TarFile, filename: str, data: str) -> None:
-    """Write to a tarfile."""
+    """Write text to a tarfile."""
     # TODO later, combine with other tarfile writing
-    data_bytes = data.encode("utf-8")
+    tarfile_write_bytes(tar_file, filename, data.encode("utf-8"))
+
+
+def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -> None:
+    """Write bytes to a tarfile."""
     tar_info = tarfile.TarInfo(name=filename)
-    tar_info.size = len(data_bytes)
-    tar_file.addfile(tar_info, io.BytesIO(data_bytes))
+    tar_info.size = len(data)
+    tar_file.addfile(tar_info, io.BytesIO(data))
