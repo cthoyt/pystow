@@ -90,6 +90,7 @@ class OpenKwargs(TypedDict):
     newline: NotRequired[str | None]
     buffering: NotRequired[int | None]
     timeout: NotRequired[int | None]
+    """Timeout only applies when opening from a remote file"""
 
 
 # docstr-coverage:excused `overload`
