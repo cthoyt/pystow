@@ -341,12 +341,14 @@ class TestUtils(unittest.TestCase):
 
     def test_tar_open(self) -> None:
         """Test writing and reading a tar file."""
-        with self.assertRaises(ValueError), open_tarfile(..., ..., operation="nope"):  # type:ignore[arg-type]
-            pass
-
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("test.tar.gz")
             inner = "test_inner.tsv"
+
+            # failure on invalid operation
+            with self.assertRaises(ValueError), open_tarfile(path, inner, operation="nope"):  # type: ignore[arg-type]
+                pass
+
             with open_tarfile(path, inner, operation="write") as file:
                 file.write(b"c1\tc2\nv1\tv2")
 
