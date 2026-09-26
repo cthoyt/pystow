@@ -37,6 +37,7 @@ from tqdm.auto import tqdm
 from .download import (
     DownloadBackend,
     DownloadError,
+    DownloadKwargs,
     UnexpectedDirectoryError,
     download,
     download_from_google,
@@ -125,6 +126,7 @@ __all__ = [
     "ArchiveType",
     "DownloadBackend",
     "DownloadError",
+    "DownloadKwargs",
     "Hash",
     "HeaderMismatchError",
     "HexDigestError",
