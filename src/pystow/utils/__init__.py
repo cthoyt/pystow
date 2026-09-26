@@ -551,16 +551,13 @@ def open_inner_tarfile(
         with _wrap_binary_if_needed(file, representation, encoding=encoding, newline=newline) as yf:
             yield yf
     elif operation == "write":
-        if representation == "binary":
-            file = BytesIO()
-            yield file
-            file.seek(0)
-            tarinfo = tarfile.TarInfo(name=inner_path)
-            tarinfo.size = len(file.getbuffer())
-            tar_file.addfile(tarinfo, file)
-        elif representation == "text":
-            raise NotImplementedError
-
+        file = BytesIO()
+        with _wrap_binary_if_needed(file, representation, encoding=encoding, newline=newline) as yf:
+            yield yf
+        file.seek(0)
+        tarinfo = tarfile.TarInfo(name=inner_path)
+        tarinfo.size = len(file.getbuffer())
+        tar_file.addfile(tarinfo, file)
     else:
         raise InvalidOperationError(operation)
 
