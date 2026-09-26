@@ -470,20 +470,46 @@ def open_tarfile(
 
     inner_path = str(PurePath(inner_path))
     if operation == "read":
-        with tarfile.open(path, "r", **(open_kwargs or {})) as tar:
-            member = tar.getmember(inner_path)
-            file = tar.extractfile(member)
-            if file is None:
-                raise FileNotFoundError(f"could not find {inner_path} in tarfile {path}")
+        with (
+            tarfile.open(path, "r", **(open_kwargs or {})) as tar_file,
+            open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
+        ):
             yield file
+    elif operation == "write":
+        with (
+            tarfile.TarFile(path, mode="w") as tar_file,
+            open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
+        ):
+            yield file
+    else:
+        raise InvalidOperationError(operation)
+
+
+@contextlib.contextmanager
+def open_tarfile_inner(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    operation: Operation,
+    representation: Representation,
+) -> Generator[IO[bytes]]:
+    """Open an inner tar file."""
+    if representation != "binary":
+        raise NotImplementedError("tarfile must use binary representation")
+
+    inner_path = str(PurePath(inner_path))
+    if operation == "read":
+        member = tar_file.getmember(inner_path)
+        file = tar_file.extractfile(member)
+        if file is None:
+            raise FileNotFoundError(f"could not find {inner_path} in tarfile {tar_file}")
+        yield file
     elif operation == "write":
         file = BytesIO()
         yield file
         file.seek(0)
         tarinfo = tarfile.TarInfo(name=inner_path)
         tarinfo.size = len(file.getbuffer())
-        with tarfile.TarFile(path, mode="w") as tar_file:
-            tar_file.addfile(tarinfo, file)
+        tar_file.addfile(tarinfo, file)
     else:
         raise InvalidOperationError(operation)
 
