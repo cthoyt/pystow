@@ -170,6 +170,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_inner_tarfile",
     "open_inner_zipfile",
     "open_tarfile",
     "open_url",
@@ -455,6 +456,32 @@ def open_zipfile(
         yield file
 
 
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_tarfile(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_tarfile(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[IO[str]]: ...
+
+
 @contextlib.contextmanager
 def open_tarfile(
     path: str | Path,
@@ -463,27 +490,68 @@ def open_tarfile(
     operation: Operation = "read",
     representation: Representation = "binary",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[IO[bytes]]:
+) -> Generator[IO[bytes]] | Generator[IO[str]]:
     """Open a tar file."""
+    mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
+    with (
+        tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
+        open_inner_tarfile(
+            tar_file, inner_path, operation=operation, representation=representation
+        ) as file,
+    ):
+        yield file
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+) -> Generator[IO[str]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+@contextlib.contextmanager
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
+    """Open an inner tar file."""
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
 
     inner_path = str(PurePath(inner_path))
     if operation == "read":
-        with tarfile.open(path, "r", **(open_kwargs or {})) as tar:
-            member = tar.getmember(inner_path)
-            file = tar.extractfile(member)
-            if file is None:
-                raise FileNotFoundError(f"could not find {inner_path} in tarfile {path}")
-            yield file
+        member = tar_file.getmember(inner_path)
+        file = tar_file.extractfile(member)
+        if file is None:
+            raise FileNotFoundError(f"could not find {inner_path} in tarfile {tar_file}")
+        yield file
     elif operation == "write":
         file = BytesIO()
         yield file
         file.seek(0)
         tarinfo = tarfile.TarInfo(name=inner_path)
         tarinfo.size = len(file.getbuffer())
-        with tarfile.TarFile(path, mode="w") as tar_file:
-            tar_file.addfile(tarinfo, file)
+        tar_file.addfile(tarinfo, file)
     else:
         raise InvalidOperationError(operation)
 
