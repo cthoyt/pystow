@@ -473,6 +473,8 @@ def open_tarfile(
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -486,6 +488,8 @@ def open_tarfile(
     operation: Operation = ...,
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -497,13 +501,20 @@ def open_tarfile(
     operation: Operation = "read",
     representation: Representation = "binary",
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[IO[bytes]] | Generator[IO[str]]:
     """Open a tar file."""
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
         open_inner_tarfile(
-            tar_file, inner_path, operation=operation, representation=representation
+            tar_file,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            encoding=encoding,
+            newline=newline,
         ) as file,
     ):
         yield file
