@@ -467,22 +467,12 @@ def open_tarfile(
     """Open a tar file."""
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
-
-    inner_path = str(PurePath(inner_path))
-    if operation == "read":
-        with (
-            tarfile.open(path, "r", **(open_kwargs or {})) as tar_file,
-            open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
-        ):
-            yield file
-    elif operation == "write":
-        with (
-            tarfile.TarFile(path, mode="w") as tar_file,
-            open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
-        ):
-            yield file
-    else:
-        raise InvalidOperationError(operation)
+    mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
+    with (
+        tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
+        open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
+    ):
+        yield file
 
 
 @contextlib.contextmanager
