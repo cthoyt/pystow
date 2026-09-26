@@ -1557,8 +1557,8 @@ def open_archive(
     archive_type: ArchiveType,
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
-    archive_kwargs: Mapping[str, Any] | None = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
+    outer_open_kwargs: Mapping[str, Any] | None = ...,
+    inner_open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
@@ -1573,8 +1573,8 @@ def open_archive(
     archive_type: ArchiveType,
     operation: Operation = ...,
     representation: Literal["text"] = ...,
-    archive_kwargs: Mapping[str, Any] | None = ...,
-    open_kwargs: Mapping[str, Any] | None = ...,
+    outer_open_kwargs: Mapping[str, Any] | None = ...,
+    inner_open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
     newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
@@ -1588,8 +1588,8 @@ def open_archive(
     archive_type: ArchiveType,
     operation: Operation = "read",
     representation: Representation = "text",
-    archive_kwargs: Mapping[str, Any] | None = None,
-    open_kwargs: Mapping[str, Any] | None = None,
+    outer_open_kwargs: Mapping[str, Any] | None = None,
+    inner_open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
     newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
@@ -1600,7 +1600,7 @@ def open_archive(
             inner_path,
             operation=operation,
             representation=representation,
-            open_kwargs=open_kwargs,
+            open_kwargs=outer_open_kwargs,
             encoding=encoding,
             newline=newline,
         ) as file:
@@ -1611,8 +1611,8 @@ def open_archive(
             inner_path,
             operation=operation,
             representation=representation,
-            zipfile_kwargs=archive_kwargs,
-            open_kwargs=open_kwargs,
+            zipfile_kwargs=outer_open_kwargs,
+            open_kwargs=inner_open_kwargs,
             encoding=encoding,
             newline=newline,
         ) as file:
