@@ -452,9 +452,27 @@ def open_tarfile(
     *,
     operation: Operation = "read",
     representation: Representation = "binary",
+    tarfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
 ) -> Generator[IO[bytes]]:
     """Open a tar file."""
+    mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
+    with (
+        tarfile.TarFile(file=path, mode=mode, **(tarfile_kwargs or {})) as file,
+        open_inner_zipfile(
+            file,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            open_kwargs=open_kwargs,
+            encoding=encoding,
+        ) as file,
+    ):
+        yield file
+
+
+def _open_old():
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
 
