@@ -15,7 +15,7 @@ import typing
 import warnings
 import zipfile
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
-from io import BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path, PurePath, PurePosixPath
 from subprocess import check_output
 from typing import (
@@ -543,6 +543,8 @@ def open_inner_tarfile(
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open an inner tar file."""
     inner_path = str(PurePath(inner_path))
+    encoding = ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = ensure_sensible_newline(newline, representation=representation)
     if operation == "read":
         member = tar_file.getmember(inner_path)
         file = tar_file.extractfile(member)
@@ -551,10 +553,18 @@ def open_inner_tarfile(
         with _wrap_binary_if_needed(file, representation, encoding=encoding, newline=newline) as yf:
             yield yf
     elif operation == "write":
-        file = BytesIO()
-        with _wrap_binary_if_needed(file, representation, encoding=encoding, newline=newline) as yf:
-            yield yf
-        file.seek(0)
+        if representation == "binary":
+            file = BytesIO()
+            yield file
+            file.seek(0)
+        elif representation == "text":
+            sio = StringIO(newline=newline)
+            yield sio
+            sio.seek(0)
+            file = BytesIO(sio.getvalue().encode(cast(str, encoding)))
+        else:
+            raise InvalidRepresentationError(representation)
+
         tarinfo = tarfile.TarInfo(name=inner_path)
         tarinfo.size = len(file.getbuffer())
         tar_file.addfile(tarinfo, file)
