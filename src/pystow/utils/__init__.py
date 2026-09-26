@@ -95,6 +95,7 @@ from .safe_open import (
     safe_write_text,
     write_json,
     write_yaml,
+    open_inner_tarfile,
 )
 from .testing import requires_package
 from ..constants import README_TEXT, TimeoutHint
@@ -460,7 +461,7 @@ def open_tarfile(
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         tarfile.TarFile(file=path, mode=mode, **(tarfile_kwargs or {})) as file,
-        open_inner_zipfile(
+        open_inner_tarfile(
             file,
             inner_path,
             operation=operation,
