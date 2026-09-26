@@ -16,9 +16,19 @@ import warnings
 import zipfile
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from io import BytesIO
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 from subprocess import check_output
-from typing import IO, TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, TypeVar, cast, overload
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -160,6 +170,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_archive",
     "open_inner_zipfile",
     "open_tarfile",
     "open_url",
@@ -351,7 +362,7 @@ def read_lzma_csv(
 def write_zipfile_csv(
     df: pandas.DataFrame,
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     sep: str = "\t",
     index: bool = False,
     **kwargs: Any,
@@ -371,7 +382,7 @@ def write_zipfile_csv(
 
 
 def read_zipfile_csv(
-    path: str | Path, inner_path: str, sep: str = "\t", **kwargs: Any
+    path: str | Path, inner_path: str | PurePath, sep: str = "\t", **kwargs: Any
 ) -> pandas.DataFrame:
     """Read an inner CSV file from a zip archive.
 
@@ -393,7 +404,7 @@ def read_zipfile_csv(
 @contextlib.contextmanager
 def open_zipfile(
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     *,
     operation: Operation = ...,
     representation: Literal["text"] = ...,
@@ -408,7 +419,7 @@ def open_zipfile(
 @contextlib.contextmanager
 def open_zipfile(
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
@@ -421,7 +432,7 @@ def open_zipfile(
 @contextlib.contextmanager
 def open_zipfile(
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     *,
     operation: Operation = "read",
     representation: Representation = "text",
@@ -448,7 +459,7 @@ def open_zipfile(
 @contextlib.contextmanager
 def open_tarfile(
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     *,
     operation: Operation = "read",
     representation: Representation = "binary",
@@ -458,6 +469,7 @@ def open_tarfile(
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
 
+    inner_path = str(PurePath(inner_path))
     if operation == "read":
         with tarfile.open(path, "r", **(open_kwargs or {})) as tar:
             member = tar.getmember(inner_path)
@@ -479,7 +491,7 @@ def open_tarfile(
 
 @contextlib.contextmanager
 def open_zip_reader(
-    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+    path: str | Path, inner_path: str | PurePath, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[Reader]:
     """Read an inner CSV file from a zip archive.
 
@@ -496,7 +508,7 @@ def open_zip_reader(
 
 @contextlib.contextmanager
 def open_zip_dict_reader(
-    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+    path: str | Path, inner_path: str | PurePath, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[csv.DictReader[str]]:
     """Read an inner CSV file from a zip archive.
 
@@ -513,7 +525,7 @@ def open_zip_dict_reader(
 
 @contextlib.contextmanager
 def open_zip_writer(
-    path: str | Path, inner_path: str, delimiter: str = "\t", **kwargs: Any
+    path: str | Path, inner_path: str | PurePath, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[Writer]:
     """Open a writer for an inner CSV file from a zip archive.
 
@@ -531,7 +543,7 @@ def open_zip_writer(
 def write_zipfile_xml(
     element_tree: lxml.etree.ElementTree,
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     **kwargs: Any,
 ) -> None:
     """Write an XML element tree to an inner XML file to a zip archive.
@@ -583,7 +595,9 @@ def iterparse_xml(path: str | Path, tag: str | tuple[str, ...], **kwargs: Any) -
         yield from etree.iterparse(file, tag=tag, **kwargs)
 
 
-def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
+def read_zipfile_xml(
+    path: str | Path, inner_path: str | PurePath, **kwargs: Any
+) -> lxml.etree.ElementTree:
     """Read an inner XML file from a zip archive.
 
     :param path: The path to the zip archive
@@ -601,7 +615,7 @@ def read_zipfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.e
 def write_zipfile_np(
     arr: numpy.typing.ArrayLike,
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     **kwargs: Any,
 ) -> None:
     """Write a dataframe to an inner CSV file to a zip archive.
@@ -618,7 +632,9 @@ def write_zipfile_np(
         np.save(file, arr, **kwargs)
 
 
-def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typing.ArrayLike:
+def read_zip_np(
+    path: str | Path, inner_path: str | PurePath, **kwargs: Any
+) -> numpy.typing.ArrayLike:
     """Read an inner numpy array-like from a zip archive.
 
     :param path: The path to the zip archive
@@ -633,7 +649,7 @@ def read_zip_np(path: str | Path, inner_path: str, **kwargs: Any) -> numpy.typin
         return cast(np.typing.ArrayLike, np.load(file, **kwargs))
 
 
-def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib.Graph:
+def read_zipfile_rdf(path: str | Path, inner_path: str | PurePath, **kwargs: Any) -> rdflib.Graph:
     """Read an inner RDF file from a zip archive.
 
     :param path: The path to the zip archive
@@ -651,7 +667,7 @@ def read_zipfile_rdf(path: str | Path, inner_path: str, **kwargs: Any) -> rdflib
 
 
 def write_zipfile_rdf(
-    graph: rdflib.Graph, path: str | Path, inner_path: str, **kwargs: Any
+    graph: rdflib.Graph, path: str | Path, inner_path: str | PurePath, **kwargs: Any
 ) -> None:
     """Read an inner RDF file from a zip archive.
 
@@ -667,7 +683,7 @@ def write_zipfile_rdf(
 def write_tarfile_csv(
     df: pandas.DataFrame,
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     sep: str = "\t",
     index: bool = False,
     **kwargs: Any,
@@ -689,7 +705,7 @@ def write_tarfile_csv(
 def write_tarfile_xml(
     element_tree: lxml.etree.ElementTree,
     path: str | Path,
-    inner_path: str,
+    inner_path: str | PurePath,
     **kwargs: Any,
 ) -> None:
     """Write an XML document a tar archive.
@@ -708,7 +724,7 @@ def write_tarfile_xml(
 
 
 def read_tarfile_csv(
-    path: str | Path, inner_path: str, sep: str = "\t", **kwargs: Any
+    path: str | Path, inner_path: str | PurePath, sep: str = "\t", **kwargs: Any
 ) -> pandas.DataFrame:
     """Read an inner CSV file from a tar archive.
 
@@ -725,7 +741,9 @@ def read_tarfile_csv(
         return pd.read_csv(file, sep=sep, **kwargs)
 
 
-def read_tarfile_xml(path: str | Path, inner_path: str, **kwargs: Any) -> lxml.etree.ElementTree:
+def read_tarfile_xml(
+    path: str | Path, inner_path: str | PurePath, **kwargs: Any
+) -> lxml.etree.ElementTree:
     """Read an inner XML file from a tar archive.
 
     :param path: The path to the tar archive
@@ -767,7 +785,10 @@ def read_rdflib(path: str | Path, **kwargs: Any) -> rdflib.Graph:
 
 
 def write_rdflib(
-    graph: rdflib.Graph, path: str | Path | IO[str] | IO[bytes], *, format: str | None = None
+    graph: rdflib.Graph,
+    path: str | Path | IO[str] | IO[bytes],
+    *,
+    format: str | None = None,
 ) -> None:
     """Write an RDF file with :mod:`rdflib`.
 
