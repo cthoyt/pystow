@@ -346,7 +346,7 @@ class TestUtils(unittest.TestCase):
             inner = "test_inner.tsv"
 
             # failure on invalid operation
-            with self.assertRaises(KeyError), open_tarfile(path, inner, operation="nope"):  # type: ignore[arg-type]
+            with self.assertRaises(KeyError), open_tarfile(path, inner, operation="nope"):  # type:ignore[call-overload]
                 pass
 
             with open_tarfile(path, inner, operation="write") as file:

@@ -455,6 +455,30 @@ def open_zipfile(
         yield file
 
 
+@overload
+@contextlib.contextmanager
+def open_tarfile(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+@overload
+@contextlib.contextmanager
+def open_tarfile(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+) -> Generator[IO[str]]: ...
+
+
 @contextlib.contextmanager
 def open_tarfile(
     path: str | Path,
@@ -463,25 +487,48 @@ def open_tarfile(
     operation: Operation = "read",
     representation: Representation = "binary",
     open_kwargs: Mapping[str, Any] | None = None,
-) -> Generator[IO[bytes]]:
+) -> Generator[IO[bytes]] | Generator[IO[str]]:
     """Open a tar file."""
-    if representation != "binary":
-        raise NotImplementedError("tarfile must use binary representation")
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
-        open_tarfile_inner(tar_file, inner_path, operation, representation) as file,
+        open_tarfile_inner(
+            tar_file, inner_path, operation=operation, representation=representation
+        ) as file,
     ):
         yield file
+
+
+@overload
+@contextlib.contextmanager
+def open_tarfile_inner(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+) -> Generator[IO[str]]: ...
+
+
+@overload
+@contextlib.contextmanager
+def open_tarfile_inner(
+    tar_file: tarfile.TarFile,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+) -> Generator[IO[bytes]]: ...
 
 
 @contextlib.contextmanager
 def open_tarfile_inner(
     tar_file: tarfile.TarFile,
     inner_path: str | PurePath,
-    operation: Operation,
-    representation: Representation,
-) -> Generator[IO[bytes]]:
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open an inner tar file."""
     if representation != "binary":
         raise NotImplementedError("tarfile must use binary representation")
