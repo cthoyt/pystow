@@ -339,22 +339,33 @@ class TestUtils(unittest.TestCase):
             with open_zipfile(path, "test.tsv", operation="write", representation="lolno"):  # type:ignore
                 pass
 
-    def test_tar_open(self) -> None:
+    def test_tar_ope(self) -> None:
         """Test writing and reading a tar file."""
-        with tempfile.TemporaryDirectory() as directory:
+        inner = "test_inner.tsv"
+
+        with self.subTest(representation="binary"), tempfile.TemporaryDirectory() as directory:
             path = Path(directory).joinpath("test.tar.gz")
-            inner = "test_inner.tsv"
 
             # failure on invalid operation
             with self.assertRaises(KeyError), open_tarfile(path, inner, operation="nope"):  # type:ignore[call-overload]
                 pass
 
-            with open_tarfile(path, inner, operation="write") as file:
+            with open_tarfile(path, inner, operation="write", representation="binary") as file:
                 file.write(b"c1\tc2\nv1\tv2")
 
-            with open_tarfile(path, inner, operation="read") as file:
+            with open_tarfile(path, inner, operation="read", representation="binary") as file:
                 self.assertEqual(b"c1\tc2\n", next(file))
                 self.assertEqual(b"v1\tv2", next(file))
+
+        with self.subTest(representation="text"), tempfile.TemporaryDirectory() as directory:
+            path = Path(directory).joinpath("test.tar.gz")
+
+            with open_tarfile(path, inner, operation="write", representation="text") as file:
+                file.write("c1\tc2\nv1\tv2")
+
+            with open_tarfile(path, inner, operation="read", representation="text") as file:
+                self.assertEqual("c1\tc2\n", next(file))
+                self.assertEqual("v1\tv2", next(file))
 
     def test_open_inner_zip(self) -> None:
         """Test opening a file within a zip archive."""
