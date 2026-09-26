@@ -19,6 +19,8 @@ from .impl import Module, VersionHint
 from .utils.download import DownloadKwargs
 
 if TYPE_CHECKING:
+    from pathlib import PurePath
+
     import bs4
     import lxml.etree
     import numpy.typing
@@ -541,7 +543,7 @@ def ensure_open_zip(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = ...,
     force: bool = ...,
     download_kwargs: DownloadKwargs | None = ...,
@@ -558,7 +560,7 @@ def ensure_open_zip(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = ...,
     force: bool = ...,
     download_kwargs: DownloadKwargs | None = ...,
@@ -573,7 +575,7 @@ def ensure_open_zip(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
@@ -745,7 +747,7 @@ def ensure_open_tarfile(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = ...,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = ...,
@@ -761,7 +763,7 @@ def ensure_open_tarfile(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = ...,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = ...,
@@ -775,7 +777,7 @@ def ensure_open_tarfile(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
@@ -1579,7 +1581,7 @@ def ensure_tar_df(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
@@ -1624,7 +1626,7 @@ def ensure_tar_xml(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
@@ -1668,7 +1670,7 @@ def ensure_zip_df(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,
@@ -1708,7 +1710,7 @@ def ensure_zip_np(
     key: str,
     *subkeys: str,
     url: str,
-    inner_path: str,
+    inner_path: str | PurePath,
     name: str | None = None,
     force: bool = False,
     download_kwargs: DownloadKwargs | None = None,

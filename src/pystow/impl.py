@@ -42,6 +42,8 @@ from .utils.download import DownloadKwargs
 from .utils.safe_open import zstd_open
 
 if TYPE_CHECKING:
+    from pathlib import PurePath
+
     import botocore.client
     import bs4
     import lxml.etree
@@ -775,7 +777,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: DownloadKwargs | None = ...,
@@ -790,7 +792,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: DownloadKwargs | None = ...,
@@ -803,7 +805,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
@@ -850,7 +852,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: DownloadKwargs | None = ...,
@@ -865,7 +867,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = ...,
         force: bool = ...,
         download_kwargs: DownloadKwargs | None = ...,
@@ -878,7 +880,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
@@ -1522,7 +1524,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
@@ -1645,7 +1647,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
@@ -1682,7 +1684,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
@@ -1716,7 +1718,7 @@ class Module:
         self,
         *subkeys: str,
         url: str,
-        inner_path: str,
+        inner_path: str | PurePath,
         name: str | None = None,
         force: bool = False,
         download_kwargs: DownloadKwargs | None = None,
