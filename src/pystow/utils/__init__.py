@@ -455,6 +455,7 @@ def open_zipfile(
         yield file
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_tarfile(
@@ -467,6 +468,7 @@ def open_tarfile(
 ) -> Generator[IO[bytes]]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_tarfile(
@@ -499,6 +501,7 @@ def open_tarfile(
         yield file
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_tarfile_inner(
@@ -510,6 +513,7 @@ def open_tarfile_inner(
 ) -> Generator[IO[str]]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_tarfile_inner(
