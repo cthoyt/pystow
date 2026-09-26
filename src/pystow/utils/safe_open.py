@@ -328,6 +328,59 @@ def open_inner_zipfile(
         yield yf
 
 
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str,
+    *,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[str]]: ...
+
+
+# docstr-coverage:excused `overload`
+@typing.overload
+@contextlib.contextmanager
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str,
+    *,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+def open_inner_tarfile(
+    tar_file: tarfile.TarFile,
+    inner_path: str,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
+    open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
+    """Open a file inside an already opened zip archive."""
+    mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
+    encoding = ensure_sensible_default_encoding(encoding, representation=representation)
+    newline = ensure_sensible_newline(newline, representation=representation)
+    with (
+        tar_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file,
+        _wrap_binary_if_needed(
+            binary_file, representation, encoding=encoding, newline=newline
+        ) as yf,
+    ):
+        yield yf
+
+
 ZZ = typing.TypeVar("ZZ", bound=IO[bytes])
 
 
