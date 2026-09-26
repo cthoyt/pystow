@@ -14,7 +14,7 @@ import typing
 import urllib.request
 import zipfile
 from collections.abc import Generator, Mapping
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import (
     IO,
     Any,
@@ -319,7 +319,8 @@ def open_inner_zipfile(
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     encoding = ensure_sensible_default_encoding(encoding, representation=representation)
     newline = ensure_sensible_newline(newline, representation=representation)
-    inner_path = str(PurePath(inner_path))
+    # relative paths within zip file's always follow Posix path, even on Windows
+    inner_path = str(PurePosixPath(inner_path))
     with (
         zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file,
         _wrap_binary_if_needed(
