@@ -122,6 +122,7 @@ __all__ = [
     "OPERATION_VALUES",
     "REPRESENTATION_VALUES",
     "REVERSE_MODE_MAP",
+    "ArchiveType",
     "DownloadBackend",
     "DownloadError",
     "Hash",
@@ -171,6 +172,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_archive",
     "open_inner_tarfile",
     "open_inner_zipfile",
     "open_tarfile",
@@ -412,6 +414,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -427,6 +430,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -440,6 +444,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open a zipfile."""
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
@@ -452,6 +457,7 @@ def open_zipfile(
             representation=representation,
             open_kwargs=open_kwargs,
             encoding=encoding,
+            newline=newline,
         ) as file,
     ):
         yield file
@@ -467,6 +473,8 @@ def open_tarfile(
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -480,6 +488,8 @@ def open_tarfile(
     operation: Operation = ...,
     representation: Literal["text"] = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -491,13 +501,20 @@ def open_tarfile(
     operation: Operation = "read",
     representation: Representation = "binary",
     open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[IO[bytes]] | Generator[IO[str]]:
     """Open a tar file."""
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
         open_inner_tarfile(
-            tar_file, inner_path, operation=operation, representation=representation
+            tar_file,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            encoding=encoding,
+            newline=newline,
         ) as file,
     ):
         yield file
@@ -1525,3 +1542,82 @@ def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -
     tar_info = tarfile.TarInfo(name=filename)
     tar_info.size = len(data)
     tar_file.addfile(tar_info, io.BytesIO(data))
+
+
+#: The archive type
+ArchiveType: TypeAlias = Literal["tar", "zip"]
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    archive_type: ArchiveType,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+    outer_open_kwargs: Mapping[str, Any] | None = ...,
+    inner_open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+# docstr-coverage:excused `overload`
+@overload
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    archive_type: ArchiveType,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+    outer_open_kwargs: Mapping[str, Any] | None = ...,
+    inner_open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[str]]: ...
+
+
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    archive_type: ArchiveType,
+    operation: Operation = "read",
+    representation: Representation = "text",
+    outer_open_kwargs: Mapping[str, Any] | None = None,
+    inner_open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
+    """Open an archived file."""
+    if archive_type == "tar":
+        with open_tarfile(
+            path,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            open_kwargs=outer_open_kwargs,
+            encoding=encoding,
+            newline=newline,
+        ) as file:
+            yield file
+    elif archive_type == "zip":
+        with open_zipfile(
+            path,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            zipfile_kwargs=outer_open_kwargs,
+            open_kwargs=inner_open_kwargs,
+            encoding=encoding,
+            newline=newline,
+        ) as file:
+            yield file
+    else:
+        raise ValueError(f"unrecognized archive type: {archive_type}")
