@@ -37,6 +37,7 @@ from tqdm.auto import tqdm
 from .download import (
     DownloadBackend,
     DownloadError,
+    DownloadKwargs,
     UnexpectedDirectoryError,
     download,
     download_from_google,
@@ -124,6 +125,7 @@ __all__ = [
     "REVERSE_MODE_MAP",
     "DownloadBackend",
     "DownloadError",
+    "DownloadKwargs",
     "Hash",
     "HeaderMismatchError",
     "HexDigestError",
