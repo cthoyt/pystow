@@ -339,8 +339,8 @@ class TestUtils(unittest.TestCase):
             with open_zipfile(path, "test.tsv", operation="write", representation="lolno"):  # type:ignore
                 pass
 
-    def test_tar_open_binary(self) -> None:
-        """Test writing and reading a tar file in binary mode."""
+    def test_tar_ope(self) -> None:
+        """Test writing and reading a tar file."""
         inner = "test_inner.tsv"
 
         with self.subTest(representation="binary"), tempfile.TemporaryDirectory() as directory:
