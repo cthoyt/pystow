@@ -170,6 +170,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_inner_tarfile",
     "open_inner_zipfile",
     "open_tarfile",
     "open_url",
@@ -494,7 +495,7 @@ def open_tarfile(
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     with (
         tarfile.open(path, mode, **(open_kwargs or {})) as tar_file,
-        open_tarfile_inner(
+        open_inner_tarfile(
             tar_file, inner_path, operation=operation, representation=representation
         ) as file,
     ):
@@ -504,7 +505,7 @@ def open_tarfile(
 # docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
-def open_tarfile_inner(
+def open_inner_tarfile(
     tar_file: tarfile.TarFile,
     inner_path: str | PurePath,
     *,
@@ -516,7 +517,7 @@ def open_tarfile_inner(
 # docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
-def open_tarfile_inner(
+def open_inner_tarfile(
     tar_file: tarfile.TarFile,
     inner_path: str | PurePath,
     *,
@@ -526,7 +527,7 @@ def open_tarfile_inner(
 
 
 @contextlib.contextmanager
-def open_tarfile_inner(
+def open_inner_tarfile(
     tar_file: tarfile.TarFile,
     inner_path: str | PurePath,
     *,
