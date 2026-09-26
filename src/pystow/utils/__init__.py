@@ -94,6 +94,7 @@ from .pydantic_utils import (
     write_pydantic_yaml,
 )
 from .safe_open import (
+    _wrap_binary_if_needed,
     is_url,
     open_inner_zipfile,
     open_url,
@@ -105,7 +106,6 @@ from .safe_open import (
     safe_write_text,
     write_json,
     write_yaml,
-    _wrap_binary_if_needed,
 )
 from .testing import requires_package
 from ..constants import README_TEXT, TimeoutHint
@@ -542,22 +542,14 @@ def open_inner_tarfile(
     newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open an inner tar file."""
-
     inner_path = str(PurePath(inner_path))
     if operation == "read":
         member = tar_file.getmember(inner_path)
         file = tar_file.extractfile(member)
         if file is None:
             raise FileNotFoundError(f"could not find {inner_path} in tarfile {tar_file}")
-        if representation == "binary":
-            yield file
-        elif representation == "text":
-            with _wrap_binary_if_needed(
-                file, representation, encoding=encoding, newline=newline
-            ) as yf:
-                yield yf
-        else:
-            raise InvalidRepresentationError(representation)
+        with _wrap_binary_if_needed(file, representation, encoding=encoding, newline=newline) as yf:
+            yield yf
     elif operation == "write":
         if representation == "binary":
             file = BytesIO()
