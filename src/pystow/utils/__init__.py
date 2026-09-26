@@ -122,6 +122,7 @@ __all__ = [
     "OPERATION_VALUES",
     "REPRESENTATION_VALUES",
     "REVERSE_MODE_MAP",
+    "ArchiveType",
     "DownloadBackend",
     "DownloadError",
     "Hash",
@@ -171,6 +172,7 @@ __all__ = [
     "n",
     "name_from_s3_key",
     "name_from_url",
+    "open_archive",
     "open_inner_tarfile",
     "open_inner_zipfile",
     "open_tarfile",
@@ -412,6 +414,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -427,6 +430,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = ...,
     open_kwargs: Mapping[str, Any] | None = ...,
     encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -440,6 +444,7 @@ def open_zipfile(
     zipfile_kwargs: Mapping[str, Any] | None = None,
     open_kwargs: Mapping[str, Any] | None = None,
     encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open a zipfile."""
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
@@ -452,6 +457,7 @@ def open_zipfile(
             representation=representation,
             open_kwargs=open_kwargs,
             encoding=encoding,
+            newline=newline,
         ) as file,
     ):
         yield file
@@ -1525,3 +1531,47 @@ def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -
     tar_info = tarfile.TarInfo(name=filename)
     tar_info.size = len(data)
     tar_file.addfile(tar_info, io.BytesIO(data))
+
+
+#: The archive type
+ArchiveType: TypeAlias = Literal["tar", "zip"]
+
+
+def open_archive(
+    archive_type: ArchiveType,
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
+    archive_kwargs: Mapping[str, Any] | None = None,
+    open_kwargs: Mapping[str, Any] | None = None,
+    encoding: str | None = None,
+    newline: str | None = None,
+) -> Generator[IO[str]] | Generator[IO[bytes]]:
+    """Open an archived file."""
+    if archive_type == "tar":
+        with open_tarfile(
+            path,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            open_kwargs=open_kwargs,
+            encoding=encoding,
+            newline=newline,
+        ) as file:
+            yield file
+    elif archive_type == "zip":
+        with open_zipfile(
+            path,
+            inner_path,
+            operation=operation,
+            representation=representation,
+            zipfile_kwargs=archive_kwargs,
+            open_kwargs=open_kwargs,
+            encoding=encoding,
+            newline=newline,
+        ) as file:
+            yield file
+    else:
+        raise ValueError(f"unrecognized archive type: {archive_type}")
