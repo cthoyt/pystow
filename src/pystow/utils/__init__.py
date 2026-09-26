@@ -1548,6 +1548,7 @@ def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -
 ArchiveType: TypeAlias = Literal["tar", "zip"]
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_archive(
@@ -1564,6 +1565,7 @@ def open_archive(
 ) -> Generator[IO[bytes]]: ...
 
 
+# docstr-coverage:excused `overload`
 @overload
 @contextlib.contextmanager
 def open_archive(
