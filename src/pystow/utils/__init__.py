@@ -1548,11 +1548,44 @@ def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -
 ArchiveType: TypeAlias = Literal["tar", "zip"]
 
 
+@overload
+@contextlib.contextmanager
 def open_archive(
-    archive_type: ArchiveType,
     path: str | Path,
     inner_path: str | PurePath,
     *,
+    archive_type: ArchiveType,
+    operation: Operation = ...,
+    representation: Literal["binary"] = ...,
+    archive_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[bytes]]: ...
+
+
+@overload
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    archive_type: ArchiveType,
+    operation: Operation = ...,
+    representation: Literal["text"] = ...,
+    archive_kwargs: Mapping[str, Any] | None = ...,
+    open_kwargs: Mapping[str, Any] | None = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
+) -> Generator[IO[str]]: ...
+
+
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    *,
+    archive_type: ArchiveType,
     operation: Operation = "read",
     representation: Representation = "text",
     archive_kwargs: Mapping[str, Any] | None = None,
