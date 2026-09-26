@@ -319,7 +319,7 @@ def open_inner_zipfile(
     mode = _OPERATION_TO_UNQUALIFIED_MODE[operation]
     encoding = ensure_sensible_default_encoding(encoding, representation=representation)
     newline = ensure_sensible_newline(newline, representation=representation)
-    # relative paths within zip file's always follow Posix path, even on Windows
+    # relative paths within zipfiles always follow POSIX, even on Windows
     inner_path = str(PurePosixPath(inner_path))
     with (
         zip_file.open(inner_path, mode=mode, **(open_kwargs or {})) as binary_file,
