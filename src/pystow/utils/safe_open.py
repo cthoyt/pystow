@@ -10,6 +10,7 @@ import io
 import json
 import lzma
 import sys
+import tarfile
 import typing
 import urllib.request
 import zipfile
