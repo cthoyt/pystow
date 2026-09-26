@@ -85,6 +85,7 @@ from .pydantic_utils import (
 )
 from .safe_open import (
     is_url,
+    open_inner_tarfile,
     open_inner_zipfile,
     open_url,
     safe_open,
@@ -95,7 +96,6 @@ from .safe_open import (
     safe_write_text,
     write_json,
     write_yaml,
-    open_inner_tarfile,
 )
 from .testing import requires_package
 from ..constants import README_TEXT, TimeoutHint
