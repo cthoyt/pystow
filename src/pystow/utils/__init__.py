@@ -1439,3 +1439,36 @@ def tarfile_write_bytes(tar_file: tarfile.TarFile, filename: str, data: bytes) -
     tar_info = tarfile.TarInfo(name=filename)
     tar_info.size = len(data)
     tar_file.addfile(tar_info, io.BytesIO(data))
+
+
+@contextlib.contextmanager
+def open_archive(
+    path: str | Path,
+    inner_path: str | PurePath,
+    archive_type: Literal["zip", "tar"],
+    *,
+    operation: Operation = "read",
+    representation: Representation = "text",
+    **kwargs: Any,
+) -> Generator[IO[str] | IO[bytes]]:
+    """Open an archived inner file."""
+    if archive_type == "zip":
+        with open_zipfile(
+            path,
+            inner_path=inner_path,
+            operation=operation,
+            representation=representation,
+            **kwargs,
+        ) as file:
+            yield file
+    elif archive_type == "tar":
+        with open_tarfile(
+            path,
+            inner_path=inner_path,
+            operation=operation,
+            representation=representation,
+            **kwargs,
+        ) as file:
+            yield file
+    else:
+        raise ValueError(f"unknown {archive_type=}")
