@@ -105,6 +105,7 @@ from .safe_open import (
     safe_write_text,
     write_json,
     write_yaml,
+    _wrap_binary_if_needed,
 )
 from .testing import requires_package
 from ..constants import README_TEXT, TimeoutHint
@@ -511,6 +512,8 @@ def open_inner_tarfile(
     *,
     operation: Operation = ...,
     representation: Literal["text"] = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[str]]: ...
 
 
@@ -523,6 +526,8 @@ def open_inner_tarfile(
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = ...,
+    encoding: str | None = ...,
+    newline: str | None = ...,
 ) -> Generator[IO[bytes]]: ...
 
 
@@ -533,10 +538,10 @@ def open_inner_tarfile(
     *,
     operation: Operation = "read",
     representation: Representation = "text",
+    encoding: str | None = None,
+    newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open an inner tar file."""
-    if representation != "binary":
-        raise NotImplementedError("tarfile must use binary representation")
 
     inner_path = str(PurePath(inner_path))
     if operation == "read":
@@ -544,14 +549,26 @@ def open_inner_tarfile(
         file = tar_file.extractfile(member)
         if file is None:
             raise FileNotFoundError(f"could not find {inner_path} in tarfile {tar_file}")
-        yield file
+        if representation == "binary":
+            yield file
+        elif representation == "text":
+            with _wrap_binary_if_needed(
+                file, representation, encoding=encoding, newline=newline
+            ) as yf:
+                yield yf
+        else:
+            raise InvalidRepresentationError(representation)
     elif operation == "write":
-        file = BytesIO()
-        yield file
-        file.seek(0)
-        tarinfo = tarfile.TarInfo(name=inner_path)
-        tarinfo.size = len(file.getbuffer())
-        tar_file.addfile(tarinfo, file)
+        if representation == "binary":
+            file = BytesIO()
+            yield file
+            file.seek(0)
+            tarinfo = tarfile.TarInfo(name=inner_path)
+            tarinfo.size = len(file.getbuffer())
+            tar_file.addfile(tarinfo, file)
+        elif representation == "text":
+            raise NotImplementedError
+
     else:
         raise InvalidOperationError(operation)
 
