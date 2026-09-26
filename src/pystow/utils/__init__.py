@@ -561,7 +561,8 @@ def open_inner_tarfile(
     newline: str | None = None,
 ) -> Generator[IO[str]] | Generator[IO[bytes]]:
     """Open an inner tar file."""
-    inner_path = str(PurePath(inner_path))
+    # by convention, paths inside tar files are POSIX-style, even on Windows
+    inner_path = str(PurePosixPath(inner_path))
     encoding = ensure_sensible_default_encoding(encoding, representation=representation)
     newline = ensure_sensible_newline(newline, representation=representation)
     if operation == "read":
