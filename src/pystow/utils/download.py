@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import shutil
 import urllib.error
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypeAlias, TypedDict
@@ -70,12 +70,12 @@ class RequestKwargs(TypedDict):
     auth: NotRequired[tuple[str, str]]
     timeout: NotRequired[TimeoutHint]
     allow_redirects: NotRequired[bool]
-    proxies: NotRequired[dict[str, str]]
+    proxies: NotRequired[MutableMapping[str, str]]
     verify: NotRequired[bool]
     stream: NotRequired[bool]
     cert: NotRequired[str | tuple[str, str]]
-    params: NotRequired[dict[str, Any]]
-    headers: NotRequired[dict[str, str | bytes | None] | None]
+    params: NotRequired[MutableMapping[str, Any]]
+    headers: NotRequired[MutableMapping[str, str | bytes | None] | None]
 
 
 class DownloadKwargs(RequestKwargs):
