@@ -76,7 +76,7 @@ __all__ = [
     "zstd_open",
 ]
 
-TextSource: TypeAlias = str | Path | IO[str]
+TextSource: TypeAlias = str | Path | IO[str] | IO[bytes]
 
 COMPRESSION_EXTENSIONS = ["gz", "xz", "bz2"]
 if zstd_available:
@@ -97,7 +97,7 @@ class OpenKwargs(TypedDict):
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path | IO[str] | IO[bytes],
+    path: TextSource,
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
@@ -109,7 +109,7 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path | IO[str] | IO[bytes],
+    path: TextSource,
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
@@ -119,7 +119,7 @@ def safe_open(
 
 @contextlib.contextmanager
 def safe_open(  # noqa:C901
-    path: str | Path | IO[str] | IO[bytes],
+    path: TextSource,
     *,
     operation: Operation = "read",
     representation: Representation = "text",
