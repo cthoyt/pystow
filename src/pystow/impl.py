@@ -1779,7 +1779,7 @@ class Module:
             *subkeys, url=url, name=name, force=force, download_kwargs=download_kwargs
         )
         if not precache:
-            return utils.read_rdflib(path=path, **(parse_kwargs or {}))
+            return utils.read_rdflib(path, **(parse_kwargs or {}))
 
         cache_path = path.with_suffix(path.suffix + ".pickle.gz")
         if cache_path.exists() and not force:
@@ -1788,7 +1788,7 @@ class Module:
             with gzip.open(cache_path, "rb") as file:
                 return cast(rdflib.Graph, pickle.load(file))
 
-        rv = utils.read_rdflib(path=path, **(parse_kwargs or {}))
+        rv = utils.read_rdflib(path, **(parse_kwargs or {}))
         with gzip.open(cache_path, "wb") as file:
             pickle.dump(rv, file, protocol=pickle.HIGHEST_PROTOCOL)
         return rv
@@ -1811,7 +1811,7 @@ class Module:
         :returns: An RDF graph
         """
         path = self.join(*subkeys, name=name, ensure_exists=False)
-        return utils.read_rdflib(path=path, **(parse_kwargs or {}))
+        return utils.read_rdflib(path, **(parse_kwargs or {}))
 
     def dump_rdf(
         self,

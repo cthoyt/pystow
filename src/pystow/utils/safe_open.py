@@ -62,6 +62,7 @@ else:
 
 
 __all__ = [
+    "Source",
     "is_url",
     "open_inner_zipfile",
     "open_url",
@@ -76,7 +77,8 @@ __all__ = [
     "zstd_open",
 ]
 
-TextSource: TypeAlias = str | Path | IO[str]
+#: A source that's either a path, a path-like, or a file-like
+Source: TypeAlias = str | Path | IO[str] | IO[bytes]
 
 COMPRESSION_EXTENSIONS = ["gz", "xz", "bz2"]
 if zstd_available:
@@ -97,7 +99,7 @@ class OpenKwargs(TypedDict):
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path | IO[str] | IO[bytes],
+    path: Source,
     *,
     operation: Operation = ...,
     representation: Literal["text"] = "text",
@@ -109,7 +111,7 @@ def safe_open(
 @typing.overload
 @contextlib.contextmanager
 def safe_open(
-    path: str | Path | IO[str] | IO[bytes],
+    path: Source,
     *,
     operation: Operation = ...,
     representation: Literal["binary"] = "binary",
@@ -119,7 +121,7 @@ def safe_open(
 
 @contextlib.contextmanager
 def safe_open(  # noqa:C901
-    path: str | Path | IO[str] | IO[bytes],
+    path: Source,
     *,
     operation: Operation = "read",
     representation: Representation = "text",
@@ -201,24 +203,24 @@ def safe_open(  # noqa:C901
 
 
 @contextlib.contextmanager
-def _open_read_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> Generator[IO[str]]:
+def _open_read_text(path: Source, **kwargs: Unpack[OpenKwargs]) -> Generator[IO[str]]:
     with safe_open(path, representation="text", operation="read", **kwargs) as file:
         yield file
 
 
 @contextlib.contextmanager
-def _open_write_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> Generator[IO[str]]:
+def _open_write_text(path: Source, **kwargs: Unpack[OpenKwargs]) -> Generator[IO[str]]:
     with safe_open(path, representation="text", operation="write", **kwargs) as file:
         yield file
 
 
-def safe_open_json(path_or_url: TextSource, **kwargs: Unpack[OpenKwargs]) -> Any:
+def safe_open_json(path_or_url: Source, **kwargs: Unpack[OpenKwargs]) -> Any:
     """Safely open a file and parse as JSON."""
     with _open_read_text(path_or_url, **kwargs) as file:
         return json.load(file)
 
 
-def safe_open_yaml(path_or_url: TextSource, **kwargs: Unpack[OpenKwargs]) -> Any:
+def safe_open_yaml(path_or_url: Source, **kwargs: Unpack[OpenKwargs]) -> Any:
     """Safely open a file and parse as YAML."""
     import yaml
 
@@ -226,13 +228,13 @@ def safe_open_yaml(path_or_url: TextSource, **kwargs: Unpack[OpenKwargs]) -> Any
         return yaml.safe_load(file)
 
 
-def safe_write_text(s: str, path: TextSource, **kwargs: Unpack[OpenKwargs]) -> int:
+def safe_write_text(s: str, path: Source, **kwargs: Unpack[OpenKwargs]) -> int:
     """Write text to a file."""
     with _open_write_text(path, **kwargs) as file:
         return file.write(s)
 
 
-def safe_read_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> str:
+def safe_read_text(path: Source, **kwargs: Unpack[OpenKwargs]) -> str:
     """Read text from a file."""
     with _open_read_text(path, **kwargs) as file:
         return file.read()
@@ -240,7 +242,7 @@ def safe_read_text(path: TextSource, **kwargs: Unpack[OpenKwargs]) -> str:
 
 def write_yaml(
     data: Any,
-    path: TextSource,
+    path: Source,
     *,
     encoding: str | None = None,
     newline: str | None = None,
@@ -258,7 +260,7 @@ def write_yaml(
 
 def write_json(
     data: Any,
-    path: TextSource,
+    path: Source,
     *,
     encoding: str | None = None,
     newline: str | None = None,
@@ -374,7 +376,7 @@ def _wrap_binary_if_needed(
 
 @contextlib.contextmanager
 def safe_open_dict_reader(
-    f: TextSource, *, delimiter: str = "\t", **kwargs: Any
+    f: Source, *, delimiter: str = "\t", **kwargs: Any
 ) -> Generator[csv.DictReader[str]]:
     """Open a CSV dictionary reader, wrapping :func:`csv.DictReader`.
 

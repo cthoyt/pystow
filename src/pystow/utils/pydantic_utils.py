@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 import typing
 from collections.abc import Callable, Generator, Iterable, Mapping
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from tqdm import tqdm
 
 from .safe_open import (
+    Source,
     _open_read_text,
     _open_write_text,
     safe_open_dict_reader,
@@ -46,7 +46,7 @@ ModelValidateFailureAction: TypeAlias = Literal["raise", "skip"]
 
 
 def iter_pydantic_jsonl(
-    file: str | Path | TextIO,
+    file: Source,
     model_cls: type[BaseModelVar],
     *,
     progress: bool = False,
@@ -81,15 +81,13 @@ def iter_pydantic_jsonl(
 
 
 def read_pydantic_jsonl(
-    file: str | Path | TextIO, model_cls: type[BaseModelVar], **kwargs: Any
+    file: Source, model_cls: type[BaseModelVar], **kwargs: Any
 ) -> list[BaseModelVar]:
     """Read models from a file as JSONL."""
     return list(iter_pydantic_jsonl(file, model_cls, **kwargs))
 
 
-def write_pydantic_jsonl(
-    models: Iterable[pydantic.BaseModel], file: str | Path | TextIO, **kwargs: Any
-) -> None:
+def write_pydantic_jsonl(models: Iterable[pydantic.BaseModel], file: Source, **kwargs: Any) -> None:
     """Write models to a file as JSONL."""
     kwargs.setdefault("exclude_none", True)
     kwargs.setdefault("exclude_unset", True)
@@ -100,7 +98,7 @@ def write_pydantic_jsonl(
 
 
 def stream_write_pydantic_jsonl(
-    models: Iterable[BaseModelVar], file: str | Path | TextIO, **kwargs: Any
+    models: Iterable[BaseModelVar], file: Source, **kwargs: Any
 ) -> Generator[BaseModelVar]:
     """Write models to a file as JSONL and yield them."""
     kwargs.setdefault("exclude_none", True)
@@ -113,7 +111,7 @@ def stream_write_pydantic_jsonl(
 
 
 def read_pydantic_tsv(
-    path: str | Path | TextIO,
+    path: Source,
     model: type[BaseModelVar],
     *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -124,7 +122,7 @@ def read_pydantic_tsv(
 
 
 def iter_pydantic_tsv(
-    path: str | Path | TextIO,
+    path: Source,
     model_cls: type[BaseModelVar],
     *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -153,7 +151,7 @@ def iter_pydantic_tsv(
 
 
 def read_pydantic_json(
-    path_or_url: str | Path | TextIO,
+    path_or_url: Source,
     model_cls: type[BaseModelVar],
     *,
     encoding: str | None = None,
@@ -164,7 +162,7 @@ def read_pydantic_json(
 
 
 def read_pydantic_yaml(
-    path_or_url: str | Path | TextIO,
+    path_or_url: Source,
     model_cls: type[BaseModelVar],
     *,
     encoding: str | None = None,
@@ -195,7 +193,7 @@ def model_dump_yaml(
 
 def write_pydantic_yaml(
     model: pydantic.BaseModel,
-    path: str | Path | TextIO,
+    path: Source,
     *,
     exclude: set[str] | None = None,
     exclude_none: bool = True,
@@ -228,7 +226,7 @@ def write_pydantic_yaml(
 
 def write_pydantic_json(
     model: pydantic.BaseModel,
-    path: str | Path | TextIO,
+    path: Source,
     *,
     exclude: set[str] | None = None,
     exclude_none: bool = True,

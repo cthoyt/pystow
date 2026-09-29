@@ -95,6 +95,7 @@ from .pydantic_utils import (
     write_pydantic_yaml,
 )
 from .safe_open import (
+    Source,
     _wrap_binary_if_needed,
     is_url,
     open_inner_zipfile,
@@ -137,6 +138,7 @@ __all__ = [
     "Operation",
     "Reader",
     "Representation",
+    "Source",
     "UnexpectedDirectory",
     "UnexpectedDirectoryError",
     "Writer",
@@ -664,7 +666,7 @@ def write_zipfile_xml(
 
 
 def read_xml(
-    path: str | Path, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
+    path: Source, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
 ) -> lxml.etree.ElementTree:
     """Read an XML element tree.
 
@@ -679,7 +681,7 @@ def read_xml(
         return etree.parse(file, **kwargs)
 
 
-def get_xml_root(path: str | Path, **kwargs: Any) -> lxml.etree.Element:
+def get_xml_root(path: Source, **kwargs: Any) -> lxml.etree.Element:
     """Read an XML element tree then get the root element.
 
     :param path: The path to an XML file
@@ -690,7 +692,7 @@ def get_xml_root(path: str | Path, **kwargs: Any) -> lxml.etree.Element:
     return read_xml(path, **kwargs).getroot()
 
 
-def iterparse_xml(path: str | Path, tag: str | tuple[str, ...], **kwargs: Any) -> Iterable[Any]:
+def iterparse_xml(path: Source, tag: str | tuple[str, ...], **kwargs: Any) -> Iterable[Any]:
     """Parse the given tags, iteratively."""
     from lxml import etree
 
@@ -761,12 +763,8 @@ def read_zipfile_rdf(path: str | Path, inner_path: str | PurePath, **kwargs: Any
 
     :returns: A graph
     """
-    import rdflib
-
-    graph = rdflib.Graph()
     with open_zipfile(path, inner_path, operation="read", representation="binary") as file:
-        graph.parse(file, **kwargs)
-    return graph
+        return read_rdflib(file, **kwargs)
 
 
 def write_zipfile_rdf(
@@ -861,7 +859,7 @@ def read_tarfile_xml(
         return etree.parse(file, **kwargs)
 
 
-def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
+def read_rdf(path: Source, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib` via :func:`read_rdflib`."""
     warnings.warn(
         "use read_rdflib() instead - this new function has a more precise name",
@@ -871,17 +869,19 @@ def read_rdf(path: str | Path, **kwargs: Any) -> rdflib.Graph:
     return read_rdflib(path, **kwargs)
 
 
-def read_rdflib(path: str | Path, **kwargs: Any) -> rdflib.Graph:
+def read_rdflib(path: Source, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
-    :param path: The path to the RDF file
-    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
+    :param path: The path to the RDF file or file-like object
+    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`.
+        Overrides RDFlib's default format and uses turtle if none is given.
 
     :returns: A parsed RDF graph
     """
     import rdflib
 
     graph = rdflib.Graph()
+    kwargs.setdefault("format", "turtle")
     with safe_open(path, representation="binary", operation="read") as file:
         graph.parse(file, **kwargs)
     return graph
@@ -889,7 +889,7 @@ def read_rdflib(path: str | Path, **kwargs: Any) -> rdflib.Graph:
 
 def write_rdflib(
     graph: rdflib.Graph,
-    path: str | Path | IO[str] | IO[bytes],
+    path: Source,
     *,
     format: str | None = None,
 ) -> None:
@@ -1045,7 +1045,7 @@ class BatchedWriter:
 
 @contextlib.contextmanager
 def safe_open_writer(
-    f: str | Path | IO[str],
+    f: Source,
     *,
     delimiter: str = "\t",
     buffering: int | None = None,
@@ -1078,7 +1078,7 @@ def safe_open_writer(
 
 @contextlib.contextmanager
 def safe_open_dict_writer(
-    f: str | Path | IO[str],
+    f: Source,
     fieldnames: typing.Sequence[str],
     *,
     delimiter: str = "\t",
@@ -1098,9 +1098,7 @@ def safe_open_dict_writer(
 
 
 @contextlib.contextmanager
-def safe_open_reader(
-    f: str | Path | IO[str], *, delimiter: str = "\t", **kwargs: Any
-) -> Generator[Reader]:
+def safe_open_reader(f: Source, *, delimiter: str = "\t", **kwargs: Any) -> Generator[Reader]:
     """Open a CSV reader, wrapping :func:`csv.reader`.
 
     :param f: A path to a file, or an already open text-based IO object
