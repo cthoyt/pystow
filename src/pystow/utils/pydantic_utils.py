@@ -47,6 +47,7 @@ ModelValidateFailureAction: TypeAlias = Literal["raise", "skip"]
 
 def iter_pydantic_jsonl(
     file: Source,
+    /,
     model_cls: type[BaseModelVar],
     *,
     progress: bool = False,
@@ -81,7 +82,7 @@ def iter_pydantic_jsonl(
 
 
 def read_pydantic_jsonl(
-    file: Source, model_cls: type[BaseModelVar], **kwargs: Any
+    file: Source, /, model_cls: type[BaseModelVar], **kwargs: Any
 ) -> list[BaseModelVar]:
     """Read models from a file as JSONL."""
     return list(iter_pydantic_jsonl(file, model_cls, **kwargs))
@@ -112,6 +113,7 @@ def stream_write_pydantic_jsonl(
 
 def read_pydantic_tsv(
     path: Source,
+    /,
     model: type[BaseModelVar],
     *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -123,6 +125,7 @@ def read_pydantic_tsv(
 
 def iter_pydantic_tsv(
     path: Source,
+    /,
     model_cls: type[BaseModelVar],
     *,
     process: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -152,6 +155,7 @@ def iter_pydantic_tsv(
 
 def read_pydantic_json(
     path_or_url: Source,
+    /,
     model_cls: type[BaseModelVar],
     *,
     encoding: str | None = None,
@@ -163,6 +167,7 @@ def read_pydantic_json(
 
 def read_pydantic_yaml(
     path_or_url: Source,
+    /,
     model_cls: type[BaseModelVar],
     *,
     encoding: str | None = None,
