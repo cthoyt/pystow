@@ -666,37 +666,37 @@ def write_zipfile_xml(
 
 
 def read_xml(
-    path: Source, /, *, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
+    source: Source, /, *, open_kwargs: dict[str, Any] | None = None, **kwargs: Any
 ) -> lxml.etree.ElementTree:
     """Read an XML element tree.
 
-    :param path: The path to an XML file
+    :param source: The path to or a file-like object representing an XML file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
 
     :returns: An element tree
     """
     from lxml import etree
 
-    with safe_open(path, representation="binary") as file:
+    with safe_open(source, representation="binary") as file:
         return etree.parse(file, **kwargs)
 
 
-def get_xml_root(path: Source, /, **kwargs: Any) -> lxml.etree.Element:
+def get_xml_root(source: Source, /, **kwargs: Any) -> lxml.etree.Element:
     """Read an XML element tree then get the root element.
 
-    :param path: The path to an XML file
+    :param source: The path to or a file-like object representing an XML file
     :param kwargs: Additional kwargs to pass to :func:`lxml.etree.parse`.
 
     :returns: The root element from the element tree
     """
-    return read_xml(path, **kwargs).getroot()
+    return read_xml(source, **kwargs).getroot()
 
 
-def iterparse_xml(path: Source, /, tag: str | tuple[str, ...], **kwargs: Any) -> Iterable[Any]:
+def iterparse_xml(source: Source, /, tag: str | tuple[str, ...], **kwargs: Any) -> Iterable[Any]:
     """Parse the given tags, iteratively."""
     from lxml import etree
 
-    with safe_open(path, representation="binary") as file:
+    with safe_open(source, representation="binary") as file:
         yield from etree.iterparse(file, tag=tag, **kwargs)
 
 
@@ -873,8 +873,8 @@ def read_rdflib(path: Source, /, **kwargs: Any) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
     :param path: The path to the RDF file or file-like object
-    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`.
-        Overrides RDFlib's default format and uses turtle if none is given.
+    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`. Overrides
+        RDFlib's default format and uses turtle if none is given.
 
     :returns: A parsed RDF graph
     """
@@ -1100,16 +1100,18 @@ def safe_open_dict_writer(
 
 
 @contextlib.contextmanager
-def safe_open_reader(f: Source, /, *, delimiter: str = "\t", **kwargs: Any) -> Generator[Reader]:
+def safe_open_reader(
+    source: Source, /, *, delimiter: str = "\t", **kwargs: Any
+) -> Generator[Reader]:
     """Open a CSV reader, wrapping :func:`csv.reader`.
 
-    :param f: A path to a file, or an already open text-based IO object
+    :param source: A path to a file, or an already open IO object
     :param delimiter: The delimiter for writing to CSV
     :param kwargs: Keyword arguments to pass to :func:`csv.reader`
 
     :yields: A CSV reader object, constructed from :func:`csv.reader`
     """
-    with safe_open(f, operation="read", representation="text", newline="") as file:
+    with safe_open(source, operation="read", representation="text", newline="") as file:
         yield csv.reader(file, delimiter=delimiter, **kwargs)
 
 
