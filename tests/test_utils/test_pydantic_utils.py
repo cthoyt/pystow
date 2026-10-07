@@ -17,6 +17,11 @@ from pystow.utils import (
     write_pydantic_jsonl,
     write_pydantic_yaml,
 )
+from pystow.utils.pydantic_utils import (
+    read_pydantic_json,
+    read_pydantic_json_list,
+    write_pydantic_json_list,
+)
 
 
 @requires_package("pydantic")
@@ -157,8 +162,14 @@ class TestPydanticUtils(unittest.TestCase):
         path = self.directory.joinpath("data.json")
         model = Model(name="test")
         write_pydantic_json(model, path)
-
         self.assertEqual("""{"name": "test"}\n""", path.read_text())
+        self.assertEqual(model, read_pydantic_json(path, Model))
+
+        path = self.directory.joinpath("data-list.json")
+        model = Model(name="test")
+        write_pydantic_json_list([model], path)
+        self.assertEqual("""[{"name": "test"}]\n""", path.read_text())
+        self.assertEqual([model], read_pydantic_json_list(path, Model))
 
     def test_write_yaml(self) -> None:
         """Test writing pydantic models to a YAML file."""

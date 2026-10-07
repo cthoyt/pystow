@@ -86,15 +86,18 @@ from .pydantic_utils import (
     iter_pydantic_tsv,
     model_dump_yaml,
     read_pydantic_json,
+    read_pydantic_json_list,
     read_pydantic_jsonl,
     read_pydantic_tsv,
     read_pydantic_yaml,
     stream_write_pydantic_jsonl,
     write_pydantic_json,
+    write_pydantic_json_list,
     write_pydantic_jsonl,
     write_pydantic_yaml,
 )
 from .safe_open import (
+    OpenKwargs,
     Source,
     _wrap_binary_if_needed,
     is_url,
@@ -189,6 +192,7 @@ __all__ = [
     "raise_on_digest_mismatch",
     "read_lzma_csv",
     "read_pydantic_json",
+    "read_pydantic_json_list",
     "read_pydantic_jsonl",
     "read_pydantic_tsv",
     "read_pydantic_yaml",
@@ -221,6 +225,7 @@ __all__ = [
     "write_lzma_csv",
     "write_pickle_gz",
     "write_pydantic_json",
+    "write_pydantic_json_list",
     "write_pydantic_jsonl",
     "write_pydantic_yaml",
     "write_rdflib",
@@ -869,18 +874,23 @@ def read_rdf(source: Source, /, **kwargs: Any) -> rdflib.Graph:
     return read_rdflib(source, **kwargs)
 
 
-def read_rdflib(source: Source, /, **kwargs: Any) -> rdflib.Graph:
+def read_rdflib(
+    source: Source, /, open_kwargs: OpenKwargs | None = None, **kwargs: Any
+) -> rdflib.Graph:
     """Read an RDF file with :mod:`rdflib`.
 
     :param source: The path to the RDF file or file-like object
-    :param kwargs: Additional kwargs to pass to :func:`rdflib.Graph.parse`
+    :param open_kwargs: keyword arguments to pass to :func:`safe_open`
+    :param kwargs: keyword arguments to pass to :func:`rdflib.Graph.parse`
 
     :returns: A parsed RDF graph
     """
     import rdflib
 
     graph = rdflib.Graph()
-    with safe_open(source, representation="binary", operation="read") as file:
+    with safe_open(
+        source, representation="binary", operation="read", **(open_kwargs or {})
+    ) as file:
         graph.parse(file, **kwargs)
     return graph
 

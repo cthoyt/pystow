@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import typing
 from collections.abc import Callable, Generator, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypeAlias, TypedDict
 
 from tqdm import tqdm
 
 from .safe_open import (
+    OpenKwargs,
     Source,
     _open_read_text,
     _open_write_text,
@@ -29,11 +30,13 @@ __all__ = [
     "iter_pydantic_tsv",
     "model_dump_yaml",
     "read_pydantic_json",
+    "read_pydantic_json_list",
     "read_pydantic_jsonl",
     "read_pydantic_tsv",
     "read_pydantic_yaml",
     "stream_write_pydantic_jsonl",
     "write_pydantic_json",
+    "write_pydantic_json_list",
     "write_pydantic_jsonl",
     "write_pydantic_yaml",
 ]
@@ -154,15 +157,17 @@ def iter_pydantic_tsv(
 
 
 def read_pydantic_json(
-    path_or_url: Source,
-    /,
-    model_cls: type[BaseModelVar],
-    *,
-    encoding: str | None = None,
-    newline: str | None = None,
+    path_or_url: Source, /, model_cls: type[BaseModelVar], **kwargs: typing.Unpack[OpenKwargs]
 ) -> BaseModelVar:
     """Read a JSON file into a model."""
-    return model_cls.model_validate(safe_open_json(path_or_url, encoding=encoding, newline=newline))
+    return model_cls.model_validate(safe_open_json(path_or_url, **kwargs))
+
+
+def read_pydantic_json_list(
+    path_or_url: Source, /, model_cls: type[BaseModelVar], **kwargs: typing.Unpack[OpenKwargs]
+) -> list[BaseModelVar]:
+    """Read a JSON file into a list of models."""
+    return [model_cls.model_validate(record) for record in safe_open_json(path_or_url, **kwargs)]
 
 
 def read_pydantic_yaml(
@@ -229,8 +234,18 @@ def write_pydantic_yaml(
     )
 
 
+class ModelDumpKwargs(TypedDict):
+    """Keyword arguments for pydantic model dump."""
+
+    exclude: NotRequired[set[str] | None]
+    exclude_none: NotRequired[bool]
+    exclude_unset: NotRequired[bool]
+    exclude_defaults: NotRequired[bool]
+
+
 def write_pydantic_json(
     model: pydantic.BaseModel,
+    /,
     path: Source,
     *,
     exclude: set[str] | None = None,
@@ -251,6 +266,43 @@ def write_pydantic_json(
         exclude_unset=exclude_unset,
         exclude_defaults=exclude_defaults,
     )
+    write_json(
+        data,
+        path,
+        encoding=encoding,
+        newline=newline,
+        ensure_ascii=ensure_ascii,
+        indent=indent,
+        trailing_newline=trailing_newline,
+    )
+
+
+def write_pydantic_json_list(
+    model: Iterable[pydantic.BaseModel],
+    /,
+    path: Source,
+    *,
+    exclude: set[str] | None = None,
+    exclude_none: bool = True,
+    exclude_unset: bool = True,
+    exclude_defaults: bool = True,
+    encoding: str | None = None,
+    newline: str | None = None,
+    ensure_ascii: bool = False,
+    indent: int | None = None,
+    trailing_newline: bool = True,
+) -> None:
+    """Write a model to a JSON file."""
+    data = [
+        m.model_dump(
+            mode="json",
+            exclude=exclude,
+            exclude_none=exclude_none,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+        )
+        for m in model
+    ]
     write_json(
         data,
         path,
