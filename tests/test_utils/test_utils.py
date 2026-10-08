@@ -9,6 +9,7 @@ import tarfile
 import tempfile
 import unittest
 import zipfile
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -56,6 +57,7 @@ from pystow.utils import (
     safe_open_yaml,
     safe_read_text,
     safe_write_text,
+    tabulate_counter,
     tarfile_writestr,
     write_lzma_csv,
     write_tarfile_csv,
@@ -912,3 +914,29 @@ class TestGitHub(unittest.TestCase):
     def test_default_branch(self) -> None:
         """Test getting the default branch."""
         self.assertEqual("main", get_default_branch("cthoyt", "pystow"))
+
+
+class TestMisc(unittest.TestCase):
+    """Tabulate tests."""
+
+    def test_tabulate_counter(self) -> None:
+        """Test tabulating a counter."""
+        c1 = Counter({"a": 1, "b": 2})
+        res = tabulate_counter(c1)
+        self.assertEqual("-  -\nb  2\na  1\n-  -", res)
+
+        c2 = Counter({0: 1, 1: 2})
+        res2 = tabulate_counter(c2)
+        self.assertEqual("-  -\n1  2\n0  1\n-  -", res2)
+
+        c3 = Counter({("a", "0"): 1, ("b", "1"): 2})
+        res3 = tabulate_counter(c3)
+        self.assertEqual("-  -  -\nb  1  2\na  0  1\n-  -  -", res3)
+
+        c4 = Counter({("a", 0): 1, ("b", 1): 2})
+        res4 = tabulate_counter(c4)
+        self.assertEqual("-  -  -\nb  1  2\na  0  1\n-  -  -", res4)
+
+        c5 = Counter({("a", 0): 1, ("b", None): 2})
+        res5 = tabulate_counter(c5)
+        self.assertEqual("-  -  -\nb     2\na  0  1\n-  -  -", res5)

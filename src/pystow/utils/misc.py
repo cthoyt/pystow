@@ -15,6 +15,6 @@ def tabulate_counter(counter: Counter[Any], *, n: int | None = None, **kwargs: A
 
     key = next(iter(counter))
     if isinstance(key, Sequence) and not isinstance(key, str):
-        return tabulate(counter.most_common(n=n), **kwargs)
-    else:
         return tabulate([(*key, count) for key, count in counter.most_common(n=n)], **kwargs)
+    else:
+        return tabulate(counter.most_common(n=n), **kwargs)
