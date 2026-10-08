@@ -80,6 +80,7 @@ from .io_typing import (
     get_mode_pair,
 )
 from .iter import reyield
+from .misc import tabulate_counter
 from .pydantic_utils import (
     ModelValidateFailureAction,
     iter_pydantic_jsonl,
@@ -219,6 +220,7 @@ __all__ = [
     "safe_write_text",
     "safe_zipfile_open",
     "stream_write_pydantic_jsonl",
+    "tabulate_counter",
     "tarfile_writestr",
     "use_appdirs",
     "write_json",

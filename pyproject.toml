@@ -65,6 +65,7 @@ typing = [
     "types-ratelimit",
     "types-PyYAML",
     "types-lxml",
+    "types-tabulate",
 ]
 docs = [
     "sphinx>=8",
