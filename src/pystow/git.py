@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from pathlib import Path
+    from pathlib import Path, PurePath
     from subprocess import CompletedProcess
 
 __all__ = [
@@ -16,11 +16,15 @@ __all__ = [
     "commit",
     "create_branch",
     "fetch",
+    "get_commit_hash_before",
     "get_current_branch",
+    "get_current_commit_hash",
     "git",
+    "git_stdout",
     "has_local_branch",
     "is_likely_default_branch",
     "push",
+    "show",
 ]
 
 
@@ -52,6 +56,15 @@ GitReturn: TypeAlias = "CompletedProcess[str]"
 def git(directory: Path, *args: str) -> GitReturn:
     """Run the git command with the given arguments in the given directory."""
     return _check_output("git", *args, directory=directory)
+
+
+def git_stdout(directory: Path, *args: str, strip: bool = True) -> str:
+    """Get the standard output from running :func:`git`."""
+    results = git(directory, *args)
+    rv = results.stdout
+    if strip:
+        rv = rv.strip()
+    return rv
 
 
 def clone(directory: Path, url: str) -> GitReturn:
@@ -98,8 +111,7 @@ def has_local_branch(directory: Path, branch: str) -> bool:
 
 def get_current_branch(directory: Path) -> str:
     """Return if on the master/main branch."""
-    completed_process = git(directory, "rev-parse", "--abbrev-ref", "HEAD")
-    return completed_process.stdout.strip()
+    return git_stdout(directory, "rev-parse", "--abbrev-ref", "HEAD")
 
 
 def create_branch(directory: Path, branch: str) -> GitReturn:
@@ -113,3 +125,22 @@ LIKELY_DEFAULT_BRANCHES = {"master", "main"}
 def is_likely_default_branch(directory: Path) -> bool:
     """Guess if the current branch is the "default"."""
     return get_current_branch(directory) in LIKELY_DEFAULT_BRANCHES
+
+
+def get_commit_hash_before(directory: Path, before: str) -> str:
+    """Get the git commit hash based on the given --before, such as "1 week ago"."""
+    return git_stdout(directory, "rev-list", "-1", f'--before="{before}"', "HEAD")
+
+
+def show(directory: Path, commit_hash: str, path: str | PurePath, *, strip: bool = False) -> str:
+    """Get the contents of a file at a specific hash."""
+    from pathlib import Path
+
+    if isinstance(path, Path):
+        path = directory.relative_to(path)
+    return git_stdout(directory, "show", f"{commit_hash}:{path}", strip=strip)
+
+
+def get_current_commit_hash(directory: Path) -> str:
+    """Get current commit."""
+    return git_stdout(directory, "rev-parse", "HEAD")
