@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from pathlib import Path
+    from pathlib import Path, PurePath
     from subprocess import CompletedProcess
 
 __all__ = [
@@ -19,8 +19,11 @@ __all__ = [
     "get_current_branch",
     "git",
     "has_local_branch",
+    "get_current_commit_hash",
+    "get_commit_hash_before",
     "is_likely_default_branch",
     "push",
+    "show",
 ]
 
 
@@ -113,3 +116,25 @@ LIKELY_DEFAULT_BRANCHES = {"master", "main"}
 def is_likely_default_branch(directory: Path) -> bool:
     """Guess if the current branch is the "default"."""
     return get_current_branch(directory) in LIKELY_DEFAULT_BRANCHES
+
+
+def get_commit_hash_before(directory: Path, before: str) -> str:
+    """Get the git commit hash based on the given --before, such as "1 week ago"."""
+    result = git(directory, "rev-list", "-1", f"--before=\"{before}\"", "HEAD")
+    return result.stdout.strip()
+
+
+def show(directory: Path, commit_hash: str, path: str | PurePath):
+    """Get the contents of a file at a specific hash."""
+    from pathlib import Path
+
+    if isinstance(path, Path):
+        path = directory.relative_to(path)
+    results = git(directory, "show", f"{commit_hash}:{path}")
+    return results.stdout
+
+
+def get_current_commit_hash(directory: Path) -> str:
+    """Get current commit."""
+    result = git(directory, "rev-parse", "HEAD")
+    return result.stdout.strip()
