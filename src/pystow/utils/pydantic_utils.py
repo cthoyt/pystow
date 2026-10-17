@@ -151,10 +151,11 @@ def iter_pydantic_tsv(
     import pydantic
 
     with safe_open_dict_reader(path) as reader:
-        records: Iterable[dict[str, Any]]
-        if process is None:
-            records = iter(reader)
-        else:
+        records = (
+            {k: v for k, v in record.items() if v}
+            for record in reader
+        )
+        if process is not None:
             records = (process(record) for record in reader)
         for record in records:
             try:
