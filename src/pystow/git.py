@@ -16,11 +16,12 @@ __all__ = [
     "commit",
     "create_branch",
     "fetch",
-    "get_current_branch",
-    "git",
-    "has_local_branch",
-    "get_current_commit_hash",
     "get_commit_hash_before",
+    "get_current_branch",
+    "get_current_commit_hash",
+    "git",
+    "git_stdout",
+    "has_local_branch",
     "is_likely_default_branch",
     "push",
     "show",
@@ -55,6 +56,15 @@ GitReturn: TypeAlias = "CompletedProcess[str]"
 def git(directory: Path, *args: str) -> GitReturn:
     """Run the git command with the given arguments in the given directory."""
     return _check_output("git", *args, directory=directory)
+
+
+def git_stdout(directory: Path, *args: str, strip: bool = True) -> str:
+    """Get the standard output from running :func:`git`."""
+    results = git(directory, *args)
+    rv = results.stdout
+    if strip:
+        rv = rv.strip()
+    return rv
 
 
 def clone(directory: Path, url: str) -> GitReturn:
@@ -101,8 +111,7 @@ def has_local_branch(directory: Path, branch: str) -> bool:
 
 def get_current_branch(directory: Path) -> str:
     """Return if on the master/main branch."""
-    completed_process = git(directory, "rev-parse", "--abbrev-ref", "HEAD")
-    return completed_process.stdout.strip()
+    return git_stdout(directory, "rev-parse", "--abbrev-ref", "HEAD")
 
 
 def create_branch(directory: Path, branch: str) -> GitReturn:
@@ -120,21 +129,18 @@ def is_likely_default_branch(directory: Path) -> bool:
 
 def get_commit_hash_before(directory: Path, before: str) -> str:
     """Get the git commit hash based on the given --before, such as "1 week ago"."""
-    result = git(directory, "rev-list", "-1", f"--before=\"{before}\"", "HEAD")
-    return result.stdout.strip()
+    return git_stdout(directory, "rev-list", "-1", f'--before="{before}"', "HEAD")
 
 
-def show(directory: Path, commit_hash: str, path: str | PurePath):
+def show(directory: Path, commit_hash: str, path: str | PurePath, *, strip: bool = False) -> str:
     """Get the contents of a file at a specific hash."""
     from pathlib import Path
 
     if isinstance(path, Path):
         path = directory.relative_to(path)
-    results = git(directory, "show", f"{commit_hash}:{path}")
-    return results.stdout
+    return git_stdout(directory, "show", f"{commit_hash}:{path}", strip=strip)
 
 
 def get_current_commit_hash(directory: Path) -> str:
     """Get current commit."""
-    result = git(directory, "rev-parse", "HEAD")
-    return result.stdout.strip()
+    return git_stdout(directory, "rev-parse", "HEAD")
