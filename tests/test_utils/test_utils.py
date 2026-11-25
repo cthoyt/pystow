@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import io
 import itertools as itt
@@ -623,6 +624,18 @@ class TestUtils(unittest.TestCase):
             self.assertFalse(path_gz.is_file())
             self.assertTrue(path_new.is_file())
             self.assertEqual(TEST_TXT_CONTENT, path_new.read_text(encoding="utf-8"))
+
+    def test_gzip_failure_does_not_leave_empty_file(self) -> None:
+        """Test that a failed gunzip does not leave an empty target file behind."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            path_src = directory.joinpath("test.txt.gz")
+            path_src.write_text("not a valid gzip file")
+            path_dst = directory.joinpath("test.txt")
+
+            with self.assertRaises(gzip.BadGzipFile):
+                gunzip(path_src, path_dst)
+            self.assertFalse(path_dst.is_file())
 
     def test_is_url(self) -> None:
         """Test checking URL."""
