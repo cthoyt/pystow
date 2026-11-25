@@ -8,6 +8,7 @@ import gzip
 import io
 import logging
 import lzma
+import os
 import pickle
 import shutil
 import tarfile
@@ -1001,8 +1002,14 @@ def gunzip(source: str | Path, target: str | Path | None = None, *, cleanup: boo
         raise NotImplementedError
     else:
         target = Path(target).expanduser().resolve()
-    with gzip.open(source, "rb") as in_file, open(target, "wb") as out_file:
-        shutil.copyfileobj(in_file, out_file)
+    target_tmp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        with gzip.open(source, "rb") as in_file, open(target_tmp, "wb") as out_file:
+            shutil.copyfileobj(in_file, out_file)
+        os.replace(target_tmp, target)
+    except BaseException:
+        target_tmp.unlink(missing_ok=True)
+        raise
     if cleanup:
         source.unlink()
     return target

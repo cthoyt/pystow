@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
+import io
 import itertools as itt
 import os
 import tarfile
@@ -11,6 +13,7 @@ import unittest
 import zipfile
 from collections import Counter
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -622,6 +625,18 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(path_new.is_file())
             self.assertEqual(TEST_TXT_CONTENT, path_new.read_text(encoding="utf-8"))
 
+    def test_gzip_failure_does_not_leave_empty_file(self) -> None:
+        """Test that a failed gunzip does not leave an empty target file behind."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            path_src = directory.joinpath("test.txt.gz")
+            path_src.write_text("not a valid gzip file")
+            path_dst = directory.joinpath("test.txt")
+
+            with self.assertRaises(gzip.BadGzipFile):
+                gunzip(path_src, path_dst)
+            self.assertFalse(path_dst.is_file())
+
     def test_is_url(self) -> None:
         """Test checking URL."""
         self.assertTrue(is_url("https://zenodo.org/records/15504009/files/startup.sh?download=1"))
@@ -704,6 +719,25 @@ class TestDownload(unittest.TestCase):
                 backend="requests",
                 stream=False,
             )
+        self.assertFalse(self.path_for_bad_url.is_file())
+
+    def test_requests_status_code_error(self) -> None:
+        """Test that non-200 status codes are handled properly with requests."""
+        url = "https://example.com/test.txt"
+        response = requests.Response()
+        response.status_code = 404
+        response.reason = "Not Found"
+        response.url = url
+        response.raw = io.BytesIO(b"")
+
+        with patch("requests.get", return_value=response) as mock_get:
+            with self.assertRaises(DownloadError):
+                download(
+                    url=url,
+                    path=self.path_for_bad_url,
+                    backend="requests",
+                )
+            mock_get.assert_called_once()
         self.assertFalse(self.path_for_bad_url.is_file())
 
 
