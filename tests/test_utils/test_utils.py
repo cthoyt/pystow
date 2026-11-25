@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import itertools as itt
 import os
 import tarfile
@@ -11,6 +12,7 @@ import unittest
 import zipfile
 from collections import Counter
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -704,6 +706,25 @@ class TestDownload(unittest.TestCase):
                 backend="requests",
                 stream=False,
             )
+        self.assertFalse(self.path_for_bad_url.is_file())
+
+    def test_requests_status_code_error(self) -> None:
+        """Test that non-200 status codes are handled properly with requests."""
+        url = "https://example.com/test.txt"
+        response = requests.Response()
+        response.status_code = 404
+        response.reason = "Not Found"
+        response.url = url
+        response.raw = io.BytesIO(b"")
+
+        with patch("requests.get", return_value=response) as mock_get:
+            with self.assertRaises(DownloadError):
+                download(
+                    url=url,
+                    path=self.path_for_bad_url,
+                    backend="requests",
+                )
+            mock_get.assert_called_once()
         self.assertFalse(self.path_for_bad_url.is_file())
 
 

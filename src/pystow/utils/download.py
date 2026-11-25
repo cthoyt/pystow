@@ -206,6 +206,7 @@ def download(  # noqa:C901
                         url,
                         path,
                     )
+                    response.raise_for_status()
                     # Solution for progress bar from https://stackoverflow.com/a/63831344/5775947
                     total_size = int(response.headers.get("Content-Length", 0))
                     # Decompress if needed
@@ -216,7 +217,7 @@ def download(  # noqa:C901
                         response.raw, "read", total=total_size, **_tqdm_kwargs
                     ) as fsrc:
                         shutil.copyfileobj(fsrc, file)
-            except requests.exceptions.ConnectionError as e:
+            except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
                 raise DownloadError(backend, url, path, e) from e
         else:
             raise ValueError(f'Invalid backend: {backend}. Use "requests" or "urllib".')
